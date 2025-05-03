@@ -144,14 +144,11 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    // Put repositories for dependencies here
-    // ForgeGradle automatically adds the Forge maven and Maven Central for you
-
-    // If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
-    // flatDir {
-    //     dir 'libs'
-    // }
+    mavenCentral()
+    maven {
+        name = "Forge"
+        url = "https://maven.minecraftforge.net/"
+    }
 }
 
 dependencies {
@@ -176,6 +173,14 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    // SLF4J API
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    
+    // Log4j (usado por Minecraft)
+    implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -205,9 +210,9 @@ jar {
         attributes([
                 "Specification-Title"     : mod_id,
                 "Specification-Vendor"    : mod_authors,
-                "Specification-Version"   : "1", // We are version 1 of ourselves
-                "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
+                "Specification-Version"   : mod_version,
+                "Implementation-Title"    : mod_name,
+                "Implementation-Version"  : mod_version,
                 "Implementation-Vendor"   : mod_authors,
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
@@ -235,4 +240,5 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    options.release = 17
 }
