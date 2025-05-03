@@ -1,12 +1,12 @@
 modLoader="javafml"
 loaderVersion="[47,)"
 license="CC BY-NC-SA 4.0"
-issueTrackerURL="https://github.com/MattCzyr/ConsoleFilter/issues"
+issueTrackerURL="https://github.com/alanjmrt94/ConsoleFilterNext/issues"
 
 [[mods]]
-modId="consolefilter"
-version="1.20.1-2.0.0"
-displayName="ConsoleFilter"
-authors="NgLoader, MarkKoz, ChaosTheDude"
-description="Hide annoying messages from your console logs."
+modId="consolefilternext"
+version="1.20.1-3.0.0"
+displayName="ConsoleFilterNext"
+authors="alanjmrt94"
+description="An improved ConsoleFilter mod that filters log messages not only by text, but also by log level (info, error, etc.). Gain better control over your console output to reduce noise and focus on what's important — ideal for debugging and error tracking."
 displayTest="IGNORE_ALL_VERSION"
