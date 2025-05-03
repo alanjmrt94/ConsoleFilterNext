@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.io.File;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 
@@ -22,7 +24,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 @Mod(ConsoleFilter.MODID)
 public class ConsoleFilter {
 
-	public static final String MODID = "consolefilter";
+	public static final String MODID = "consolefilternext";
 	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");
 
 	private static final Logger LOGGER = LogUtils.getLogger();
@@ -34,7 +36,9 @@ public class ConsoleFilter {
 		config.init();
 
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilter-common.toml");
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
+
+		createEmptyConfigFile();
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event) {
@@ -68,5 +72,21 @@ public class ConsoleFilter {
 
 	public ConsoleFilterConfig getConfig() {
 		return config;
+	}
+
+	private void createEmptyConfigFile() {
+		File configFile = new File("config/consolefilternext-common.toml");
+		if (!configFile.exists()) {
+			try {
+				configFile.getParentFile().mkdirs(); // Crea la carpeta si no existe
+				// Escribe el contenido [general] en el archivo
+				try (java.io.FileWriter writer = new java.io.FileWriter(configFile)) {
+					writer.write("[general]\n\n");
+					writer.write("levelFilters = [\"INFO\"]\n");
+				}
+			} catch (IOException e) {
+				LOGGER.error("No se pudo crear el archivo de configuración con el contenido [general].", e);
+			}
+		}
 	}
 }

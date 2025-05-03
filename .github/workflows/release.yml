@@ -22,13 +22,13 @@ jobs:
     - name: Build with Gradle
       run: |
         ./gradlew build
-        mv build/libs/ConsoleFilter-*.jar ./
+        mv build/libs/ConsoleFilterNext-*.jar ./
     - uses: actions/upload-artifact@v3
       with:
-        name: consolefilter-mod
+        name: consolefilternext-mod
         path: build/libs
     - uses: ncipollo/release-action@v1
       with:
-        artifacts: "ConsoleFilter-*.jar"
+        artifacts: "ConsoleFilterNext-*.jar"
         name: Release ${{ env.RELEASE_VERSION }}
         token: ${{ secrets.GITHUB_TOKEN }}

@@ -32,10 +32,10 @@ To configure the mod, you have two options:
 ### 🛠️ Editing the Configuration File
 
 1. Go to the `config` folder in your Minecraft installation  
-2. Open `consolefilter-common.toml`  
+2. Open `consolefilternext-common.toml`  
 3. Edit the values according to your needs
 
-For example, to filter all `INFO` messages from the `Server thread`, your `consolefilter-common.toml` should look like this:
+For example, to filter all `INFO` messages from the `Server thread`, your `consolefilternext-common.toml` should look like this:
 
 ````toml
 [general]
