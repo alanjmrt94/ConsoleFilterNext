@@ -54,35 +54,42 @@ sourceFilters = ["net.minecraft.server.MinecraftServer"]
 
 # Filters messages using regular expressions (advanced)
 regexFilters = []
+````
 
 ## 💡 Tips
 
 Here are some useful examples to help you get started with advanced filtering:
 
-### ✅ Filter all DEBUG messages:
+### ✅ Filter all DEBUG messages
+
 ```toml
 levelFilters = ["DEBUG"]
 ```
 
-### ✅ Filter messages from a specific mod or package:
+### ✅ Filter messages from a specific mod or package
+
 ```toml
 sourceFilters = ["com.example.mymod"]
 ```
 
-### ✅ Filter log messages from a specific thread:
+### ✅ Filter log messages from a specific thread
+
 ```toml
 threadFilters = ["Render thread"]
 ```
 
-### ✅ Filter messages that contain specific phrases:
+### ✅ Filter messages that contain specific phrases
+
 ```toml
 basicFilters = ["Could not resolve", "Missing texture"]
 ```
 
-### ✅ Use regular expressions to match patterns (advanced):
+### ✅ Use regular expressions to match patterns (advanced)
+
 ```toml
 regexFilters = ["^\\[Render thread\\].*Missing.*$", ".*ERROR.*\\bBlockEntity\\b.*"]
 ```
+
 > Note: Regex patterns must follow Java regular expression syntax.
 
 ---
@@ -94,10 +101,9 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 ## 🧩 Compatibility
 
-- **Minecraft Versions**: 1.20.1 
+- **Minecraft Versions**: 1.20.1
 - **Mod Loaders**: Forge  
 - **Platforms**: Client and Server compatible  
-
 
 ## License
 
