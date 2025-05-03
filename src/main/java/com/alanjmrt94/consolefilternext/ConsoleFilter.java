@@ -1,14 +1,16 @@
-package com.chaosthedude.consolefilter;
+package com.alanjmrt94.consolefilternext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 
-import com.chaosthedude.consolefilter.filter.CustomFilter;
-import com.chaosthedude.consolefilter.filter.JavaFilter;
-import com.chaosthedude.consolefilter.filter.Log4jFilter;
-import com.chaosthedude.consolefilter.filter.SystemFilter;
+import com.alanjmrt94.consolefilternext.filter.CustomFilter;
+import com.alanjmrt94.consolefilternext.filter.JavaFilter;
+import com.alanjmrt94.consolefilternext.filter.Log4jFilter;
+import com.alanjmrt94.consolefilternext.filter.SystemFilter;
 import com.mojang.logging.LogUtils;
 
 import net.minecraftforge.fml.ModLoadingContext;
@@ -21,6 +23,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public class ConsoleFilter {
 
 	public static final String MODID = "consolefilter";
+	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");
 
 	private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -46,6 +49,21 @@ public class ConsoleFilter {
 		for (CustomFilter filter : filterRegistry) {
 			filter.applyFilter(this);
 		}
+	}
+
+	public boolean shouldFilter(String message) {
+		Matcher matcher = LOG_PATTERN.matcher(message);
+		if (matcher.matches()) {
+			LogMessage logMessage = new LogMessage(
+				matcher.group(1), // timestamp
+				matcher.group(2), // thread
+				matcher.group(3), // level
+				matcher.group(4), // source
+				matcher.group(5)  // message
+			);
+			return config.shouldFilter(logMessage);
+		}
+		return false;
 	}
 
 	public ConsoleFilterConfig getConfig() {

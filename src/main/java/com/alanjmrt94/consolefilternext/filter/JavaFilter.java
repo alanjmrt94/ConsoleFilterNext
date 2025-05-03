@@ -1,11 +1,11 @@
-package com.chaosthedude.consolefilter.filter;
+package com.alanjmrt94.consolefilternext.filter;
 
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import com.chaosthedude.consolefilter.ConsoleFilter;
-import com.chaosthedude.consolefilter.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.ConsoleFilter;
+import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
 
 public class JavaFilter implements CustomFilter, Filter {
 

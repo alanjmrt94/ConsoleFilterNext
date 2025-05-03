@@ -1,9 +1,9 @@
-package com.chaosthedude.consolefilter.filter;
+package com.alanjmrt94.consolefilternext.filter;
 
 import java.io.PrintStream;
 
-import com.chaosthedude.consolefilter.ConsoleFilter;
-import com.chaosthedude.consolefilter.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.ConsoleFilter;
+import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
 
 public class SystemFilter extends PrintStream implements CustomFilter {
 

@@ -1,4 +1,4 @@
-package com.chaosthedude.consolefilter.filter;
+package com.alanjmrt94.consolefilternext.filter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -8,8 +8,8 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.message.Message;
 
-import com.chaosthedude.consolefilter.ConsoleFilter;
-import com.chaosthedude.consolefilter.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.ConsoleFilter;
+import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
 
 public class Log4jFilter implements CustomFilter, Filter {
 
