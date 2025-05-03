@@ -2,26 +2,36 @@ package com.alanjmrt94.consolefilternext.filter;
 
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import com.alanjmrt94.consolefilternext.ConsoleFilter;
-import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.LogMessage;
 
-public class JavaFilter implements CustomFilter, Filter {
-
-	private final ConsoleFilterConfig config;
+public class JavaFilter implements Filter, CustomFilter {
+	private final ConsoleFilter mod;
 
 	public JavaFilter(ConsoleFilter mod) {
-		config = mod.getConfig();
+		this.mod = mod;
 	}
 
 	@Override
 	public void applyFilter(ConsoleFilter mod) {
-		Logger.getLogger("").setFilter(this);
+		// Implementar la lógica para aplicar el filtro a Java Logging
+	}
+
+	@Override
+	public boolean shouldFilter(LogMessage message) {
+		return mod.getConfig().shouldFilter(message);
 	}
 
 	@Override
 	public boolean isLoggable(LogRecord record) {
-		return !config.shouldFilter(record.getMessage());
+		LogMessage logMessage = new LogMessage(
+			record.getMillis() + "",
+			record.getThreadID() + "",
+			record.getLevel().getName(),
+			record.getLoggerName(),
+			record.getMessage()
+		);
+		return !shouldFilter(logMessage);
 	}
 }

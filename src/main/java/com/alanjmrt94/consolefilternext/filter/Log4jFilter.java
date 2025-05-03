@@ -6,16 +6,23 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.config.Node;
+import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.message.Message;
 
 import com.alanjmrt94.consolefilternext.ConsoleFilter;
 import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.LogMessage;
 
-public class Log4jFilter implements CustomFilter, Filter {
+@Plugin(name = "ConsoleFilter", category = Node.CATEGORY, elementType = Filter.ELEMENT_TYPE)
+public class Log4jFilter implements Filter, CustomFilter {
 
+	private final ConsoleFilter mod;
 	private final ConsoleFilterConfig config;
 
 	public Log4jFilter(ConsoleFilter mod) {
+		this.mod = mod;
 		config = mod.getConfig();
 	}
 
@@ -25,12 +32,20 @@ public class Log4jFilter implements CustomFilter, Filter {
 	}
 
 	@Override
-	public Filter.Result filter(LogEvent event) {
-		Message message = event.getMessage();
-		if (config.shouldFilter(message.toString()) || config.shouldFilter(message.getFormattedMessage())) {
-			return Filter.Result.DENY;
-		}
-		return null;
+	public boolean shouldFilter(LogMessage message) {
+		return config.shouldFilter(message);
+	}
+
+	@Override
+	public Result filter(LogEvent event) {
+		LogMessage logMessage = new LogMessage(
+			event.getTimeMillis() + "",
+			event.getThreadName(),
+			event.getLevel().name(),
+			event.getLoggerName(),
+			event.getMessage().getFormattedMessage()
+		);
+		return shouldFilter(logMessage) ? Result.DENY : Result.NEUTRAL;
 	}
 
 	@Override
@@ -140,5 +155,10 @@ public class Log4jFilter implements CustomFilter, Filter {
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, Message msg, Throwable t) {
 		return null;
+	}
+
+	@PluginFactory
+	public static Log4jFilter createFilter() {
+		return new Log4jFilter(null);
 	}
 }
