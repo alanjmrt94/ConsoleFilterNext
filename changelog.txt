@@ -1,5 +1,23 @@
 -----------------------------------------------------
+ PROJECT LINEAGE
+-----------------------------------------------------
+ - Fork of ConsoleFilter by Matthew Czyr (MattCzyr)
+ - Original: https://github.com/MattCzyr/ConsoleFilter
+ - This fork maintained by alanjmrt94
+
+-----------------------------------------------------
+ VERSION 3.0.1 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Add interactive dev-env.sh script for environment setup and toolchain management
+ - Clarify fork lineage from Matthew Czyr's ConsoleFilter in docs and mod metadata
+ - Restore original mod description with fork attribution
+ - Upgrade Gradle Wrapper to 8.14.3
+
+-----------------------------------------------------
  VERSION 3.0.0 - 1.20.1
 -----------------------------------------------------
 1.20.1:
- - Initial release for MC 1.20.1
+ - Initial fork release for MC 1.20.1 (based on ConsoleFilter by Matthew Czyr)
+ - Filters by log level, thread, source, basic text, and regex
+ - Forge config via consolefilternext-common.toml

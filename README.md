@@ -1,21 +1,27 @@
 # Console Filter Next
 
-An enhanced version of ConsoleFilter (fork of ConsoleFilter by MattCzyr) that not only allows filtering log messages by text content, but also by their log level (e.g., info, error, and other specific types). This provides more precise control over what gets displayed in your console, helping you reduce noise and focus on the messages that matter most — for debugging and error management purposes.
+An improved ConsoleFilter mod that filters log messages not only by text, but also by log level (info, error, etc.). Gain better control over your console output to reduce noise and focus on what's important — ideal for debugging and error tracking. Fork of ConsoleFilter by [Matthew Czyr](https://github.com/MattCzyr).
 
-[Downloads and more information on Curse](https://minecraft.curseforge.com/projects/console-filter-next)
+[Downloads on CurseForge](https://minecraft.curseforge.com/projects/console-filter-next)
 
----
-
-## 🙌 Credits
-
-- Original concept based on [ConsoleFilter](https://www.curseforge.com/minecraft/mc-mods/console-filter)
-- Authors: **NgLoader**, **MarkKoz**, **ChaosTheDude**
-- Extended and maintained by: **alanjmrt94**
-- Licensed under: MIT License *(or specify your license)*
+> **Developers:** run `./scripts/dev-env.sh` for environment setup, toolchain checks (JDK 17), and build configuration.
 
 ---
 
-Crafted with ❤️ for modders who seek clarity in their debug, free from the chaos of unnecessary noise.
+## 🙌 Credits & lineage
+
+| | |
+|---|---|
+| **Original project** | [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) — created and maintained by **Matthew Czyr** ([MattCzyr](https://github.com/MattCzyr)) |
+| **Original contributors** | **NgLoader**, **MarkKoz**, **ChaosTheDude** |
+| **This fork** | **Console Filter Next** — forked and extended by **alanjmrt94** |
+| **License** | [CC BY-NC-SA 4.0](LICENSE.md) (same as upstream) |
+
+Console Filter Next is **not** the official ConsoleFilter project. It is an independent fork with extra features and a separate release track. Please report issues for this fork on [this repository](https://github.com/alanjmrt94/ConsoleFilterNext/issues); for the original mod, use [MattCzyr/ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter/issues).
+
+---
+
+Crafted with ❤️ for modders who want a cleaner console.
 
 ## ⚙️ Config
 
@@ -72,6 +78,8 @@ levelFilters = ["DEBUG"]
 sourceFilters = ["com.example.mymod"]
 ```
 
+> **Note:** In v3.0.0, `sourceFilters` and `threadFilters` require an **exact** match. Substring/package-prefix matching is planned for v3.1.0.
+
 ### ✅ Filter log messages from a specific thread
 
 ```toml
@@ -101,10 +109,37 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 ## 🧩 Compatibility
 
-- **Minecraft Versions**: 1.20.1
-- **Mod Loaders**: Forge  
-- **Platforms**: Client and Server compatible  
+| | |
+|---|---|
+| **Minecraft** | 1.20.1 |
+| **Mod loader** | Forge 47+ |
+| **Java (runtime)** | 17 (bundled with Minecraft) |
+| **Side** | Client and server (optional on both) |
+
+## 🛠️ Building from source
+
+**Requirements:** JDK **17** (Temurin recommended), not Java 21+ alone. The mod targets Java 17 bytecode.
+
+```bash
+git clone https://github.com/alanjmrt94/ConsoleFilterNext.git
+cd ConsoleFilterNext
+./gradlew build
+```
+
+The JAR is produced in `build/libs/`. If you only have Java 25 installed, the build will fail until JDK 17 is available — use `./scripts/dev-env.sh verify` for guidance.
+
+**Tip:** use the interactive setup script:
+
+```bash
+./scripts/dev-env.sh
+```
+
+## ⚠️ Known limitations (v3.0.0)
+
+- `JavaFilter` and `SystemFilter` are not fully wired yet; most filtering goes through Log4j only.
+- Config changes require a game restart (hot reload not implemented).
+- `sourceFilters` and `threadFilters` use exact string matching (not substring).
 
 ## License
 
-This mod is available under the [Creative Commons Attribution-NonCommercial ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+[Creative Commons Attribution-NonCommercial ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) — see [LICENSE.md](LICENSE.md).
