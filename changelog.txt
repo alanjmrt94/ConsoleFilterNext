@@ -6,6 +6,15 @@
  - This fork maintained by alanjmrt94
 
 -----------------------------------------------------
+ VERSION 3.1.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Wire JavaFilter, Log4jFilter, SystemOutFilter, and SystemErrFilter
+ - Remove manual config file creation; use ForgeConfig only
+ - Support config hot-reload via ModConfigEvent
+ - Filter plain-text console lines (basic/regex) without log format parsing
+
+-----------------------------------------------------
  VERSION 3.0.1 - 1.20.1
 -----------------------------------------------------
 1.20.1:

@@ -15,7 +15,7 @@ public class JavaFilter implements Filter, CustomFilter {
 
 	@Override
 	public void applyFilter(ConsoleFilter mod) {
-		// Implementar la lógica para aplicar el filtro a Java Logging
+		java.util.logging.Logger.getLogger("").setFilter(this);
 	}
 
 	@Override

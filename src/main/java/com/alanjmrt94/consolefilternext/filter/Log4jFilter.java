@@ -6,16 +6,12 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
-import org.apache.logging.log4j.core.config.Node;
-import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.message.Message;
 
 import com.alanjmrt94.consolefilternext.ConsoleFilter;
 import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
 import com.alanjmrt94.consolefilternext.LogMessage;
 
-@Plugin(name = "ConsoleFilter", category = Node.CATEGORY, elementType = Filter.ELEMENT_TYPE)
 public class Log4jFilter implements Filter, CustomFilter {
 
 	private final ConsoleFilter mod;
@@ -50,7 +46,7 @@ public class Log4jFilter implements Filter, CustomFilter {
 
 	@Override
 	public State getState() {
-		return null;
+		return State.INITIALIZED;
 	}
 
 	@Override
@@ -77,88 +73,83 @@ public class Log4jFilter implements Filter, CustomFilter {
 
 	@Override
 	public Result getOnMismatch() {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result getOnMatch() {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String msg, Object... params) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3, Object p4) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3, Object p4, Object p5) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3, Object p4, Object p5, Object p6) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3, Object p4, Object p5, Object p6, Object p7) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3, Object p4, Object p5, Object p6, Object p7, Object p8) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, String message, Object p0, Object p1, Object p2,
 			Object p3, Object p4, Object p5, Object p6, Object p7, Object p8, Object p9) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, Object msg, Throwable t) {
-		return null;
+		return Result.NEUTRAL;
 	}
 
 	@Override
 	public Result filter(Logger logger, Level level, Marker marker, Message msg, Throwable t) {
-		return null;
-	}
-
-	@PluginFactory
-	public static Log4jFilter createFilter() {
-		return new Log4jFilter(null);
+		return Result.NEUTRAL;
 	}
 }

@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.File;
-import java.io.IOException;
 
 import org.slf4j.Logger;
 
 import com.alanjmrt94.consolefilternext.filter.CustomFilter;
 import com.alanjmrt94.consolefilternext.filter.JavaFilter;
 import com.alanjmrt94.consolefilternext.filter.Log4jFilter;
-import com.alanjmrt94.consolefilternext.filter.SystemFilter;
+import com.alanjmrt94.consolefilternext.filter.SystemErrFilter;
+import com.alanjmrt94.consolefilternext.filter.SystemOutFilter;
 import com.mojang.logging.LogUtils;
 
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -35,18 +35,19 @@ public class ConsoleFilter {
 	public ConsoleFilter() {
 		config.init();
 
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
+		var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+		modEventBus.addListener(this::commonSetup);
+		modEventBus.addListener(this::onConfigEvent);
 
-		createEmptyConfigFile();
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event) {
 		config.load();
-
 		LOGGER.info(config.filterCount() + " message(s) to be filtered.");
 
-		filterRegistry.add(new SystemFilter(this));
+		filterRegistry.add(new SystemOutFilter(this));
+		filterRegistry.add(new SystemErrFilter(this));
 		filterRegistry.add(new JavaFilter(this));
 		filterRegistry.add(new Log4jFilter(this));
 
@@ -55,38 +56,42 @@ public class ConsoleFilter {
 		}
 	}
 
-	public boolean shouldFilter(String message) {
+	private void onConfigEvent(ModConfigEvent event) {
+		if (!MODID.equals(event.getConfig().getModId())) {
+			return;
+		}
+		if (event.getConfig().getType() != ModConfig.Type.COMMON) {
+			return;
+		}
+		if (event instanceof ModConfigEvent.Loading || event instanceof ModConfigEvent.Reloading) {
+			config.load();
+			if (event instanceof ModConfigEvent.Reloading) {
+				LOGGER.info("Configuración recargada: {} filtro(s) activos.", config.filterCount());
+			}
+		}
+	}
+
+	public boolean shouldFilterMessage(String message) {
+		if (message == null) {
+			return false;
+		}
+
 		Matcher matcher = LOG_PATTERN.matcher(message);
 		if (matcher.matches()) {
 			LogMessage logMessage = new LogMessage(
-				matcher.group(1), // timestamp
-				matcher.group(2), // thread
-				matcher.group(3), // level
-				matcher.group(4), // source
-				matcher.group(5)  // message
+				matcher.group(1),
+				matcher.group(2),
+				matcher.group(3),
+				matcher.group(4),
+				matcher.group(5)
 			);
 			return config.shouldFilter(logMessage);
 		}
-		return false;
+
+		return config.shouldFilterPlain(message);
 	}
 
 	public ConsoleFilterConfig getConfig() {
 		return config;
-	}
-
-	private void createEmptyConfigFile() {
-		File configFile = new File("config/consolefilternext-common.toml");
-		if (!configFile.exists()) {
-			try {
-				configFile.getParentFile().mkdirs(); // Crea la carpeta si no existe
-				// Escribe el contenido [general] en el archivo
-				try (java.io.FileWriter writer = new java.io.FileWriter(configFile)) {
-					writer.write("[general]\n\n");
-					writer.write("levelFilters = [\"INFO\"]\n");
-				}
-			} catch (IOException e) {
-				LOGGER.error("No se pudo crear el archivo de configuración con el contenido [general].", e);
-			}
-		}
 	}
 }

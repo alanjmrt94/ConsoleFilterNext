@@ -3,6 +3,8 @@ package com.alanjmrt94.consolefilternext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -48,24 +50,36 @@ public class ConsoleFilterConfig {
 	}
 
 	public void load() {
+		filterList.clear();
+
 		for (String entry : basicFilters.get()) {
-			filterList.add(FilterEntry.wildcard(entry));
+			if (entry != null && !entry.isEmpty()) {
+				filterList.add(FilterEntry.wildcard(entry));
+			}
 		}
-		
+
 		for (String entry : regexFilters.get()) {
-			filterList.add(FilterEntry.regex(entry));
+			if (entry != null && !entry.isEmpty()) {
+				filterList.add(FilterEntry.regex(entry));
+			}
 		}
 
 		for (String level : levelFilters.get()) {
-			filterList.add(FilterEntry.level(level));
+			if (level != null && !level.isEmpty()) {
+				filterList.add(FilterEntry.level(level));
+			}
 		}
 
 		for (String thread : threadFilters.get()) {
-			filterList.add(FilterEntry.thread(thread));
+			if (thread != null && !thread.isEmpty()) {
+				filterList.add(FilterEntry.thread(thread));
+			}
 		}
 
 		for (String source : sourceFilters.get()) {
-			filterList.add(FilterEntry.source(source));
+			if (source != null && !source.isEmpty()) {
+				filterList.add(FilterEntry.source(source));
+			}
 		}
 	}
 
@@ -73,6 +87,33 @@ public class ConsoleFilterConfig {
 		for (FilterEntry entry : filterList) {
 			if (entry.shouldFilter(message)) {
 				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean shouldFilterPlain(String text) {
+		if (text == null || text.isEmpty()) {
+			return false;
+		}
+
+		for (String entry : basicFilters.get()) {
+			if (entry != null && !entry.isEmpty() && text.contains(entry)) {
+				return true;
+			}
+		}
+
+		for (String entry : regexFilters.get()) {
+			if (entry == null || entry.isEmpty()) {
+				continue;
+			}
+			try {
+				if (Pattern.compile(entry).matcher(text).find()) {
+					return true;
+				}
+			} catch (PatternSyntaxException ignored) {
+				// Expresión inválida en config; se omite
 			}
 		}
 

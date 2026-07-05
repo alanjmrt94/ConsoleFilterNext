@@ -141,10 +141,9 @@ The JAR is produced in `build/libs/`. Use `./scripts/dev-env.sh verify` if the b
 ./scripts/dev-env.sh
 ```
 
-## ⚠️ Known limitations (v3.0.0)
+## ⚠️ Known limitations (v3.1.0)
 
-- `JavaFilter` and `SystemFilter` are not fully wired yet; most filtering goes through Log4j only.
-- Config changes require a game restart (hot reload not implemented).
+- Config hot-reload reloads filter rules but requires filters to already be registered (restart if filters fail to apply on first launch).
 - `sourceFilters` and `threadFilters` use exact string matching (not substring).
 
 ## License
