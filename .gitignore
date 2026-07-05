@@ -25,7 +25,10 @@ gradle-app.setting
 *.iml
 
 # Configuración local del script de entorno de desarrollo
-scripts/.dev-env.local
+scripts/.release.local
 
 # Cursor — plan de desarrollo local (no versionar)
 .cursor/
+
+# Directorio de ejecución local (runClient / runServer)
+run/

@@ -6,6 +6,18 @@
  - This fork maintained by alanjmrt94
 
 -----------------------------------------------------
+ VERSION 3.2.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - sourceFilters use contains matching; levelFilters are case-insensitive
+ - Precompile regex patterns on config load
+ - Migrate to FMLJavaModLoadingContext constructor (Forge 47.4+ API)
+ - Add Minecraft/Forge dependency ranges to mods.toml
+ - Remove redundant Log4j/SLF4J dependencies from build
+ - Add unit tests for FilterEntry and LogMessage
+ - Rename dev-env.sh to release.sh; auto-generate run/eula.txt for runServer
+
+-----------------------------------------------------
  VERSION 3.1.0 - 1.20.1
 -----------------------------------------------------
 1.20.1:

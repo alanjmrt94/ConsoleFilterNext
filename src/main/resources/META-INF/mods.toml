@@ -4,11 +4,26 @@ license="CC BY-NC-SA 4.0"
 issueTrackerURL="https://github.com/alanjmrt94/ConsoleFilterNext/issues"
 
 [[mods]]
-modId="consolefilternext"
-version="1.20.1-3.1.0"
-displayName="ConsoleFilterNext"
-authors="alanjmrt94"
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
 credits="Fork of ConsoleFilter by Matthew Czyr (MattCzyr). Original contributors: NgLoader, MarkKoz, ChaosTheDude."
-description="An improved ConsoleFilter mod that filters log messages not only by text, but also by log level (info, error, etc.). Gain better control over your console output to reduce noise and focus on what's important — ideal for debugging and error tracking. Fork of ConsoleFilter by Matthew Czyr."
+description='''${mod_description}'''
+# Environment: ${mod_environment} — client and dedicated server
 displayTest="IGNORE_ALL_VERSION"
 logoFile="icon.png"
+
+[[dependencies.minecraft]]
+modId="minecraft"
+mandatory=true
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.forge]]
+modId="forge"
+mandatory=true
+versionRange="${forge_version_range}"
+ordering="AFTER"
+side="BOTH"

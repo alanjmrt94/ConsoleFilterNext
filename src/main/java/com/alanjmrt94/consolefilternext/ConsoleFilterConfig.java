@@ -18,6 +18,7 @@ public class ConsoleFilterConfig {
 	private ForgeConfigSpec spec;
 
 	private List<FilterEntry> filterList = new ArrayList<>();
+	private List<Pattern> compiledRegexPatterns = new ArrayList<>();
 
 	public void init() {
 		ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -33,7 +34,7 @@ public class ConsoleFilterConfig {
 				.defineList("regexFilters", Collections.emptyList(), obj -> true);
 
 		levelFilters = builder
-				.comment("Filter messages by log level (INFO, ERROR, WARN, etc.)")
+				.comment("Filter messages by log level (INFO, ERROR, WARN, etc.). Case-insensitive.")
 				.defineList("levelFilters", Collections.emptyList(), obj -> true);
 
 		threadFilters = builder
@@ -41,7 +42,7 @@ public class ConsoleFilterConfig {
 				.defineList("threadFilters", Collections.emptyList(), obj -> true);
 
 		sourceFilters = builder
-				.comment("Filter messages by source (e.g., 'net.minecraft.server.MinecraftServer')")
+				.comment("Filter messages by source/logger name. Matches when the source contains any of these strings (e.g. 'net.minecraft.server' matches 'net.minecraft.server.MinecraftServer').")
 				.defineList("sourceFilters", Collections.emptyList(), obj -> true);
 
 		builder.pop();
@@ -51,6 +52,7 @@ public class ConsoleFilterConfig {
 
 	public void load() {
 		filterList.clear();
+		compiledRegexPatterns.clear();
 
 		for (String entry : basicFilters.get()) {
 			if (entry != null && !entry.isEmpty()) {
@@ -60,7 +62,13 @@ public class ConsoleFilterConfig {
 
 		for (String entry : regexFilters.get()) {
 			if (entry != null && !entry.isEmpty()) {
-				filterList.add(FilterEntry.regex(entry));
+				try {
+					Pattern pattern = Pattern.compile(entry);
+					compiledRegexPatterns.add(pattern);
+					filterList.add(FilterEntry.regex(pattern));
+				} catch (PatternSyntaxException ignored) {
+					// Expresión inválida en config; se omite
+				}
 			}
 		}
 
@@ -104,16 +112,9 @@ public class ConsoleFilterConfig {
 			}
 		}
 
-		for (String entry : regexFilters.get()) {
-			if (entry == null || entry.isEmpty()) {
-				continue;
-			}
-			try {
-				if (Pattern.compile(entry).matcher(text).find()) {
-					return true;
-				}
-			} catch (PatternSyntaxException ignored) {
-				// Expresión inválida en config; se omite
+		for (Pattern pattern : compiledRegexPatterns) {
+			if (pattern.matcher(text).find()) {
+				return true;
 			}
 		}
 

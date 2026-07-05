@@ -4,7 +4,7 @@ An improved ConsoleFilter mod that filters log messages not only by text, but al
 
 [Downloads on CurseForge](https://minecraft.curseforge.com/projects/console-filter-next)
 
-> **Developers:** run `./scripts/dev-env.sh` for environment setup, toolchain checks, and build configuration.
+> **Developers:** run `./scripts/release.sh` for environment setup, toolchain checks, and build configuration.
 
 ---
 
@@ -55,8 +55,8 @@ levelFilters = ["INFO"]
 # Filters messages coming from specific threads
 threadFilters = ["Server thread"]
 
-# Filters messages based on their source (usually class names or packages)
-sourceFilters = ["net.minecraft.server.MinecraftServer"]
+# Filters messages based on their source (logger or class name). Matches when the source **contains** the string (package prefixes work).
+sourceFilters = ["net.minecraft.server"]
 
 # Filters messages using regular expressions (advanced)
 regexFilters = []
@@ -72,13 +72,15 @@ Here are some useful examples to help you get started with advanced filtering:
 levelFilters = ["DEBUG"]
 ```
 
+`levelFilters` are **case-insensitive** (`debug` matches `DEBUG`).
+
 ### ✅ Filter messages from a specific mod or package
 
 ```toml
 sourceFilters = ["com.example.mymod"]
 ```
 
-> **Note:** In v3.0.0, `sourceFilters` and `threadFilters` require an **exact** match. Substring/package-prefix matching is planned for v3.1.0.
+`sourceFilters` match when the logger/source **contains** the configured string, so package prefixes like `net.minecraft.server` match `net.minecraft.server.MinecraftServer`.
 
 ### ✅ Filter log messages from a specific thread
 
@@ -114,7 +116,7 @@ If **any** of the conditions match, the message will be **filtered out**.
 | **Minecraft** | 1.20.1 |
 | **Mod loader** | Forge 47+ |
 | **Java (runtime)** | 17 (bundled with Minecraft) |
-| **Side** | Client and server (optional on both) |
+| **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
 
 ## 🛠️ Building from source
 
@@ -129,22 +131,33 @@ If **any** of the conditions match, the message will be **filtered out**.
 ```bash
 git clone https://github.com/alanjmrt94/ConsoleFilterNext.git
 cd ConsoleFilterNext
-./scripts/dev-env.sh verify   # check your setup
+./scripts/release.sh verify   # check your setup
 ./gradlew build
 ```
 
-The JAR is produced in `build/libs/`. Use `./scripts/dev-env.sh verify` if the build fails due to Java/Gradle mismatch.
+The JAR is produced in `build/libs/`. Use `./scripts/release.sh verify` if the build fails due to Java/Gradle mismatch.
+
+### Local development runs (client and server)
+
+The mod is verified for **both** client and dedicated server. Use Gradle from the project root:
+
+| Command | Purpose |
+|---------|---------|
+| `./gradlew runClient` | Launch the Minecraft **client** with the mod in `run/mods/` |
+| `./gradlew runServer` | Launch a local **dedicated server** (auto-accepts EULA via `run/eula.txt`) |
+
+The `run/` directory holds local world data, configs, and logs and is **gitignored**.
 
 **Tip:** use the interactive setup script:
 
 ```bash
-./scripts/dev-env.sh
+./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v3.1.0)
+## ⚠️ Known limitations (v3.2.0)
 
 - Config hot-reload reloads filter rules but requires filters to already be registered (restart if filters fail to apply on first launch).
-- `sourceFilters` and `threadFilters` use exact string matching (not substring).
+- `threadFilters` still require an **exact** thread name match.
 
 ## License
 

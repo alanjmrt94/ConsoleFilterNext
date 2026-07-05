@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-LOCAL_CONFIG="${SCRIPT_DIR}/.dev-env.local"
+LOCAL_CONFIG="${SCRIPT_DIR}/.release.local"
 GRADLE_PROPERTIES="${PROJECT_ROOT}/gradle.properties"
 GRADLE_WRAPPER="${PROJECT_ROOT}/gradle/wrapper/gradle-wrapper.properties"
 BUILD_GRADLE="${PROJECT_ROOT}/build.gradle"
@@ -68,7 +68,7 @@ save_java_home() {
   local java_home="$1"
   cat > "${LOCAL_CONFIG}" <<EOF
 # Configuración local del entorno de desarrollo (no versionar)
-# Generado por scripts/dev-env.sh
+# Generado por scripts/release.sh
 
 export JAVA_HOME="${java_home}"
 export PATH="\${JAVA_HOME}/bin:\${PATH}"
@@ -244,7 +244,7 @@ update_gradle_wrapper() {
   fi
 
   log_ok "distributionUrl → gradle-${new}-bin.zip (descarga pendiente al próximo ./gradlew)"
-  log_info "Configura JAVA_HOME con Java 17 o 21: ./scripts/dev-env.sh java"
+  log_info "Configura JAVA_HOME con Java 17 o 21: ./scripts/release.sh java"
   return 1
 }
 
@@ -330,7 +330,7 @@ show_java_install_commands() {
   echo "  Configurar en este proyecto:"
   print_cmd "export JAVA_HOME=/usr/lib/jvm/java-${toolchain}-openjdk-amd64"
   print_cmd "export PATH=\"\${JAVA_HOME}/bin:\${PATH}\""
-  print_cmd "./scripts/dev-env.sh java"
+  print_cmd "./scripts/release.sh java"
   echo
 }
 
@@ -354,7 +354,7 @@ show_java_switch_commands() {
       ;;
   esac
   print_cmd "java -version"
-  print_cmd "./scripts/dev-env.sh java"
+  print_cmd "./scripts/release.sh java"
   echo
 }
 
@@ -386,7 +386,7 @@ show_gradle_update_commands() {
   print_cmd "sdk install gradle ${recommended}"
   echo
   echo "  Desde este script:"
-  print_cmd "./scripts/dev-env.sh    # menú → 2 → 4 (Gradle) o 3 (perfil recomendado)"
+  print_cmd "./scripts/release.sh    # menú → 2 → 4 (Gradle) o 3 (perfil recomendado)"
   echo
 }
 
@@ -414,7 +414,7 @@ show_forge_update_commands() {
   print_cmd "curl -s https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml | head -20"
   echo
   echo "  Desde este script:"
-  print_cmd "./scripts/dev-env.sh    # menú → 2 → 2 (Forge) o 3 (perfil recomendado)"
+  print_cmd "./scripts/release.sh    # menú → 2 → 2 (Forge) o 3 (perfil recomendado)"
   echo
 }
 
@@ -435,7 +435,7 @@ show_forgegradle_update_commands() {
   print_cmd "./gradlew build"
   echo
   echo "  Desde este script:"
-  print_cmd "./scripts/dev-env.sh    # menú → 2 → 5 (ForgeGradle)"
+  print_cmd "./scripts/release.sh    # menú → 2 → 5 (ForgeGradle)"
   echo
 }
 
@@ -476,7 +476,7 @@ show_contextual_commands() {
     if has_jdk_version "21"; then
       echo -e "  ${YELLOW}JDK ${java_tc} no instalado localmente${RESET} — OK con Java 21 como launcher:"
       print_cmd "export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64"
-      print_cmd "./scripts/dev-env.sh java"
+      print_cmd "./scripts/release.sh java"
       echo "  (Gradle descarga JDK ${java_tc} para el toolchain; Java 21 launcher compila OK)"
       echo
     else
@@ -488,7 +488,7 @@ show_contextual_commands() {
         macos)  print_cmd "brew install openjdk@${java_tc}" ;;
         *)      print_cmd "sdk install java ${java_tc}.0.13-tem" ;;
       esac
-      print_cmd "./scripts/dev-env.sh java"
+      print_cmd "./scripts/release.sh java"
       echo
     fi
   fi
@@ -524,7 +524,7 @@ show_contextual_commands() {
     echo
   fi
 
-  echo "  Ver todos los comandos: menú → 8 o ./scripts/dev-env.sh commands"
+  echo "  Ver todos los comandos: menú → 8 o ./scripts/release.sh commands"
   echo
 }
 
@@ -1102,8 +1102,8 @@ build_menu() {
     echo
     echo "  1) ./gradlew build"
     echo "  2) ./gradlew clean build"
-    echo "  3) ./gradlew runClient"
-    echo "  4) ./gradlew runServer"
+    echo "  3) ./gradlew runClient   — cliente local (desarrollo)"
+    echo "  4) ./gradlew runServer   — servidor dedicado (EULA auto en run/)"
     echo "  5) ./gradlew --version"
     echo "  6) Tarea personalizada"
     echo "  0) Volver"
@@ -1145,7 +1145,7 @@ fix_permissions() {
   find "${PROJECT_ROOT}" -type d -not -path "${PROJECT_ROOT}/.git/*" -exec chmod 755 {} + 2>/dev/null || true
   find "${PROJECT_ROOT}" -type f -not -path "${PROJECT_ROOT}/.git/*" ! -name 'gradlew' -exec chmod 644 {} + 2>/dev/null || true
   chmod 755 "${PROJECT_ROOT}/gradlew" 2>/dev/null || true
-  chmod 755 "${SCRIPT_DIR}/dev-env.sh" 2>/dev/null || true
+  chmod 755 "${SCRIPT_DIR}/release.sh" 2>/dev/null || true
   log_ok "Permisos corregidos (dirs 755, archivos 644, gradlew 755)"
   pause
 }
@@ -1171,8 +1171,7 @@ tools_menu() {
     echo "  3) Editar gradle.properties"
     echo "  4) Editar build.gradle"
     echo "  5) Editar gradle-wrapper.properties"
-    echo "  6) Ver plan de desarrollo (.cursor/DEVELOPMENT.md)"
-    echo "  7) Ver comandos de instalación/actualización"
+    echo "  6) Ver comandos de instalación/actualización"
     echo "  0) Volver"
     echo
     read -r -p "Opción: " choice
@@ -1182,8 +1181,7 @@ tools_menu() {
       3) open_config_file "${GRADLE_PROPERTIES}" ;;
       4) open_config_file "${BUILD_GRADLE}" ;;
       5) open_config_file "${GRADLE_WRAPPER}" ;;
-      6) open_config_file "${PROJECT_ROOT}/.cursor/DEVELOPMENT.md" ;;
-      7) show_all_suggested_commands ;;
+      6) show_all_suggested_commands ;;
       0) return ;;
       *) log_error "Opción inválida"; pause ;;
     esac
@@ -1193,7 +1191,7 @@ tools_menu() {
 show_help() {
   clear
   cat <<'EOF'
-═══ Ayuda — dev-env.sh ═══
+═══ Ayuda — release.sh ═══
 
 Este script gestiona el entorno de desarrollo de Console Filter Next.
 
@@ -1202,26 +1200,31 @@ REGLAS IMPORTANTES
   • Launcher Gradle: JDK 17 recomendado; JDK 21 alternativa válida (compila OK).
   • Java 25 como launcher requiere Gradle ≥ 8.14.3.
   • Forge y Minecraft deben ser versiones compatibles entre sí.
+  • El mod funciona en cliente y servidor; ambos entornos se pueden probar con Gradle.
+
+EJECUCIÓN LOCAL (cliente y servidor)
+  • ./gradlew runClient  — inicia el cliente con el mod cargado desde run/
+  • ./gradlew runServer  — inicia servidor dedicado; genera run/eula.txt (eula=true)
+  • run/ está en .gitignore (datos locales de desarrollo, no versionar)
 
 ARCHIVOS QUE MODIFICA
   • gradle.properties      — minecraft_version, forge_version, mod_version
   • build.gradle           — Java toolchain, ForgeGradle
   • gradle/wrapper/...     — versión de Gradle
-  • scripts/.dev-env.local — JAVA_HOME local (no versionar)
+  • scripts/.release.local — JAVA_HOME local (no versionar)
 
 PERFIL RECOMENDADO (menú 3 → opción 1)
   Minecraft 1.20.1 | Forge 47.4.10 | Launcher Java 17 o 21 | Gradle 8.14.3 | FG [6.0,6.2)
 
 DOCUMENTACIÓN
   README.md                    — información del mod y fork de Matthew Czyr
-  .cursor/DEVELOPMENT.md       — plan de desarrollo local (no versionado)
-  scripts/dev-env.sh           — entorno de desarrollo interactivo
+  scripts/release.sh           — entorno de desarrollo interactivo
 
 USO RÁPIDO
-  ./scripts/dev-env.sh          # menú interactivo
-  ./scripts/dev-env.sh verify   # solo verificar entorno
-  ./scripts/dev-env.sh profile  # aplicar perfil recomendado
-  ./scripts/dev-env.sh commands # ver comandos de instalar/actualizar
+  ./scripts/release.sh          # menú interactivo
+  ./scripts/release.sh verify   # solo verificar entorno
+  ./scripts/release.sh profile  # aplicar perfil recomendado
+  ./scripts/release.sh commands # ver comandos de instalar/actualizar
 
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk

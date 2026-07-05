@@ -14,7 +14,6 @@ import com.alanjmrt94.consolefilternext.filter.SystemErrFilter;
 import com.alanjmrt94.consolefilternext.filter.SystemOutFilter;
 import com.mojang.logging.LogUtils;
 
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -32,14 +31,14 @@ public class ConsoleFilter {
 	private final ConsoleFilterConfig config = new ConsoleFilterConfig();
 	private final List<CustomFilter> filterRegistry = new ArrayList<>();
 
-	public ConsoleFilter() {
+	public ConsoleFilter(FMLJavaModLoadingContext context) {
 		config.init();
 
-		var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+		var modEventBus = context.getModEventBus();
 		modEventBus.addListener(this::commonSetup);
 		modEventBus.addListener(this::onConfigEvent);
 
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
+		context.registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event) {

@@ -1,7 +1,7 @@
-# Copia este archivo a .dev-env.local para fijar JAVA_HOME en tu máquina.
-# El script dev-env.sh lo genera automáticamente al configurar Java.
+# Copia este archivo a .release.local para fijar JAVA_HOME en tu máquina.
+# El script release.sh lo genera automáticamente al configurar Java.
 #
-# cp scripts/.dev-env.local.example scripts/.dev-env.local
+# cp scripts/.release.local.example scripts/.release.local
 #
 # Recomendado (Forge oficial):
 # export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
