@@ -4,7 +4,7 @@ An improved ConsoleFilter mod that filters log messages not only by text, but al
 
 [Downloads on CurseForge](https://minecraft.curseforge.com/projects/console-filter-next)
 
-> **Developers:** run `./scripts/dev-env.sh` for environment setup, toolchain checks (JDK 17), and build configuration.
+> **Developers:** run `./scripts/dev-env.sh` for environment setup, toolchain checks, and build configuration.
 
 ---
 
@@ -118,15 +118,22 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 ## 🛠️ Building from source
 
-**Requirements:** JDK **17** (Temurin recommended), not Java 21+ alone. The mod targets Java 17 bytecode.
+**Requirements:** The mod targets **Java 17 bytecode** (MC 1.20.1). For running Gradle:
+
+| Launcher JDK | Status |
+|--------------|--------|
+| **Java 17** | Recommended (official Forge guidance) |
+| **Java 21** | Supported alternative — builds successfully in this project |
+| **Java 25** | Requires Gradle 8.14.3+ as launcher |
 
 ```bash
 git clone https://github.com/alanjmrt94/ConsoleFilterNext.git
 cd ConsoleFilterNext
+./scripts/dev-env.sh verify   # check your setup
 ./gradlew build
 ```
 
-The JAR is produced in `build/libs/`. If you only have Java 25 installed, the build will fail until JDK 17 is available — use `./scripts/dev-env.sh verify` for guidance.
+The JAR is produced in `build/libs/`. Use `./scripts/dev-env.sh verify` if the build fails due to Java/Gradle mismatch.
 
 **Tip:** use the interactive setup script:
 

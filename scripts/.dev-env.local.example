@@ -3,5 +3,10 @@
 #
 # cp scripts/.dev-env.local.example scripts/.dev-env.local
 #
+# Recomendado (Forge oficial):
 # export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+#
+# Alternativa válida (compila OK en este proyecto):
+# export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+#
 # export PATH="${JAVA_HOME}/bin:${PATH}"

@@ -130,6 +130,14 @@ java_major_version() {
   "${java_bin}" -version 2>&1 | head -1 | sed -E 's/.*version "([0-9]+).*/\1/'
 }
 
+# Launcher JVM aceptado para ejecutar Gradle (no confundir con bytecode del mod → siempre 17)
+is_recommended_launcher_java() { [[ "$(java_major_version "${1:-java}")" == "17" ]]; }
+is_acceptable_launcher_java() {
+  local major
+  major="$(java_major_version "${1:-java}")"
+  [[ "${major}" == "17" || "${major}" == "21" ]]
+}
+
 find_installed_jdks() {
   local paths=(
     "/usr/lib/jvm"
@@ -465,15 +473,30 @@ show_contextual_commands() {
   echo "────────────────────────────────────────"
 
   if ! has_jdk_version "${java_tc}"; then
-    echo -e "  ${YELLOW}Java ${java_tc}${RESET} — instalar:"
-    case "$(detect_platform)" in
-      debian) print_cmd "sudo apt install -y openjdk-${java_tc}-jdk" ;;
-      fedora) print_cmd "sudo dnf install -y java-${java_tc}-openjdk-devel" ;;
-      arch)   print_cmd "sudo pacman -S jdk${java_tc}-openjdk" ;;
-      macos)  print_cmd "brew install openjdk@${java_tc}" ;;
-      *)      print_cmd "sdk install java ${java_tc}.0.13-tem" ;;
-    esac
-    print_cmd "./scripts/dev-env.sh java"
+    if has_jdk_version "21"; then
+      echo -e "  ${YELLOW}JDK ${java_tc} no instalado localmente${RESET} — OK con Java 21 como launcher:"
+      print_cmd "export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64"
+      print_cmd "./scripts/dev-env.sh java"
+      echo "  (Gradle descarga JDK ${java_tc} para el toolchain; Java 21 launcher compila OK)"
+      echo
+    else
+      echo -e "  ${YELLOW}Java ${java_tc}${RESET} — instalar:"
+      case "$(detect_platform)" in
+        debian) print_cmd "sudo apt install -y openjdk-${java_tc}-jdk" ;;
+        fedora) print_cmd "sudo dnf install -y java-${java_tc}-openjdk-devel" ;;
+        arch)   print_cmd "sudo pacman -S jdk${java_tc}-openjdk" ;;
+        macos)  print_cmd "brew install openjdk@${java_tc}" ;;
+        *)      print_cmd "sdk install java ${java_tc}.0.13-tem" ;;
+      esac
+      print_cmd "./scripts/dev-env.sh java"
+      echo
+    fi
+  fi
+
+  if command -v java &>/dev/null && [[ "$(java_major_version java)" == "21" ]]; then
+    echo -e "  ${YELLOW}Java 21 activo${RESET} — alternativa válida (recomendado: JDK 17):"
+    print_cmd "# compilar con configuración actual"
+    print_cmd "./gradlew build"
     echo
   fi
 
@@ -517,10 +540,16 @@ show_java_status() {
     echo "  versión      : $(java -version 2>&1 | head -1)"
     local major
     major="$(java_major_version java)"
-    if [[ "${major}" -ge 22 ]]; then
-      log_warn "Java ${major} como launcher puede fallar con Gradle 8.1.x (usar JDK 17/21 o Gradle ≥ 8.14.3)"
+    if is_recommended_launcher_java java; then
+      log_ok "Java ${major} como launcher (recomendado para Forge 1.20.1)"
+    elif [[ "${major}" == "21" ]]; then
+      log_warn "Java 21 como launcher: alternativa válida — compila correctamente (recomendado oficial: JDK 17)"
+    elif [[ "${major}" -ge 22 ]]; then
+      log_warn "Java ${major} como launcher puede fallar con Gradle antiguo (usar JDK 17/21 o Gradle ≥ 8.14.3)"
     fi
   fi
+
+  echo "  Bytecode mod : Java $(get_java_release) (fijo para MC 1.20.1, independiente del launcher)"
 
   echo "  JAVA_HOME    : ${JAVA_HOME:-<no definido>}"
   local toolchain release
@@ -628,8 +657,15 @@ check_recommendations() {
   if command -v java &>/dev/null; then
     local major
     major="$(java_major_version java)"
-    if [[ "${major}" -ge 25 && "$(printf '%s\n' "${gradle_ver}" "8.14.3" | sort -V | head -1)" == "${gradle_ver}" ]]; then
-      log_warn "Java ${major} + Gradle ${gradle_ver} → instalar JDK 17 o actualizar Gradle"
+    if is_recommended_launcher_java java; then
+      : # Java 17 launcher — sin advertencia
+    elif [[ "${major}" == "21" ]]; then
+      log_warn "Launcher Java 21: alternativa válida verificada (recomendado oficial: JDK 17)"
+    elif [[ "${major}" -ge 25 && "$(printf '%s\n' "${gradle_ver}" "8.14.3" | sort -V | head -1)" == "${gradle_ver}" ]]; then
+      log_warn "Java ${major} + Gradle ${gradle_ver} → usar JDK 17/21 como launcher o actualizar Gradle"
+      issues=$((issues + 1))
+    elif [[ "${major}" -ge 22 ]]; then
+      log_warn "Java ${major} como launcher → preferir JDK 17 o 21"
       issues=$((issues + 1))
     fi
   fi
@@ -816,6 +852,95 @@ configure_versions_menu() {
   done
 }
 
+find_first_jdk_for_major() {
+  local want="$1"
+  while IFS= read -r jdk; do
+    [[ -z "${jdk}" ]] && continue
+    local major
+    major="$("${jdk}/bin/java" -version 2>&1 | head -1 | sed -E 's/.*version "([0-9]+).*/\1/')"
+    if [[ "${major}" == "${want}" ]]; then
+      echo "${jdk}"
+      return 0
+    fi
+  done < <(find_installed_jdks)
+  return 1
+}
+
+# Elige JDK 17 o 21 como launcher de Gradle al aplicar un perfil
+select_profile_launcher_java() {
+  local jdk17 jdk21 choice default_choice
+
+  jdk17="$(find_first_jdk_for_major 17 || true)"
+  jdk21="$(find_first_jdk_for_major 21 || true)"
+
+  echo
+  echo -e "${BOLD}Launcher JVM para Gradle${RESET} (el mod sigue compilando a bytecode Java 17):"
+  echo
+
+  if [[ -n "${jdk17}" ]]; then
+    echo "  1) Java 17 — recomendado (Forge oficial)"
+    echo "     ${jdk17}"
+  else
+    echo "  1) Java 17 — recomendado (no instalado en este sistema)"
+  fi
+
+  if [[ -n "${jdk21}" ]]; then
+    echo "  2) Java 21 — alternativa válida (compila OK en este proyecto)"
+    echo "     ${jdk21}"
+  else
+    echo "  2) Java 21 — alternativa válida (no instalado en este sistema)"
+  fi
+
+  echo "  0) Omitir (no cambiar JAVA_HOME)"
+  echo
+
+  if [[ -n "${jdk17}" ]]; then
+    default_choice="1"
+  elif [[ -n "${jdk21}" ]]; then
+    default_choice="2"
+  else
+    log_warn "No se encontró JDK 17 ni 21. Instala uno antes de continuar."
+    show_java_install_commands
+    return 1
+  fi
+
+  read -r -p "Selecciona launcher Java [${default_choice}]: " choice
+  choice="${choice:-${default_choice}}"
+
+  case "${choice}" in
+    1)
+      if [[ -z "${jdk17}" ]]; then
+        log_error "JDK 17 no está instalado"
+        print_cmd "sudo apt install -y openjdk-17-jdk"
+        return 1
+      fi
+      save_java_home "${jdk17}"
+      export JAVA_HOME="${jdk17}"
+      export PATH="${JAVA_HOME}/bin:${PATH}"
+      log_ok "JAVA_HOME → ${jdk17} (Java 17, recomendado)"
+      ;;
+    2)
+      if [[ -z "${jdk21}" ]]; then
+        log_error "JDK 21 no está instalado"
+        print_cmd "sudo apt install -y openjdk-21-jdk"
+        return 1
+      fi
+      save_java_home "${jdk21}"
+      export JAVA_HOME="${jdk21}"
+      export PATH="${JAVA_HOME}/bin:${PATH}"
+      log_warn "JAVA_HOME → ${jdk21} (Java 21, alternativa válida)"
+      ;;
+    0)
+      log_info "JAVA_HOME sin cambios"
+      ;;
+    *)
+      log_error "Opción inválida"
+      return 1
+      ;;
+  esac
+  return 0
+}
+
 # ─── Perfiles predefinidos ────────────────────────────────────────────────────
 
 apply_profile_1201_recommended() {
@@ -823,7 +948,8 @@ apply_profile_1201_recommended() {
   echo
   echo "  Minecraft   → 1.20.1"
   echo "  Forge       → 47.4.10"
-  echo "  Java        → 17"
+  echo "  Bytecode    → Java 17 (target del mod, fijo)"
+  echo "  Launcher    → Java 17 (recomendado) o Java 21 (alternativa válida)"
   echo "  Gradle      → 8.14.3"
   echo "  ForgeGradle → 6.0.29"
   echo
@@ -845,15 +971,7 @@ apply_profile_1201_recommended() {
   load_local_config
   update_gradle_wrapper "8.14.3" || true
 
-  # Intentar seleccionar JDK 17 automáticamente
-  while IFS= read -r jdk; do
-    [[ -z "${jdk}" ]] && continue
-    if [[ "${jdk}" == *"java-17"* || "${jdk}" == *"jdk-17"* || "${jdk}" == *"17"* ]]; then
-      save_java_home "${jdk}"
-      log_ok "JAVA_HOME configurado a ${jdk}"
-      break
-    fi
-  done < <(find_installed_jdks)
+  select_profile_launcher_java || true
 
   log_ok "Perfil MC 1.20.1 recomendado aplicado"
   pause
@@ -876,7 +994,7 @@ profiles_menu() {
     clear
     echo -e "${BOLD}${CYAN}═══ Perfiles predefinidos ═══${RESET}"
     echo
-    echo "  1) MC 1.20.1 recomendado (Forge 47.4.10, Java 17, Gradle 8.14.3)"
+    echo "  1) MC 1.20.1 recomendado (Forge 47.4.10, launcher Java 17 o 21, Gradle 8.14.3)"
     echo "  2) MC 1.20.1 legacy (Forge 47.1.0, Gradle 8.1.1)"
     echo "  0) Volver"
     echo
@@ -1080,8 +1198,9 @@ show_help() {
 Este script gestiona el entorno de desarrollo de Console Filter Next.
 
 REGLAS IMPORTANTES
-  • MC 1.20.1 requiere bytecode Java 17 (no Java 25 como target del mod).
-  • Gradle puede ejecutarse con Java 17/21; Java 25 requiere Gradle ≥ 8.14.3.
+  • MC 1.20.1 requiere bytecode Java 17 (target del mod, no del launcher).
+  • Launcher Gradle: JDK 17 recomendado; JDK 21 alternativa válida (compila OK).
+  • Java 25 como launcher requiere Gradle ≥ 8.14.3.
   • Forge y Minecraft deben ser versiones compatibles entre sí.
 
 ARCHIVOS QUE MODIFICA
@@ -1091,7 +1210,7 @@ ARCHIVOS QUE MODIFICA
   • scripts/.dev-env.local — JAVA_HOME local (no versionar)
 
 PERFIL RECOMENDADO (menú 3 → opción 1)
-  Minecraft 1.20.1 | Forge 47.4.10 | Java 17 | Gradle 8.14.3 | FG 6.0.29
+  Minecraft 1.20.1 | Forge 47.4.10 | Launcher Java 17 o 21 | Gradle 8.14.3 | FG 6.0.29
 
 DOCUMENTACIÓN
   README.md                    — información del mod y fork de Matthew Czyr
@@ -1105,7 +1224,8 @@ USO RÁPIDO
   ./scripts/dev-env.sh commands # ver comandos de instalar/actualizar
 
 COMANDOS EXTERNOS FRECUENTES
-  Java (Ubuntu):   sudo apt install openjdk-17-jdk
+  Java 17 (recomendado): sudo apt install openjdk-17-jdk
+  Java 21 (alternativa): sudo apt install openjdk-21-jdk
   Gradle:          ./gradlew wrapper --gradle-version=8.14.3
   Forge:           sed -i 's|^forge_version=.*|forge_version=47.4.10|' gradle.properties
                    ./gradlew --refresh-dependencies clean build
