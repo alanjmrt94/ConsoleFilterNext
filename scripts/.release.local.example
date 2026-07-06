@@ -13,11 +13,11 @@ export GITHUB_REMOTE=origin
 # CurseForge: https://console.curseforge.com → Account → API tokens
 export CURSEFORGE_API_TOKEN="c7bbb4a0-..."
 export CURSEFORGE_PROJECT_SLUG="consolefilternext"
-export CURSEFORGE_PROJECT_ID="ConsoleFilterNext"   # opcional; si vacío se resuelve por slug
+export CURSEFORGE_PROJECT_ID=""   # opcional; ID numérico de CurseForge (vacío = resolver por slug)
 #
 # Modrinth: https://modrinth.com/settings/account → Personal access tokens
 export MODRINTH_TOKEN="mrp_..."
 export MODRINTH_PROJECT_SLUG="consolefilternext"
-export MODRINTH_PROJECT_ID="ConsoleFilterNext"     # opcional; si vacío se resuelve por slug
+export MODRINTH_PROJECT_ID=""     # opcional; ID Base62 de Modrinth (vacío = resolver por slug)
 #
 export RELEASE_TYPE="release"     # release | beta | alpha
