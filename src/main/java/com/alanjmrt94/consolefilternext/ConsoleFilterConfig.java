@@ -49,7 +49,7 @@ public class ConsoleFilterConfig {
 				.defineList("levelFilters", Collections.emptyList(), obj -> true);
 
 		threadFilters = builder
-				.comment("Filter messages by thread name (e.g., 'Server thread', 'Render thread', etc.)")
+				.comment("Filter messages by thread name. Matches when the thread name contains any of these strings (e.g. 'Server' matches 'Server thread').")
 				.defineList("threadFilters", Collections.emptyList(), obj -> true);
 
 		sourceFilters = builder
@@ -152,7 +152,11 @@ public class ConsoleFilterConfig {
 	}
 
 	private boolean applyMode(boolean matches) {
-		return whitelistMode.get() ? !matches : matches;
+		return applyFilterMode(matches, whitelistMode.get());
+	}
+
+	static boolean applyFilterMode(boolean matches, boolean whitelistMode) {
+		return whitelistMode ? !matches : matches;
 	}
 
 	public int filterCount() {

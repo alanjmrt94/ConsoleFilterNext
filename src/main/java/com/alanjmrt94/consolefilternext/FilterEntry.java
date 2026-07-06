@@ -28,9 +28,11 @@ public interface FilterEntry {
 
 	public static FilterEntry thread(String thread, boolean ignoreCase) {
 		if (ignoreCase) {
-			return message -> message.getThread().equalsIgnoreCase(thread);
+			String needle = thread.toLowerCase(Locale.ROOT);
+			return message -> message.getThread() != null
+				&& message.getThread().toLowerCase(Locale.ROOT).contains(needle);
 		}
-		return message -> message.getThread().equals(thread);
+		return message -> message.getThread() != null && message.getThread().contains(thread);
 	}
 
 	public static FilterEntry source(String source, boolean ignoreCase) {

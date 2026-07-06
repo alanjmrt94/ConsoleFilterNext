@@ -6,6 +6,13 @@
  - This fork maintained by alanjmrt94
 
 -----------------------------------------------------
+ VERSION 3.3.1 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - threadFilters use contains matching (aligned with sourceFilters)
+ - Refactor Log4jFilter to extend AbstractFilter
+
+-----------------------------------------------------
  VERSION 3.3.0 - 1.20.1
 -----------------------------------------------------
 1.20.1:

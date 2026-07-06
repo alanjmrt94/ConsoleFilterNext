@@ -88,8 +88,10 @@ sourceFilters = ["com.example.mymod"]
 ### ✅ Filter log messages from a specific thread
 
 ```toml
-threadFilters = ["Render thread"]
+threadFilters = ["Server"]
 ```
+
+`threadFilters` match when the thread name **contains** the configured string (`Server` matches `Server thread`).
 
 ### ✅ Filter messages that contain specific phrases
 
@@ -187,10 +189,10 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 ./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v3.3.0)
+## ⚠️ Known limitations (v3.3.1)
 
 - Config hot-reload via `/consolefilter reload` re-parses filter rules; filters must already be registered at startup.
-- `threadFilters` still require an exact thread name match unless `ignoreCase = true` (still exact string, not substring).
+- In-game config UI beyond Forge Mod Options is not implemented yet (see development plan).
 
 ## License
 

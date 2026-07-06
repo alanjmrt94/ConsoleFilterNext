@@ -53,14 +53,14 @@ class FilterEntryTest {
 	}
 
 	@Test
-	void threadFilterRequiresExactMatch() {
-		assertTrue(FilterEntry.thread("Server thread", false).shouldFilter(sampleMessage()));
-		assertFalse(FilterEntry.thread("Server", false).shouldFilter(sampleMessage()));
+	void threadFilterUsesContains() {
+		assertTrue(FilterEntry.thread("Server", false).shouldFilter(sampleMessage()));
+		assertFalse(FilterEntry.thread("Render", false).shouldFilter(sampleMessage()));
 	}
 
 	@Test
 	void threadFilterIgnoresCaseWhenEnabled() {
-		assertTrue(FilterEntry.thread("server thread", true).shouldFilter(sampleMessage()));
+		assertTrue(FilterEntry.thread("server", true).shouldFilter(sampleMessage()));
 	}
 
 	@Test
