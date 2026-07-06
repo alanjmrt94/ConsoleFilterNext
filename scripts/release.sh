@@ -424,10 +424,10 @@ show_forgegradle_update_commands() {
 
   echo -e "${BOLD}ForgeGradle — actualizar plugin de build${RESET}"
   echo "────────────────────────────────────────"
-  echo "  Versión actual: ${current} | Recomendada: [6.0,6.2)"
+  echo "  Versión actual: ${current} | Recomendada: 6.0.47"
   echo
   echo "  Editar build.gradle:"
-  print_cmd "sed -i \"s|id 'net.minecraftforge.gradle' version '[^']*'|id 'net.minecraftforge.gradle' version '[6.0,6.2)'|\" build.gradle"
+  print_cmd "sed -i \"s|id 'net.minecraftforge.gradle' version '[^']*'|id 'net.minecraftforge.gradle' version '6.0.47'|\" build.gradle"
   echo
   echo "  Sincronizar proyecto:"
   print_cmd "cd ${PROJECT_ROOT}"
@@ -797,7 +797,7 @@ set_forgegradle_version() {
   local current new
   current="$(get_forgegradle_version)"
   echo "ForgeGradle actual: ${current}"
-  echo "Recomendado: [6.0,6.2) (rango; 6.0.29 fijado falla con Gradle 8.14.3)"
+  echo "Recomendado: 6.0.47 (compatible con Gradle 8.14.3; no usar 6.0.29 fijado)"
   read -r -p "Nueva versión de ForgeGradle [${current}]: " new
   new="${new:-${current}}"
 
@@ -951,7 +951,7 @@ apply_profile_1201_recommended() {
   echo "  Bytecode    → Java 17 (target del mod, fijo)"
   echo "  Launcher    → Java 17 (recomendado) o Java 21 (alternativa válida)"
   echo "  Gradle      → 8.14.3"
-  echo "  ForgeGradle → [6.0,6.2)"
+  echo "  ForgeGradle → 6.0.47"
   echo
   read -r -p "¿Aplicar este perfil? [s/N]: " confirm
   [[ "${confirm,,}" == "s" || "${confirm,,}" == "si" ]] || return
@@ -966,7 +966,7 @@ apply_profile_1201_recommended() {
 
   sed -i 's/JavaLanguageVersion\.of([0-9]\+)/JavaLanguageVersion.of(17)/' "${BUILD_GRADLE}"
   sed -i 's/options\.release = [0-9]\+/options.release = 17/' "${BUILD_GRADLE}"
-  sed -i "s|id 'net.minecraftforge.gradle' version '[^']*'|id 'net.minecraftforge.gradle' version '[6.0,6.2)'|" "${BUILD_GRADLE}"
+  sed -i "s|id 'net.minecraftforge.gradle' version '[^']*'|id 'net.minecraftforge.gradle' version '6.0.47'|" "${BUILD_GRADLE}"
 
   load_local_config
   update_gradle_wrapper "8.14.3" || true
@@ -983,7 +983,7 @@ apply_profile_1201_legacy() {
   [[ "${confirm,,}" == "s" || "${confirm,,}" == "si" ]] || return
 
   set_prop "forge_version" "47.1.0" "${GRADLE_PROPERTIES}"
-  sed -i "s|id 'net.minecraftforge.gradle' version '[^']*'|id 'net.minecraftforge.gradle' version '[6.0,6.2)'|" "${BUILD_GRADLE}"
+  sed -i "s|id 'net.minecraftforge.gradle' version '[^']*'|id 'net.minecraftforge.gradle' version '6.0.47'|" "${BUILD_GRADLE}"
   sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.1.1-bin.zip|' "${GRADLE_WRAPPER}"
   log_ok "Perfil legacy restaurado"
   pause
@@ -1214,7 +1214,7 @@ ARCHIVOS QUE MODIFICA
   • scripts/.release.local — JAVA_HOME local (no versionar)
 
 PERFIL RECOMENDADO (menú 3 → opción 1)
-  Minecraft 1.20.1 | Forge 47.4.10 | Launcher Java 17 o 21 | Gradle 8.14.3 | FG [6.0,6.2)
+  Minecraft 1.20.1 | Forge 47.4.10 | Launcher Java 17 o 21 | Gradle 8.14.3 | FG 6.0.47
 
 DOCUMENTACIÓN
   README.md                    — información del mod y fork de Matthew Czyr

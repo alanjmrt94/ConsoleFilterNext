@@ -44,5 +44,9 @@ public interface FilterEntry {
 		return message -> message.getSource() != null && message.getSource().contains(source);
 	}
 
+	public static FilterEntry logger(String logger, boolean ignoreCase) {
+		return source(logger, ignoreCase);
+	}
+
 	boolean shouldFilter(LogMessage message);
 }

@@ -2,6 +2,7 @@ package com.alanjmrt94.consolefilternext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +21,8 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.api.distmarker.Dist;
 
 @Mod(ConsoleFilter.MODID)
 public class ConsoleFilter {
@@ -45,6 +48,10 @@ public class ConsoleFilter {
 		modEventBus.addListener(this::onConfigEvent);
 
 		context.registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
+
+		if (FMLEnvironment.dist == Dist.CLIENT) {
+			ConsoleFilterClient.register(context);
+		}
 	}
 
 	public static ConsoleFilter getInstance() {
@@ -131,5 +138,9 @@ public class ConsoleFilter {
 
 	public FilterStats getStats() {
 		return stats;
+	}
+
+	public Optional<java.nio.file.Path> getConfigPath() {
+		return commonModConfig != null ? Optional.of(commonModConfig.getFullPath()) : Optional.empty();
 	}
 }

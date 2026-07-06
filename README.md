@@ -48,6 +48,8 @@ For example, to filter all `INFO` messages from the `Server thread`, your `conso
 
 ignoreCase = false
 whitelistMode = false
+filterLatestLog = true
+activeProfile = "default"
 
 # Filters messages that contain specific text
 basicFilters = ["Killed all storms"]
@@ -123,9 +125,59 @@ ignoreCase = true
 basicFilters = ["missing texture"]
 ```
 
-Applies to `basicFilters`, `threadFilters`, `sourceFilters`, and `regexFilters`. `levelFilters` are always case-insensitive.
+Applies to `basicFilters`, `threadFilters`, `sourceFilters`, `loggerFilters`, and `regexFilters`. `levelFilters` are always case-insensitive.
 
-### ✅ Reload filters without restarting
+### ✅ Legacy logger filters
+
+```toml
+loggerFilters = ["net.minecraft.server"]
+```
+
+Same as `sourceFilters` (contains match on logger/source name). Both lists are applied.
+
+### ✅ Filter profiles
+
+```toml
+activeProfile = "production"
+
+[profiles.debug]
+levelFilters = ["DEBUG"]
+
+[profiles.production]
+levelFilters = ["WARN", "ERROR"]
+```
+
+Profiles: `default` (uses `[general]`), `debug`, or `production`. Switch at runtime:
+
+```
+/consolefilter profile debug
+/consolefilter profile production
+/consolefilter profile default
+```
+
+### ✅ Filter latest.log
+
+```toml
+filterLatestLog = true
+```
+
+When `true`, `latest.log` and other Log4j file appenders are filtered. When `false`, only console output is filtered.
+
+### ✅ Export / import config
+
+```
+/consolefilter export backups/consolefilter.toml
+/consolefilter import backups/consolefilter.toml
+```
+
+### ✅ In-game config (Forge)
+
+- **Options → Mods → Console Filter Next → Config** — edit lists and booleans
+- Config screen from the Mod List (quick reference + path)
+
+> [Mod Menu](https://modrinth.com/mod/modmenu) is **Fabric-only**. This Forge mod uses Forge Mod Options.
+
+### ✅ Reload and manage filters
 
 On a server with OP level 2+:
 
@@ -133,9 +185,12 @@ On a server with OP level 2+:
 /consolefilter reload
 /consolefilter list
 /consolefilter status
+/consolefilter profile production
+/consolefilter export backups/consolefilter.toml
+/consolefilter import backups/consolefilter.toml
 ```
 
-`reload` re-reads `consolefilternext-common.toml` from disk. `status` shows active filter count and how many messages have been hidden.
+`reload` re-reads `consolefilternext-common.toml`. `status` shows profile, filters, and hidden message count.
 
 ---
 
@@ -189,10 +244,11 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 ./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v3.3.1)
+## ⚠️ Known limitations (v3.4.0)
 
-- Config hot-reload via `/consolefilter reload` re-parses filter rules; filters must already be registered at startup.
-- In-game config UI beyond Forge Mod Options is not implemented yet (see development plan).
+- `/consolefilter profile` switches filters in memory until restart (does not rewrite `activeProfile` in the TOML file).
+- Config hot-reload via `/consolefilter reload` re-parses rules; filters must already be registered at startup.
+- Full in-game editor for filter lists is limited to Forge Mod Options (no Mod Menu on Forge).
 
 ## License
 

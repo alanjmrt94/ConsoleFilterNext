@@ -6,6 +6,17 @@
  - This fork maintained by alanjmrt94
 
 -----------------------------------------------------
+ VERSION 3.4.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Add loggerFilters (legacy alias, merged with source filtering)
+ - Add filter profiles: default, debug, production
+ - Add /consolefilter export, import, and profile commands
+ - Add filterLatestLog option for latest.log file appenders
+ - Register client config screen (Forge Mod List / config button)
+ - Pin ForgeGradle to 6.0.47; enable Gradle daemon for local dev
+
+-----------------------------------------------------
  VERSION 3.3.1 - 1.20.1
 -----------------------------------------------------
 1.20.1:

@@ -23,7 +23,8 @@ public class Log4jFilter extends AbstractFilter implements CustomFilter {
 
 	@Override
 	public void applyFilter(ConsoleFilter mod) {
-		((Logger) LogManager.getRootLogger()).addFilter(this);
+		Logger root = (Logger) LogManager.getRootLogger();
+		Log4jAppenderFilters.apply(root, this, config);
 	}
 
 	@Override

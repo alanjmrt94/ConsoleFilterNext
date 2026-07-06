@@ -76,6 +76,12 @@ class FilterEntryTest {
 	}
 
 	@Test
+	void loggerFilterUsesContainsOnSource() {
+		FilterEntry entry = FilterEntry.logger("minecraft.server", false);
+		assertTrue(entry.shouldFilter(sampleMessage()));
+	}
+
+	@Test
 	void regexFilterCompilesWithIgnoreCaseFlag() {
 		FilterEntry entry = FilterEntry.regex("player", true);
 		assertTrue(entry.shouldFilter(sampleMessage()));
