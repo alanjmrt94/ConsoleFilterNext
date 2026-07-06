@@ -302,7 +302,44 @@ With API tokens in `scripts/.release.local` and `gh auth login`:
 ./scripts/release.sh publish             # build + tag + GitHub + Modrinth + CurseForge
 ```
 
-See `scripts/.release.local.example` for `CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, and project slugs.
+Copy and edit the template:
+
+```bash
+cp scripts/.release.local.example scripts/.release.local
+```
+
+#### Platform IDs
+
+| Platform | Variable | Format | When required |
+|----------|----------|--------|---------------|
+| **Modrinth** | `MODRINTH_PROJECT_ID` | Base62 (e.g. `tFqJGW2q`) | **Required while the project is in Draft** — the public API cannot resolve the slug until the project is approved |
+| **Modrinth** | `MODRINTH_PROJECT_SLUG` | URL slug (e.g. `consolefilternext`) | Used for auto-resolution when `MODRINTH_PROJECT_ID` is empty |
+| **CurseForge** | `CURSEFORGE_PROJECT_ID` | Numeric ID | Optional; leave empty to resolve by `CURSEFORGE_PROJECT_SLUG` |
+
+Find the Modrinth Base62 ID in [Modrinth → Projects](https://modrinth.com/dashboard/projects) (column **ID**). Do **not** put the display name (e.g. `ConsoleFilterNext`) in `MODRINTH_PROJECT_ID` — the API expects Base62 and will reject it.
+
+#### Publish flow
+
+1. `clean build` → JAR in `build/libs/`
+2. Git annotated tag (`mod_version` from `gradle.properties`) → push to `origin`
+3. GitHub Release (`gh`) with the JAR and `changelog.txt` excerpt
+4. Modrinth version upload (`POST /v2/version` with `file_parts` / `primary_file`)
+5. CurseForge file upload
+
+#### Partial re-runs
+
+If one step already succeeded, skip the rest:
+
+```bash
+./scripts/release.sh publish --skip-build --skip-github              # Modrinth + CurseForge only
+./scripts/release.sh publish --skip-build --skip-github --skip-modrinth   # CurseForge only
+```
+
+#### Modrinth draft projects
+
+While status is **Draft**, the project page may exist at `modrinth.com/project/<slug>` but `GET /v2/project/<slug>` returns **404** without a known ID. Set `MODRINTH_PROJECT_ID` in `.release.local`, then publish. After moderation approves the project, you can clear `MODRINTH_PROJECT_ID` and rely on slug resolution if you prefer.
+
+See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, `RELEASE_TYPE`, etc.).
 
 ## ⚠️ Known limitations (v4.0.1)
 

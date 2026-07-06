@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Funciones de publicación de release — incluido desde scripts/release.sh
-# GitHub (tag + release), Modrinth y CurseForge.
+# Publicación de releases: GitHub (tag + release), Modrinth y CurseForge.
+#
+# Modrinth: proyectos en estado Draft no son visibles por slug en la API pública;
+# definir MODRINTH_PROJECT_ID (Base62). La subida usa POST /v2/version con
+# file_parts y primary_file en el JSON multipart.
 
 : "${SCRIPT_DIR:?SCRIPT_DIR must be set by release.sh}"
 : "${PROJECT_ROOT:?PROJECT_ROOT must be set by release.sh}"
@@ -150,11 +154,19 @@ publish_resolve_modrinth_project_id() {
 	publish_require_command curl || return 1
 	publish_require_command jq || return 1
 
-	local response id
-	response="$(curl -fsS "https://api.modrinth.com/v2/project/${MODRINTH_PROJECT_SLUG}")"
+	local response id auth_header=()
+	[[ -n "${MODRINTH_TOKEN}" ]] && auth_header=(-H "Authorization: ${MODRINTH_TOKEN}")
+
+	response="$(curl -fsS "${auth_header[@]}" "https://api.modrinth.com/v2/project/${MODRINTH_PROJECT_SLUG}" 2>/dev/null || true)"
 	id="$(echo "${response}" | jq -r '.id // empty')"
-	[[ -n "${id}" && "${id}" != "null" ]] || return 1
-	echo "${id}"
+	if [[ -n "${id}" && "${id}" != "null" ]]; then
+		echo "${id}"
+		return 0
+	fi
+
+	log_error "No se pudo resolver el proyecto Modrinth (slug: ${MODRINTH_PROJECT_SLUG})"
+	log_error "Si el proyecto está en draft, define MODRINTH_PROJECT_ID con el ID Base62 (panel de Modrinth → Projects)."
+	return 1
 }
 
 publish_curseforge_game_version_ids() {
@@ -261,10 +273,7 @@ publish_modrinth_upload() {
 	publish_require_command curl || return 1
 	publish_require_command jq || return 1
 
-	project_id="$(publish_resolve_modrinth_project_id)" || {
-		log_error "No se pudo resolver el proyecto Modrinth (slug: ${MODRINTH_PROJECT_SLUG})"
-		return 1
-	}
+	project_id="$(publish_resolve_modrinth_project_id)" || return 1
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
 	PUBLISH_TMP_DIR="$(mktemp -d)"
@@ -284,7 +293,9 @@ publish_modrinth_upload() {
 			game_versions: [$mc],
 			version_type: $vtype,
 			loaders: ["forge"],
-			featured: false
+			featured: false,
+			file_parts: ["file"],
+			primary_file: "file"
 		}')"
 
 	if [[ "${dry_run}" == "true" ]]; then
@@ -555,6 +566,12 @@ Uso: $(basename "$0") publish [opciones]
   --skip-curseforge   Omitir CurseForge
 
 Configura tokens en scripts/.release.local (ver .release.local.example)
+
+Modrinth:
+  • MODRINTH_PROJECT_ID = ID Base62 (panel → Projects → columna ID).
+  • Obligatorio en proyectos Draft; el slug no resuelve hasta aprobar el proyecto.
+  • No usar el nombre del proyecto (solo Base62).
+  • Tras publicar, reintentar con --skip-build --skip-github si GitHub ya terminó.
 EOF
 				return 0
 				;;

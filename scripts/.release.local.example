@@ -14,10 +14,16 @@ export GITHUB_REMOTE=origin
 export CURSEFORGE_API_TOKEN="c7bbb4a0-..."
 export CURSEFORGE_PROJECT_SLUG="consolefilternext"
 export CURSEFORGE_PROJECT_ID=""   # opcional; ID numérico de CurseForge (vacío = resolver por slug)
+#   No usar el nombre del proyecto; CurseForge usa IDs numéricos.
 #
 # Modrinth: https://modrinth.com/settings/account → Personal access tokens
+#   El token debe tener permiso de subir versiones (VERSION_CREATE / upload).
 export MODRINTH_TOKEN="mrp_..."
 export MODRINTH_PROJECT_SLUG="consolefilternext"
-export MODRINTH_PROJECT_ID=""     # opcional; ID Base62 de Modrinth (vacío = resolver por slug)
+# ID Base62 del proyecto (columna ID en Modrinth → Projects).
+#   • Proyecto publicado: puede dejarse vacío; el script resuelve el ID por slug.
+#   • Proyecto en draft: obligatorio — la API pública no expone el slug hasta aprobar.
+#   • No usar el nombre visible (p. ej. "ConsoleFilterNext"); solo el ID Base62 (p. ej. tFqJGW2q).
+export MODRINTH_PROJECT_ID=""
 #
 export RELEASE_TYPE="release"     # release | beta | alpha

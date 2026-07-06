@@ -1236,8 +1236,16 @@ PUBLICACIÓN DE RELEASES (opción 9 / publish)
   Requiere: gh auth login, jq, curl
   Tokens en scripts/.release.local (ver .release.local.example):
     CURSEFORGE_API_TOKEN, MODRINTH_TOKEN
+  IDs de proyecto:
+    Modrinth  → MODRINTH_PROJECT_ID (Base62, ej. tFqJGW2q)
+                Obligatorio si el proyecto está en Draft (el slug no resuelve vía API pública).
+                No usar el nombre visible del proyecto.
+    CurseForge → CURSEFORGE_PROJECT_ID (numérico, opcional; vacío = resolver por slug)
   Flujo: clean build → tag (mod_version) → push → GitHub Release → Modrinth → CurseForge
   Dry-run: ./scripts/release.sh publish --dry-run
+  Reintentos parciales:
+    publish --skip-build --skip-github              # solo Modrinth + CurseForge
+    publish --skip-build --skip-github --skip-modrinth
 
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk
