@@ -30,10 +30,12 @@ To configure the mod, you have two options:
 
 ### 🕹️ In-Game
 
-1. Go to `Options -> Mod Options`
-2. Find **ConsoleFilterNext**
-3. Click on **Config**
-4. From there, you can edit all filter options
+1. Go to **Options → Mods**
+2. Find **Console Filter Next**
+3. Click **Config**
+4. Edit booleans, profiles, and filter lists; use **Save & Apply** to write `consolefilternext-common.toml` and reload filters
+
+No extra mods required — uses Forge's built-in Mod List config button.
 
 ### 🛠️ Editing the Configuration File
 
@@ -172,10 +174,10 @@ When `true`, `latest.log` and other Log4j file appenders are filtered. When `fal
 
 ### ✅ In-game config (Forge)
 
-- **Options → Mods → Console Filter Next → Config** — edit lists and booleans
-- Config screen from the Mod List (quick reference + path)
+- **Options → Mods → Console Filter Next → Config** — edit booleans, profiles, and all filter lists
+- **Save & Apply** writes the TOML file and reloads filters without restarting
 
-> [Mod Menu](https://modrinth.com/mod/modmenu) is **Fabric-only**. This Forge mod uses Forge Mod Options.
+> [Mod Menu](https://modrinth.com/mod/modmenu) is **Fabric-only**. This Forge mod uses the native Mod List Config button (no dependencies).
 
 ### ✅ Reload and manage filters
 
@@ -244,11 +246,11 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 ./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v3.4.0)
+## ⚠️ Known limitations (v3.5.0)
 
-- `/consolefilter profile` switches filters in memory until restart (does not rewrite `activeProfile` in the TOML file).
-- Config hot-reload via `/consolefilter reload` re-parses rules; filters must already be registered at startup.
-- Full in-game editor for filter lists is limited to Forge Mod Options (no Mod Menu on Forge).
+- `/consolefilter profile` switches filters in memory until restart (does not rewrite `activeProfile` in the TOML file unless you use the in-game editor or edit the file).
+- Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
+- The in-game list editor shows entries as a vertical list (no search/pagination yet); very large lists are cumbersome to edit in UI.
 
 ## License
 
