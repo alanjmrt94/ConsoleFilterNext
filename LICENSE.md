@@ -3,8 +3,9 @@
 **Console Filter Next**  
 Copyright © 2024–2026 [alanjmrt94](https://github.com/alanjmrt94)
 
-**Based on [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter)**  
+**Based on [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter)**   
 Copyright © Matthew Czyr ([MattCzyr](https://github.com/MattCzyr)) and contributors (NgLoader, MarkKoz, ChaosTheDude)
+
 
 ---
 
@@ -35,7 +36,7 @@ No warranties are given. You may not apply legal terms or technological measures
 When redistributing this mod or derivative works, include a notice similar to:
 
 ```
-Console Filter Next — fork of ConsoleFilter by Matthew Czyr
+Console Filter Next - originally based on ConsoleFilter by Matthew Czyr
 https://github.com/alanjmrt94/ConsoleFilterNext
 Licensed under CC BY-NC-SA 4.0
 ```

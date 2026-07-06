@@ -1,8 +1,8 @@
 # Console Filter Next
 
-An improved ConsoleFilter mod that filters log messages not only by text, but also by log level, thread, source, mod id, and regex. Reduce console noise on the client or dedicated server while debugging modpacks and development environments. Fork of ConsoleFilter by [Matthew Czyr](https://github.com/MattCzyr).
+An improved console log filter for Minecraft Forge — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
-**Current release:** `1.20.1-4.0.1` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
+**Current release:** `1.20.1-4.0.2` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
 
 ## Downloads
 
@@ -30,16 +30,16 @@ An improved ConsoleFilter mod that filters log messages not only by text, but al
 
 ---
 
-## 🙌 Credits & lineage
+## 🙌 Credits
 
 | | |
 |---|---|
-| **Original project** | [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) — created and maintained by **Matthew Czyr** ([MattCzyr](https://github.com/MattCzyr)) |
-| **Original contributors** | **NgLoader**, **MarkKoz**, **ChaosTheDude** |
-| **This fork** | **Console Filter Next** — forked and extended by **alanjmrt94** |
-| **License** | [CC BY-NC-SA 4.0](LICENSE.md) (same as upstream) |
+| **Console Filter Next** | **alanjmrt94** |
+| **Originally based on** | [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) by **Matthew Czyr** ([MattCzyr](https://github.com/MattCzyr)) |
+| **ConsoleFilter contributors** | **NgLoader**, **MarkKoz**, **ChaosTheDude** |
+| **License** | [CC BY-NC-SA 4.0](LICENSE.md) |
 
-Console Filter Next is **not** the official ConsoleFilter project. It is an independent fork with extra features and a separate release track. Please report issues for this fork on [this repository](https://github.com/alanjmrt94/ConsoleFilterNext/issues); for the original mod, use [MattCzyr/ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter/issues).
+Issues and pull requests: [github.com/alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 
 ---
 
@@ -339,9 +339,38 @@ If one step already succeeded, skip the rest:
 
 While status is **Draft**, the project page may exist at `modrinth.com/project/<slug>` but `GET /v2/project/<slug>` returns **404** without a known ID. Set `MODRINTH_PROJECT_ID` in `.release.local`, then publish. After moderation approves the project, you can clear `MODRINTH_PROJECT_ID` and rely on slug resolution if you prefer.
 
+#### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|--------|-----|
+| `Base62 decoding overflowed` | `MODRINTH_PROJECT_ID` set to display name instead of Base62 ID | Use the ID from Modrinth → Projects |
+| `404` resolving Modrinth slug | Project is still in **Draft** | Set `MODRINTH_PROJECT_ID` |
+| `EOF while parsing a string` (HTTP 400) | JSON metadata embedded in `curl -F` was truncated by the shell | Fixed in `publish-release.sh` (payload written to a temp file) |
+| Changelog includes every old version | `changelog.txt` section parser did not stop at the next `VERSION` header | Fixed in `publish-release.sh` |
+
 See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, `RELEASE_TYPE`, etc.).
 
-## ⚠️ Known limitations (v4.0.1)
+### CI/CD (GitHub Actions)
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | `./gradlew build`, upload JAR artifact, dedicated server smoke test |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`*`) | Build, create GitHub Release with the mod JAR |
+| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload the built JAR to Modrinth and CurseForge (optional; requires repository secrets) |
+
+**Repository secrets** for distribution publish (Settings → Secrets and variables → Actions):
+
+| Secret | Required for |
+|--------|----------------|
+| `MODRINTH_TOKEN` | Modrinth upload |
+| `MODRINTH_PROJECT_ID` | Modrinth when the project is in Draft (Base62 ID) |
+| `CURSEFORGE_API_TOKEN` | CurseForge upload |
+
+Optional variables: `MODRINTH_PROJECT_SLUG`, `CURSEFORGE_PROJECT_SLUG`, `CURSEFORGE_PROJECT_ID`, `RELEASE_TYPE` (defaults match `scripts/.release.local.example`).
+
+If distribution secrets are not configured, the publish workflow skips upload steps with a notice.
+
+## ⚠️ Known limitations (v4.0.2)
 
 - Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
 - The in-game list editor paginates long lists (8 per page) but has no search yet.
@@ -349,7 +378,7 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 
 ## License
 
-[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) (CC BY-NC-SA 4.0) — same as upstream ConsoleFilter. See [LICENSE.md](LICENSE.md) for attribution and terms.
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) (CC BY-NC-SA 4.0). See [LICENSE.md](LICENSE.md) for attribution and terms.
 
 Free to download on CurseForge and Modrinth; redistribution and derivatives must follow CC BY-NC-SA 4.0 (attribution, non-commercial, share-alike).
 
@@ -358,6 +387,6 @@ Free to download on CurseForge and Modrinth; redistribution and derivatives must
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
 - [Modrinth](https://modrinth.com/mod/consolefilternext)
 - [GitHub repository](https://github.com/alanjmrt94/ConsoleFilterNext)
-- [Report issues (this fork)](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
-- [Original ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter)
+- [Report issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
+- [ConsoleFilter by Matthew Czyr](https://github.com/MattCzyr/ConsoleFilter)
 - [Migration guide](MIGRATION.md)

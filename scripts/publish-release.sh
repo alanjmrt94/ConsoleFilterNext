@@ -4,7 +4,8 @@
 #
 # Modrinth: proyectos en estado Draft no son visibles por slug en la API pública;
 # definir MODRINTH_PROJECT_ID (Base62). La subida usa POST /v2/version con
-# file_parts y primary_file en el JSON multipart.
+# file_parts y primary_file. El JSON multipart se escribe en un archivo temporal
+# para evitar que el shell trunque comillas en el changelog.
 
 : "${SCRIPT_DIR:?SCRIPT_DIR must be set by release.sh}"
 : "${PROJECT_ROOT:?PROJECT_ROOT must be set by release.sh}"
@@ -97,9 +98,9 @@ publish_extract_changelog() {
 
 	local section
 	section="$(awk -v ver="${semver}" '
-		$0 ~ "VERSION " ver " " { capture=1; next }
+		$0 ~ "VERSION " ver "[^0-9]" { capture=1; next }
 		capture && /^-+$/ { if (started) next; started=1; next }
-		capture && started && /^VERSION / { exit }
+		capture && started && /^[[:space:]]*VERSION / { exit }
 		capture && started { print }
 	' "${changelog_file}")"
 
@@ -304,10 +305,11 @@ publish_modrinth_upload() {
 		return 0
 	fi
 
+	printf '%s' "${json}" >"${PUBLISH_TMP_DIR}/modrinth-payload.json"
 	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/modrinth-response.json" -w "%{http_code}" \
 		-X POST "https://api.modrinth.com/v2/version" \
 		-H "Authorization: ${MODRINTH_TOKEN}" \
-		-F "data=${json};type=application/json" \
+		-F "data=@${PUBLISH_TMP_DIR}/modrinth-payload.json;type=application/json" \
 		-F "file=@${jar}")"
 
 	if [[ "${http_code}" =~ ^2 ]]; then
@@ -371,11 +373,12 @@ publish_curseforge_upload() {
 	fi
 
 	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
+	printf '%s' "${metadata}" >"${PUBLISH_TMP_DIR}/curseforge-metadata.json"
 	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/curseforge-response.json" -w "%{http_code}" \
 		-X POST "https://api.curseforge.com/v1/mods/${project_id}/files" \
 		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
 		-H "Accept: application/json" \
-		-F "metadata=${metadata};type=application/json" \
+		-F "metadata=@${PUBLISH_TMP_DIR}/curseforge-metadata.json;type=application/json" \
 		-F "file=@${jar}")"
 
 	if [[ "${http_code}" =~ ^2 ]]; then
@@ -388,7 +391,7 @@ publish_curseforge_upload() {
 	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/curseforge-legacy-response.json" -w "%{http_code}" \
 		-X POST "https://minecraft.curseforge.com/api/projects/${project_id}/upload-file" \
 		-H "X-Api-Token: ${CURSEFORGE_API_TOKEN}" \
-		-F "metadata=${metadata}" \
+		-F "metadata=@${PUBLISH_TMP_DIR}/curseforge-metadata.json" \
 		-F "file=@${jar}")"
 
 	if [[ "${http_code}" =~ ^2 ]]; then

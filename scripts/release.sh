@@ -981,7 +981,7 @@ apply_profile_1201_recommended() {
 }
 
 apply_profile_1201_legacy() {
-  echo -e "${BOLD}Perfil legacy: MC 1.20.1 (configuración original del fork)${RESET}"
+  echo -e "${BOLD}Perfil legacy: MC 1.20.1 (configuración original)${RESET}"
   read -r -p "¿Restaurar Forge 47.1.0 + Gradle 8.1.1? [s/N]: " confirm
   [[ "${confirm,,}" == "s" || "${confirm,,}" == "si" ]] || return
 
@@ -1222,7 +1222,7 @@ PERFIL RECOMENDADO (menú 3 → opción 1)
   Minecraft 1.20.1 | Forge 47.4.10 | Launcher Java 17 o 21 | Gradle 8.14.3 | FG 6.0.47
 
 DOCUMENTACIÓN
-  README.md                    — información del mod y fork de Matthew Czyr
+  README.md                    — información del mod y créditos
   scripts/release.sh           — entorno de desarrollo interactivo
 
 USO RÁPIDO
@@ -1246,6 +1246,8 @@ PUBLICACIÓN DE RELEASES (opción 9 / publish)
   Reintentos parciales:
     publish --skip-build --skip-github              # solo Modrinth + CurseForge
     publish --skip-build --skip-github --skip-modrinth
+  CI: tag push → .github/workflows/release.yml (GitHub Release)
+       tag push → .github/workflows/publish-distribution.yml (Modrinth + CurseForge, secrets)
 
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk

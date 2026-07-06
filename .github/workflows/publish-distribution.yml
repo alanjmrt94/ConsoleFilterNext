@@ -1,0 +1,52 @@
+name: Publish distribution
+
+# Sube el JAR a Modrinth y CurseForge cuando se publica un tag.
+# Requiere secrets en el repositorio (ver README → CI/CD).
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Grant execute permission
+        run: chmod +x gradlew scripts/release.sh scripts/publish-release.sh
+
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+
+      - name: Publish to Modrinth and CurseForge
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+          MODRINTH_PROJECT_SLUG: ${{ vars.MODRINTH_PROJECT_SLUG }}
+          CURSEFORGE_PROJECT_SLUG: ${{ vars.CURSEFORGE_PROJECT_SLUG }}
+          RELEASE_TYPE: ${{ vars.RELEASE_TYPE }}
+        run: |
+          if [ -z "${MODRINTH_TOKEN}" ] && [ -z "${CURSEFORGE_API_TOKEN}" ]; then
+            echo "No distribution secrets configured; skipping Modrinth and CurseForge upload."
+            echo "Configure MODRINTH_TOKEN and/or CURSEFORGE_API_TOKEN in repository secrets."
+            exit 0
+          fi
+          ./scripts/release.sh publish --skip-build --skip-github

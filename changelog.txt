@@ -1,11 +1,20 @@
 -----------------------------------------------------
  PROJECT LINEAGE
 -----------------------------------------------------
- - Fork of ConsoleFilter by Matthew Czyr (MattCzyr)
- - Original: https://github.com/MattCzyr/ConsoleFilter
- - This fork maintained by alanjmrt94
+ - Originally based on ConsoleFilter by Matthew Czyr (MattCzyr)
+ - https://github.com/MattCzyr/ConsoleFilter
+ - Console Filter Next by alanjmrt94
+ - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
- - Licensed under CC BY-NC-SA 4.0; see LICENSE.md for attribution (fork + upstream)
+-----------------------------------------------------
+ VERSION 4.0.2 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Fix Modrinth/CurseForge upload: write multipart JSON metadata to temp files (avoid shell truncation)
+ - Fix changelog.txt extraction: stop at the next VERSION section header
+ - Document Modrinth draft IDs, publish troubleshooting, and CI/CD workflows
+ - Add GitHub Actions workflow to publish JARs to Modrinth and CurseForge on tag push
+ - Simplify credits: originally based on ConsoleFilter by Matthew Czyr
 
 -----------------------------------------------------
  VERSION 4.0.1 - 1.20.1

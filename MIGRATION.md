@@ -1,8 +1,8 @@
 # Migrating from ConsoleFilter (Matthew Czyr)
 
-Console Filter Next is a **fork** with extra features. Config file name and several keys differ.
+Console Filter Next originated from [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) and adds profiles, an in-game editor, mod-id filters, and more. Config file name and several keys differ.
 
-## Downloads (this fork)
+## Downloads
 
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
 - [Modrinth](https://modrinth.com/mod/consolefilternext)
@@ -71,7 +71,6 @@ Use **Options → Mods → Console Filter Next → Config** (Forge Mod List). No
 
 ## Reporting issues
 
-- **This fork:** [alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
-- **Original:** [MattCzyr/ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter/issues)
+[alanjmrt94/ConsoleFilterNext/issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 
 Downloads: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext)
