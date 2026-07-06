@@ -136,13 +136,33 @@ publish_resolve_curseforge_project_id() {
 	publish_require_command jq || return 1
 	[[ -n "${CURSEFORGE_API_TOKEN}" ]] || return 1
 
-	local response id
-	response="$(curl -fsS \
+	local response id http_code tmp
+	tmp="$(mktemp)"
+	http_code="$(curl -sS -o "${tmp}" -w "%{http_code}" \
 		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
 		-H "Accept: application/json" \
 		"https://api.curseforge.com/v1/mods/search?gameId=432&searchFilter=6&slug=${CURSEFORGE_PROJECT_SLUG}")"
+	response="$(cat "${tmp}")"
+	rm -f "${tmp}"
+
+	if [[ "${http_code}" == "403" ]]; then
+		log_error "CurseForge API rechazó el token (HTTP 403)"
+		log_error "Regenera CURSEFORGE_API_TOKEN: https://console.curseforge.com/#/profile → Profile API key"
+		return 1
+	fi
+
+	if [[ ! "${http_code}" =~ ^2 ]]; then
+		log_error "CurseForge search falló (HTTP ${http_code})"
+		echo "${response}" >&2
+		return 1
+	fi
+
 	id="$(echo "${response}" | jq -r '.data[0].id // empty')"
-	[[ -n "${id}" && "${id}" != "null" ]] || return 1
+	if [[ -z "${id}" || "${id}" == "null" ]]; then
+		log_error "No se encontró proyecto CurseForge con slug: ${CURSEFORGE_PROJECT_SLUG}"
+		log_error "Define CURSEFORGE_PROJECT_ID (numérico) en scripts/.release.local"
+		return 1
+	fi
 	echo "${id}"
 }
 
@@ -259,6 +279,166 @@ publish_github_repo_slug() {
 	esac
 }
 
+publish_modrinth_config_file() {
+	local assets="${PROJECT_ROOT}/assets"
+	if [[ -f "${assets}/modrinth.json" ]]; then
+		echo "${assets}/modrinth.json"
+		return 0
+	fi
+	if [[ -f "${assets}/modrinth.template.json" ]]; then
+		log_warn "assets/modrinth.json no existe; usando assets/modrinth.template.json"
+		echo "${assets}/modrinth.template.json"
+		return 0
+	fi
+	return 1
+}
+
+publish_modrinth_image_ext() {
+	local file="$1"
+	local ext="${file##*.}"
+	case "${ext}" in
+		png | jpg | jpeg | bmp | gif | webp | svg | svgz | rgb) echo "${ext}" ;;
+		*) echo "png" ;;
+	esac
+}
+
+publish_modrinth_image_mime() {
+	local ext="$1"
+	case "${ext}" in
+		jpg | jpeg) echo "image/jpeg" ;;
+		svg) echo "image/svg+xml" ;;
+		svgz) echo "image/svg+xml" ;;
+		*) echo "image/${ext}" ;;
+	esac
+}
+
+publish_modrinth_build_patch_json() {
+	local config_file="$1"
+	local assets_dir="${PROJECT_ROOT}/assets"
+	local body_file body submit patch
+
+	body_file="$(jq -r '.body_file // empty' "${config_file}")"
+	[[ -n "${body_file}" && -f "${assets_dir}/${body_file}" ]] || {
+		log_error "No se encontró body_file en assets/ (campo body_file de modrinth.json)"
+		return 1
+	}
+	body="$(cat "${assets_dir}/${body_file}")"
+	submit="$(jq '.submit_for_review // false' "${config_file}")"
+
+	patch="$(jq \
+		--arg body "${body}" \
+		--argjson submit "${submit}" \
+		'del(._comment, .body_file, .icon_file, .gallery, .submit_for_review)
+		| .body = $body
+		| if $submit then .requested_status = "approved" else . end' "${config_file}")"
+	printf '%s' "${patch}"
+}
+
+publish_modrinth_upload_binary_image() {
+	local method="$1"
+	local url="$2"
+	local file="$3"
+	local ext mime http_code
+
+	ext="$(publish_modrinth_image_ext "${file}")"
+	mime="$(publish_modrinth_image_mime "${ext}")"
+	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/modrinth-image-response.json" -w "%{http_code}" \
+		-X "${method}" "${url}" \
+		-H "Authorization: ${MODRINTH_TOKEN}" \
+		-H "Content-Type: ${mime}" \
+		--data-binary @"${file}")"
+	printf '%s' "${http_code}"
+}
+
+publish_modrinth_sync_metadata() {
+	local project_id="$1"
+	local dry_run="${2:-false}"
+	local config_file assets_dir patch icon_file http_code submit
+
+	[[ "${SKIP_MODRINTH_METADATA:-false}" == "true" ]] && return 0
+
+	publish_require_command curl || return 1
+	publish_require_command jq || return 1
+
+	config_file="$(publish_modrinth_config_file)" || {
+		log_warn "Sin assets/modrinth.json; omitiendo sincronización de metadatos Modrinth"
+		return 0
+	}
+
+	assets_dir="${PROJECT_ROOT}/assets"
+	patch="$(publish_modrinth_build_patch_json "${config_file}")" || return 1
+	submit="$(jq -r '.submit_for_review // false' "${config_file}")"
+
+	if [[ "${dry_run}" == "true" ]]; then
+		log_info "[dry-run] Modrinth PATCH proyecto ${project_id}"
+		echo "${patch}" | jq .
+		jq -c '.gallery[]? // empty' "${config_file}" 2>/dev/null || true
+		return 0
+	fi
+
+	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
+	printf '%s' "${patch}" >"${PUBLISH_TMP_DIR}/modrinth-patch.json"
+
+	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/modrinth-patch-response.json" -w "%{http_code}" \
+		-X PATCH "https://api.modrinth.com/v2/project/${project_id}" \
+		-H "Authorization: ${MODRINTH_TOKEN}" \
+		-H "Content-Type: application/json" \
+		--data-binary @"${PUBLISH_TMP_DIR}/modrinth-patch.json")"
+	if [[ ! "${http_code}" =~ ^2 ]]; then
+		log_error "Modrinth PATCH proyecto falló (HTTP ${http_code})"
+		cat "${PUBLISH_TMP_DIR}/modrinth-patch-response.json" 2>/dev/null || true
+		return 1
+	fi
+	log_ok "Modrinth: metadatos del proyecto actualizados"
+
+	icon_file="$(jq -r '.icon_file // empty' "${config_file}")"
+	if [[ -n "${icon_file}" && -f "${assets_dir}/${icon_file}" ]]; then
+		local ext icon_code
+		ext="$(publish_modrinth_image_ext "${assets_dir}/${icon_file}")"
+		icon_code="$(publish_modrinth_upload_binary_image PATCH \
+			"https://api.modrinth.com/v2/project/${project_id}/icon?ext=${ext}" \
+			"${assets_dir}/${icon_file}")"
+		if [[ "${icon_code}" =~ ^2 ]]; then
+			log_ok "Modrinth: icono subido"
+		else
+			log_warn "Modrinth: falló la subida del icono (HTTP ${icon_code})"
+		fi
+	fi
+
+	local gallery_count i file featured title description ordering ext query_url gal_code gal_err
+	gallery_count="$(jq '.gallery | length // 0' "${config_file}")"
+	for ((i = 0; i < gallery_count; i++)); do
+		file="$(jq -r ".gallery[${i}].file // empty" "${config_file}")"
+		[[ -n "${file}" && -f "${assets_dir}/${file}" ]] || continue
+		featured="$(jq -r ".gallery[${i}].featured // false" "${config_file}")"
+		title="$(jq -r ".gallery[${i}].title // \"\"" "${config_file}")"
+		description="$(jq -r ".gallery[${i}].description // \"\"" "${config_file}")"
+		ordering="$(jq -r ".gallery[${i}].ordering // ${i}" "${config_file}")"
+		ext="$(publish_modrinth_image_ext "${assets_dir}/${file}")"
+		query_url="https://api.modrinth.com/v2/project/${project_id}/gallery?ext=${ext}&featured=${featured}&ordering=${ordering}"
+		[[ -n "${title}" ]] && query_url+="&title=$(printf '%s' "${title}" | jq -sRr @uri)"
+		[[ -n "${description}" ]] && query_url+="&description=$(printf '%s' "${description}" | jq -sRr @uri)"
+		gal_code="$(publish_modrinth_upload_binary_image POST "${query_url}" "${assets_dir}/${file}")"
+		if [[ "${gal_code}" =~ ^2 ]]; then
+			log_ok "Modrinth: imagen de galería subida (${file})"
+		else
+			gal_err="$(jq -r '.description // empty' "${PUBLISH_TMP_DIR}/modrinth-image-response.json" 2>/dev/null || true)"
+			if [[ "${gal_err}" == *duplicate* ]]; then
+				log_info "Modrinth: galería ya contenía ${file} (omitida)"
+			else
+				log_warn "Modrinth: falló galería ${file} (HTTP ${gal_code})"
+			fi
+		fi
+	done
+
+	if [[ "${submit}" == "true" ]]; then
+		log_info "Modrinth: solicitada revisión (requested_status=approved)"
+	else
+		log_info "Modrinth: proyecto aún en draft — activá submit_for_review en assets/modrinth.json o enviá desde el panel"
+	fi
+	return 0
+}
+
 publish_modrinth_upload() {
 	local tag="$1"
 	local jar="$2"
@@ -275,6 +455,13 @@ publish_modrinth_upload() {
 	publish_require_command jq || return 1
 
 	project_id="$(publish_resolve_modrinth_project_id)" || return 1
+
+	publish_modrinth_sync_metadata "${project_id}" "${dry_run}" || return 1
+
+	if [[ "${SKIP_MODRINTH_VERSION_UPLOAD:-false}" == "true" ]]; then
+		[[ "${dry_run}" != "true" ]] && log_ok "Modrinth: omitida subida de versión (--skip-modrinth-version-upload)"
+		return 0
+	fi
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
 	PUBLISH_TMP_DIR="$(mktemp -d)"
@@ -337,10 +524,7 @@ publish_curseforge_upload() {
 	publish_require_command curl || return 1
 	publish_require_command jq || return 1
 
-	project_id="$(publish_resolve_curseforge_project_id)" || {
-		log_error "No se pudo resolver el proyecto CurseForge (slug: ${CURSEFORGE_PROJECT_SLUG})"
-		return 1
-	}
+	project_id="$(publish_resolve_curseforge_project_id)" || return 1
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
 	version_ids="$(publish_curseforge_game_version_ids "${mc_version}")" || {
@@ -383,6 +567,7 @@ publish_curseforge_upload() {
 
 	if [[ "${http_code}" =~ ^2 ]]; then
 		log_ok "CurseForge: archivo subido (HTTP ${http_code})"
+		publish_curseforge_remind_gallery
 		return 0
 	fi
 
@@ -396,6 +581,7 @@ publish_curseforge_upload() {
 
 	if [[ "${http_code}" =~ ^2 ]]; then
 		log_ok "CurseForge (legacy): archivo subido (HTTP ${http_code})"
+		publish_curseforge_remind_gallery
 		return 0
 	fi
 
@@ -403,6 +589,35 @@ publish_curseforge_upload() {
 	cat "${PUBLISH_TMP_DIR}/curseforge-response.json" 2>/dev/null || true
 	cat "${PUBLISH_TMP_DIR}/curseforge-legacy-response.json" 2>/dev/null || true
 	return 1
+}
+
+publish_curseforge_remind_gallery() {
+	local cf_json="${PROJECT_ROOT}/assets/curseforge.json"
+	local assets_dir="${PROJECT_ROOT}/assets"
+	local count i file title description abs
+
+	[[ -f "${cf_json}" ]] || return 0
+
+	publish_require_command jq || return 0
+
+	count="$(jq '.gallery | length // 0' "${cf_json}")"
+	[[ "${count}" -gt 0 ]] || return 0
+
+	log_info "CurseForge: subí estas capturas manualmente en el panel del proyecto (Images / Gallery):"
+	for ((i = 0; i < count; i++)); do
+		file="$(jq -r ".gallery[${i}].file // empty" "${cf_json}")"
+		title="$(jq -r ".gallery[${i}].title // \"\"" "${cf_json}")"
+		description="$(jq -r ".gallery[${i}].description // \"\"" "${cf_json}")"
+		[[ -n "${file}" ]] || continue
+		abs="${assets_dir}/${file}"
+		if [[ -f "${abs}" ]]; then
+			echo "  → ${abs}"
+			[[ -n "${title}" ]] && echo "    ${title}"
+			[[ -n "${description}" ]] && echo "    ${description}"
+		else
+			log_warn "  Falta archivo de galería: ${abs}"
+		fi
+	done
 }
 
 publish_check_prerequisites() {
@@ -504,6 +719,9 @@ publish_release_full() {
 
 	echo
 	log_ok "Proceso de publicación completado para ${tag}"
+	if [[ "${SKIP_CURSEFORGE:-false}" == "true" ]]; then
+		publish_curseforge_remind_gallery
+	fi
 	if [[ "${dry_run}" == "true" ]]; then
 		log_info "Dry-run: no se realizaron subidas ni cambios en git remoto"
 	fi
@@ -546,6 +764,8 @@ publish_release_cli() {
 	SKIP_GITHUB=false
 	SKIP_MODRINTH=false
 	SKIP_CURSEFORGE=false
+	SKIP_MODRINTH_METADATA=false
+	SKIP_MODRINTH_VERSION_UPLOAD=false
 
 	while [[ $# -gt 0 ]]; do
 		case "$1" in
@@ -556,6 +776,14 @@ publish_release_cli() {
 			--skip-github) SKIP_GITHUB=true ;;
 			--skip-modrinth) SKIP_MODRINTH=true ;;
 			--skip-curseforge) SKIP_CURSEFORGE=true ;;
+			--skip-modrinth-metadata) SKIP_MODRINTH_METADATA=true ;;
+			--skip-modrinth-version-upload) SKIP_MODRINTH_VERSION_UPLOAD=true ;;
+			--modrinth-sync-only)
+				SKIP_GITHUB=true
+				SKIP_CURSEFORGE=true
+				skip_build=true
+				SKIP_MODRINTH_VERSION_UPLOAD=true
+				;;
 			-h|--help)
 				cat <<EOF
 Uso: $(basename "$0") publish [opciones]
@@ -567,8 +795,13 @@ Uso: $(basename "$0") publish [opciones]
   --skip-github       Omitir tag y GitHub Release
   --skip-modrinth     Omitir Modrinth
   --skip-curseforge   Omitir CurseForge
+  --skip-modrinth-metadata         No actualizar descripción/licencia/icono/galería
+  --skip-modrinth-version-upload   Solo metadatos Modrinth (sin subir JAR)
+  --modrinth-sync-only             Igual que --skip-build --skip-github --skip-curseforge
+                                   y solo sincronizar assets/modrinth.json
 
 Configura tokens en scripts/.release.local (ver .release.local.example)
+Metadatos Modrinth: assets/modrinth.json, assets/modrinth-body.md, assets/icon.png
 
 Modrinth:
   • MODRINTH_PROJECT_ID = ID Base62 (panel → Projects → columna ID).

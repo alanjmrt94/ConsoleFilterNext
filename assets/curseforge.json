@@ -1,0 +1,10 @@
+{
+  "_comment": "CurseForge no expone API pública para subir screenshots; publish-release.sh muestra estas rutas tras publicar el JAR.",
+  "gallery": [
+    {
+      "file": "gallery/sample-1.png",
+      "title": "Console Filter Next",
+      "description": "In-game configuration editor (Options → Mods → Config)"
+    }
+  ]
+}

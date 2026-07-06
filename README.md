@@ -2,7 +2,7 @@
 
 An improved console log filter for Minecraft Forge — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
-**Current release:** `1.20.1-4.0.2` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
+**Current release:** `1.20.1-4.0.3` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
 
 ## Downloads
 
@@ -314,6 +314,7 @@ cp scripts/.release.local.example scripts/.release.local
 |----------|----------|--------|---------------|
 | **Modrinth** | `MODRINTH_PROJECT_ID` | Base62 (e.g. `tFqJGW2q`) | **Required while the project is in Draft** — the public API cannot resolve the slug until the project is approved |
 | **Modrinth** | `MODRINTH_PROJECT_SLUG` | URL slug (e.g. `consolefilternext`) | Used for auto-resolution when `MODRINTH_PROJECT_ID` is empty |
+| **CurseForge** | `CURSEFORGE_API_TOKEN` | Profile API key (`cfc_pat_…`) | From [CurseForge profile](https://console.curseforge.com/#/profile) → **Profile API key** |
 | **CurseForge** | `CURSEFORGE_PROJECT_ID` | Numeric ID | Optional; leave empty to resolve by `CURSEFORGE_PROJECT_SLUG` |
 
 Find the Modrinth Base62 ID in [Modrinth → Projects](https://modrinth.com/dashboard/projects) (column **ID**). Do **not** put the display name (e.g. `ConsoleFilterNext`) in `MODRINTH_PROJECT_ID` — the API expects Base62 and will reject it.
@@ -339,12 +340,31 @@ If one step already succeeded, skip the rest:
 
 While status is **Draft**, the project page may exist at `modrinth.com/project/<slug>` but `GET /v2/project/<slug>` returns **404** without a known ID. Set `MODRINTH_PROJECT_ID` in `.release.local`, then publish. After moderation approves the project, you can clear `MODRINTH_PROJECT_ID` and rely on slug resolution if you prefer.
 
+#### Modrinth project metadata (`assets/`)
+
+Before or during publish, `publish-release.sh` syncs [assets/modrinth.json](assets/modrinth.json) to the Modrinth API (description, license, links, categories, icon, gallery). Edit:
+
+| File | Purpose |
+|------|---------|
+| `assets/modrinth.json` | Short description, license, URLs, categories, gallery list |
+| `assets/modrinth-body.md` | Long description (project body) |
+| `assets/icon.png` | Project icon (also used as featured gallery image by default) |
+
+Sync metadata only (no JAR upload):
+
+```bash
+./scripts/release.sh publish --modrinth-sync-only
+```
+
+Set `"submit_for_review": true` in `modrinth.json` when ready for moderators (or submit manually in the Modrinth dashboard).
+
 #### Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|--------|-----|
 | `Base62 decoding overflowed` | `MODRINTH_PROJECT_ID` set to display name instead of Base62 ID | Use the ID from Modrinth → Projects |
 | `404` resolving Modrinth slug | Project is still in **Draft** | Set `MODRINTH_PROJECT_ID` |
+| `403` resolving CurseForge slug | Wrong or invalid **Profile API key** | Copy **Profile API key** from [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) (`cfc_pat_…`). Or set `CURSEFORGE_PROJECT_ID` (numeric ID from the project page sidebar) |
 | `EOF while parsing a string` (HTTP 400) | JSON metadata embedded in `curl -F` was truncated by the shell | Fixed in `publish-release.sh` (payload written to a temp file) |
 | Changelog includes every old version | `changelog.txt` section parser did not stop at the next `VERSION` header | Fixed in `publish-release.sh` |
 
@@ -364,13 +384,13 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 |--------|----------------|
 | `MODRINTH_TOKEN` | Modrinth upload |
 | `MODRINTH_PROJECT_ID` | Modrinth when the project is in Draft (Base62 ID) |
-| `CURSEFORGE_API_TOKEN` | CurseForge upload |
+| `CURSEFORGE_API_TOKEN` | CurseForge upload — [Profile API key](https://console.curseforge.com/#/profile) (`cfc_pat_…`) |
 
 Optional variables: `MODRINTH_PROJECT_SLUG`, `CURSEFORGE_PROJECT_SLUG`, `CURSEFORGE_PROJECT_ID`, `RELEASE_TYPE` (defaults match `scripts/.release.local.example`).
 
 If distribution secrets are not configured, the publish workflow skips upload steps with a notice.
 
-## ⚠️ Known limitations (v4.0.2)
+## ⚠️ Known limitations (v4.0.3)
 
 - Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
 - The in-game list editor paginates long lists (8 per page) but has no search yet.

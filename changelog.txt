@@ -7,6 +7,14 @@
  - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
 -----------------------------------------------------
+ VERSION 4.0.3 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Add assets/ for distribution (icon, Modrinth metadata templates) and API sync in publish-release.sh
+ - Document CurseForge Profile API key; improve CurseForge/Modrinth publish error messages
+ - Fix CI server-smoke timeout (Gradle cache, warm build, 420s startup window)
+
+-----------------------------------------------------
  VERSION 4.0.2 - 1.20.1
 -----------------------------------------------------
 1.20.1:

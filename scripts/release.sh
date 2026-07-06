@@ -1235,7 +1235,8 @@ USO RÁPIDO
 PUBLICACIÓN DE RELEASES (opción 9 / publish)
   Requiere: gh auth login, jq, curl
   Tokens en scripts/.release.local (ver .release.local.example):
-    CURSEFORGE_API_TOKEN, MODRINTH_TOKEN
+    CURSEFORGE_API_TOKEN  — Profile API key en https://console.curseforge.com/#/profile
+    MODRINTH_TOKEN
   IDs de proyecto:
     Modrinth  → MODRINTH_PROJECT_ID (Base62, ej. tFqJGW2q)
                 Obligatorio si el proyecto está en Draft (el slug no resuelve vía API pública).

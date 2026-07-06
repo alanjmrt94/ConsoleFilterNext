@@ -10,8 +10,11 @@ export PATH="${JAVA_HOME}/bin:${PATH}"
 # GitHub: autenticación vía `gh auth login` (no hace falta token aquí)
 export GITHUB_REMOTE=origin
 #
-# CurseForge: https://console.curseforge.com → Account → API tokens
-export CURSEFORGE_API_TOKEN="c7bbb4a0-..."
+# CurseForge: https://console.curseforge.com/#/profile → "Profile API key" (cfc_pat_…)
+# Usar comillas simples si el valor contiene $.
+export CURSEFORGE_API_TOKEN='cfc_pat_...'
+# Opcional — solo si el fallback legacy lo pide: https://www.curseforge.com/account/api-tokens
+# export CURSEFORGE_AUTHOR_TOKEN='...'
 export CURSEFORGE_PROJECT_SLUG="consolefilternext"
 export CURSEFORGE_PROJECT_ID=""   # opcional; ID numérico de CurseForge (vacío = resolver por slug)
 #   No usar el nombre del proyecto; CurseForge usa IDs numéricos.
