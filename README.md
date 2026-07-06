@@ -46,6 +46,9 @@ For example, to filter all `INFO` messages from the `Server thread`, your `conso
 ````toml
 [general]
 
+ignoreCase = false
+whitelistMode = false
+
 # Filters messages that contain specific text
 basicFilters = ["Killed all storms"]
 
@@ -102,6 +105,36 @@ regexFilters = ["^\\[Render thread\\].*Missing.*$", ".*ERROR.*\\bBlockEntity\\b.
 
 > Note: Regex patterns must follow Java regular expression syntax.
 
+### ✅ Whitelist mode (show only matching messages)
+
+```toml
+whitelistMode = true
+basicFilters = ["ERROR", "WARN"]
+```
+
+With `whitelistMode = true`, only messages that match at least one filter are shown; everything else is hidden.
+
+### ✅ Case-insensitive matching
+
+```toml
+ignoreCase = true
+basicFilters = ["missing texture"]
+```
+
+Applies to `basicFilters`, `threadFilters`, `sourceFilters`, and `regexFilters`. `levelFilters` are always case-insensitive.
+
+### ✅ Reload filters without restarting
+
+On a server with OP level 2+:
+
+```
+/consolefilter reload
+/consolefilter list
+/consolefilter status
+```
+
+`reload` re-reads `consolefilternext-common.toml` from disk. `status` shows active filter count and how many messages have been hidden.
+
 ---
 
 You can combine multiple filters to fine-tune what gets shown in your console.  
@@ -154,10 +187,10 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 ./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v3.2.0)
+## ⚠️ Known limitations (v3.3.0)
 
-- Config hot-reload reloads filter rules but requires filters to already be registered (restart if filters fail to apply on first launch).
-- `threadFilters` still require an **exact** thread name match.
+- Config hot-reload via `/consolefilter reload` re-parses filter rules; filters must already be registered at startup.
+- `threadFilters` still require an exact thread name match unless `ignoreCase = true` (still exact string, not substring).
 
 ## License
 

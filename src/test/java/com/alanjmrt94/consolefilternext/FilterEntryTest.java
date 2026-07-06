@@ -22,7 +22,13 @@ class FilterEntryTest {
 
 	@Test
 	void wildcardMatchesSubstring() {
-		FilterEntry entry = FilterEntry.wildcard("Player joined");
+		FilterEntry entry = FilterEntry.wildcard("Player joined", false);
+		assertTrue(entry.shouldFilter(sampleMessage()));
+	}
+
+	@Test
+	void wildcardIgnoresCaseWhenEnabled() {
+		FilterEntry entry = FilterEntry.wildcard("player joined", true);
 		assertTrue(entry.shouldFilter(sampleMessage()));
 	}
 
@@ -35,15 +41,26 @@ class FilterEntryTest {
 
 	@Test
 	void sourceFilterUsesContains() {
-		FilterEntry entry = FilterEntry.source("net.minecraft.server");
+		FilterEntry entry = FilterEntry.source("net.minecraft.server", false);
 		assertTrue(entry.shouldFilter(sampleMessage()));
-		assertFalse(FilterEntry.source("com.example").shouldFilter(sampleMessage()));
+		assertFalse(FilterEntry.source("com.example", false).shouldFilter(sampleMessage()));
+	}
+
+	@Test
+	void sourceFilterIgnoresCaseWhenEnabled() {
+		FilterEntry entry = FilterEntry.source("NET.MINECRAFT.SERVER", true);
+		assertTrue(entry.shouldFilter(sampleMessage()));
 	}
 
 	@Test
 	void threadFilterRequiresExactMatch() {
-		assertTrue(FilterEntry.thread("Server thread").shouldFilter(sampleMessage()));
-		assertFalse(FilterEntry.thread("Server").shouldFilter(sampleMessage()));
+		assertTrue(FilterEntry.thread("Server thread", false).shouldFilter(sampleMessage()));
+		assertFalse(FilterEntry.thread("Server", false).shouldFilter(sampleMessage()));
+	}
+
+	@Test
+	void threadFilterIgnoresCaseWhenEnabled() {
+		assertTrue(FilterEntry.thread("server thread", true).shouldFilter(sampleMessage()));
 	}
 
 	@Test
@@ -55,6 +72,12 @@ class FilterEntryTest {
 	@Test
 	void regexFilterMatchesFullFormattedMessage() {
 		FilterEntry entry = FilterEntry.regex(Pattern.compile("^\\[12:00:00\\]"));
+		assertTrue(entry.shouldFilter(sampleMessage()));
+	}
+
+	@Test
+	void regexFilterCompilesWithIgnoreCaseFlag() {
+		FilterEntry entry = FilterEntry.regex("player", true);
 		assertTrue(entry.shouldFilter(sampleMessage()));
 	}
 }

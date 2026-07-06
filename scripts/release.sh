@@ -961,8 +961,8 @@ apply_profile_1201_recommended() {
   set_prop "forge_version" "47.4.10" "${GRADLE_PROPERTIES}"
   set_prop "forge_version_range" "[47,)" "${GRADLE_PROPERTIES}"
   set_prop "loader_version_range" "[47,)" "${GRADLE_PROPERTIES}"
-  set_prop "mapping_channel" "official" "${GRADLE_PROPERTIES}"
-  set_prop "mapping_version" "1.20.1" "${GRADLE_PROPERTIES}"
+  set_prop "mapping_channel" "parchment" "${GRADLE_PROPERTIES}"
+  set_prop "mapping_version" "2023.09.03-1.20.1" "${GRADLE_PROPERTIES}"
 
   sed -i 's/JavaLanguageVersion\.of([0-9]\+)/JavaLanguageVersion.of(17)/' "${BUILD_GRADLE}"
   sed -i 's/options\.release = [0-9]\+/options.release = 17/' "${BUILD_GRADLE}"

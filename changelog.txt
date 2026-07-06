@@ -6,6 +6,15 @@
  - This fork maintained by alanjmrt94
 
 -----------------------------------------------------
+ VERSION 3.3.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Add /consolefilter reload, list, and status commands (OP level 2)
+ - Add ignoreCase and whitelistMode config options
+ - Track and report filtered message count
+ - Switch to Parchment mappings (Librarian plugin) for improved IDE support
+
+-----------------------------------------------------
  VERSION 3.2.0 - 1.20.1
 -----------------------------------------------------
 1.20.1:

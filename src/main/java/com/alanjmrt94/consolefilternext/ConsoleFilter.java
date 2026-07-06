@@ -12,6 +12,7 @@ import com.alanjmrt94.consolefilternext.filter.JavaFilter;
 import com.alanjmrt94.consolefilternext.filter.Log4jFilter;
 import com.alanjmrt94.consolefilternext.filter.SystemErrFilter;
 import com.alanjmrt94.consolefilternext.filter.SystemOutFilter;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mojang.logging.LogUtils;
 
 import net.minecraftforge.fml.common.Mod;
@@ -26,12 +27,17 @@ public class ConsoleFilter {
 	public static final String MODID = "consolefilternext";
 	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");
 
+	private static ConsoleFilter instance;
+
 	private static final Logger LOGGER = LogUtils.getLogger();
 
 	private final ConsoleFilterConfig config = new ConsoleFilterConfig();
+	private final FilterStats stats = new FilterStats();
 	private final List<CustomFilter> filterRegistry = new ArrayList<>();
+	private ModConfig commonModConfig;
 
 	public ConsoleFilter(FMLJavaModLoadingContext context) {
+		instance = this;
 		config.init();
 
 		var modEventBus = context.getModEventBus();
@@ -39,6 +45,10 @@ public class ConsoleFilter {
 		modEventBus.addListener(this::onConfigEvent);
 
 		context.registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
+	}
+
+	public static ConsoleFilter getInstance() {
+		return instance;
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event) {
@@ -62,6 +72,11 @@ public class ConsoleFilter {
 		if (event.getConfig().getType() != ModConfig.Type.COMMON) {
 			return;
 		}
+
+		if (event instanceof ModConfigEvent.Loading) {
+			commonModConfig = event.getConfig();
+		}
+
 		if (event instanceof ModConfigEvent.Loading || event instanceof ModConfigEvent.Reloading) {
 			config.load();
 			if (event instanceof ModConfigEvent.Reloading) {
@@ -70,11 +85,25 @@ public class ConsoleFilter {
 		}
 	}
 
+	public boolean reloadConfigFromDisk() {
+		if (commonModConfig != null && commonModConfig.getConfigData() instanceof CommentedFileConfig fileConfig) {
+			fileConfig.load();
+			config.load();
+			LOGGER.info("Configuración recargada desde disco: {} filtro(s) activos.", config.filterCount());
+			return true;
+		}
+
+		config.load();
+		LOGGER.warn("ModConfig no disponible; recarga aplicada solo en memoria.");
+		return true;
+	}
+
 	public boolean shouldFilterMessage(String message) {
 		if (message == null) {
 			return false;
 		}
 
+		boolean filtered;
 		Matcher matcher = LOG_PATTERN.matcher(message);
 		if (matcher.matches()) {
 			LogMessage logMessage = new LogMessage(
@@ -84,13 +113,23 @@ public class ConsoleFilter {
 				matcher.group(4),
 				matcher.group(5)
 			);
-			return config.shouldFilter(logMessage);
+			filtered = config.shouldFilter(logMessage);
+		} else {
+			filtered = config.shouldFilterPlain(message);
 		}
 
-		return config.shouldFilterPlain(message);
+		if (filtered) {
+			stats.recordFiltered();
+		}
+
+		return filtered;
 	}
 
 	public ConsoleFilterConfig getConfig() {
 		return config;
+	}
+
+	public FilterStats getStats() {
+		return stats;
 	}
 }
