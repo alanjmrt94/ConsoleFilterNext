@@ -48,5 +48,9 @@ public interface FilterEntry {
 		return source(logger, ignoreCase);
 	}
 
+	public static FilterEntry modId(String modId) {
+		return message -> ModIdResolver.messageFromMod(message.getSource(), modId);
+	}
+
 	boolean shouldFilter(LogMessage message);
 }

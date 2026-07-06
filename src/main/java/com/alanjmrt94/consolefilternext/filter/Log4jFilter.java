@@ -34,6 +34,10 @@ public class Log4jFilter extends AbstractFilter implements CustomFilter {
 
 	@Override
 	public Result filter(LogEvent event) {
+		if (config.isSkipMessagesWithStackTrace() && event.getThrown() != null) {
+			return Result.NEUTRAL;
+		}
+
 		LogMessage logMessage = new LogMessage(
 			event.getTimeMillis() + "",
 			event.getThreadName(),

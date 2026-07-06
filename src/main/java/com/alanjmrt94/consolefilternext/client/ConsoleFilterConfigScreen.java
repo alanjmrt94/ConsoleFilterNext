@@ -2,12 +2,14 @@ package com.alanjmrt94.consolefilternext.client;
 
 import java.nio.file.Path;
 
+import com.alanjmrt94.consolefilternext.ConfigPreset;
 import com.alanjmrt94.consolefilternext.ConsoleFilter;
 import com.alanjmrt94.consolefilternext.client.config.ConfigEditorModel;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -19,13 +21,8 @@ public class ConsoleFilterConfigScreen extends Screen {
 
 	private final Screen parent;
 	private final Path configPath;
-	private final ConfigEditorModel model;
-
-	private Button ignoreCaseButton;
-	private Button whitelistButton;
-	private Button filterLogButton;
-	private Button activeProfileButton;
-	private Button editingProfileButton;
+	private ConfigEditorModel model;
+	private int presetIndex;
 
 	public ConsoleFilterConfigScreen(Screen parent) {
 		super(Component.literal("Console Filter Next"));
@@ -37,7 +34,7 @@ public class ConsoleFilterConfigScreen extends Screen {
 	private static Path resolveConfigPath() {
 		ConsoleFilter mod = ConsoleFilter.getInstance();
 		if (mod != null) {
-			return mod.getConfigPath().orElseGet(() -> defaultConfigPath());
+			return mod.getConfigPath().orElseGet(ConsoleFilterConfigScreen::defaultConfigPath);
 		}
 		return defaultConfigPath();
 	}
@@ -48,49 +45,59 @@ public class ConsoleFilterConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
+		clearWidgets();
+
 		int left = 20;
-		int buttonWidth = 220;
-		int y = 36;
+		int right = width / 2 + 10;
+		int buttonWidth = width / 2 - 40;
+		int y = 28;
 
-		activeProfileButton = addRenderableWidget(Button.builder(
+		addRenderableWidget(Button.builder(
 			Component.literal("Active profile: " + model.getActiveProfile()),
-			button -> cycleActiveProfile(button)
+			button -> {
+				model.cycleActiveProfile();
+				button.setMessage(Component.literal("Active profile: " + model.getActiveProfile()));
+			}
 		).bounds(left, y, buttonWidth, 20).build());
-		y += 28;
 
-		editingProfileButton = addRenderableWidget(Button.builder(
+		addRenderableWidget(Button.builder(
 			Component.literal("Editing profile: " + model.getEditingProfile()),
-			button -> cycleEditingProfile(button)
-		).bounds(left, y, buttonWidth, 20).build());
+			button -> {
+				model.cycleEditingProfile();
+				init();
+			}
+		).bounds(right, y, buttonWidth, 20).build());
+		y += 24;
+
+		addToggle(left, y, buttonWidth, "ignoreCase", model::isIgnoreCase, model::setIgnoreCase);
+		addToggle(right, y, buttonWidth, "whitelistMode", model::isWhitelistMode, model::setWhitelistMode);
+		y += 24;
+
+		addToggle(left, y, buttonWidth, "filterLatestLog", model::isFilterLatestLog, model::setFilterLatestLog);
+		addToggle(right, y, buttonWidth, "skipStackTrace", model::isSkipMessagesWithStackTrace, model::setSkipMessagesWithStackTrace);
 		y += 28;
-
-		ignoreCaseButton = addRenderableWidget(Button.builder(
-			toggleLabel("ignoreCase", model.isIgnoreCase()),
-			button -> toggleIgnoreCase(button)
-		).bounds(left, y, buttonWidth, 20).build());
-		y += 24;
-
-		whitelistButton = addRenderableWidget(Button.builder(
-			toggleLabel("whitelistMode", model.isWhitelistMode()),
-			button -> toggleWhitelist(button)
-		).bounds(left, y, buttonWidth, 20).build());
-		y += 24;
-
-		filterLogButton = addRenderableWidget(Button.builder(
-			toggleLabel("filterLatestLog", model.isFilterLatestLog()),
-			button -> toggleFilterLog(button)
-		).bounds(left, y, buttonWidth, 20).build());
-		y += 32;
 
 		for (String listKey : ConfigEditorModel.FILTER_LIST_KEYS) {
-			final String key = listKey;
-			int count = model.getFilterList(key).size();
+			int count = model.getFilterList(listKey).size();
 			addRenderableWidget(Button.builder(
-				Component.literal(ConfigEditorModel.displayNameForList(key) + " (" + count + ")"),
-				button -> minecraft.setScreen(new FilterListEditScreen(this, model, key))
-			).bounds(left, y, buttonWidth, 20).build());
-			y += 24;
+				Component.literal(ConfigEditorModel.displayNameForList(listKey) + " (" + count + ")"),
+				button -> minecraft.setScreen(new FilterListEditScreen(this, model, listKey))
+			).bounds(left, y, width - 40, 20).build());
+			y += 22;
 		}
+
+		ConfigPreset preset = ConfigPreset.all().get(presetIndex);
+		addRenderableWidget(Button.builder(
+			Component.literal("Preset: " + preset.getLabel()),
+			button -> cyclePreset(button)
+		).bounds(left, height - 76, 150, 20).build());
+
+		addRenderableWidget(Button.builder(Component.literal("Apply preset"), button -> applyPreset())
+			.bounds(left + 156, height - 76, 90, 20).build());
+		addRenderableWidget(Button.builder(Component.literal("Import..."), button -> minecraft.setScreen(new ConfigPathScreen(this, model, configPath, true)))
+			.bounds(left + 252, height - 76, 70, 20).build());
+		addRenderableWidget(Button.builder(Component.literal("Export..."), button -> minecraft.setScreen(new ConfigPathScreen(this, model, configPath, false)))
+			.bounds(left + 328, height - 76, 70, 20).build());
 
 		addRenderableWidget(Button.builder(Component.literal("Save & Apply"), button -> saveAndApply())
 			.bounds(width / 2 - 155, height - 28, 100, 20).build());
@@ -100,34 +107,39 @@ public class ConsoleFilterConfigScreen extends Screen {
 			.bounds(width / 2 + 65, height - 28, 80, 20).build());
 	}
 
-	private void cycleActiveProfile(Button button) {
-		model.cycleActiveProfile();
-		button.setMessage(Component.literal("Active profile: " + model.getActiveProfile()));
+	private void addToggle(
+			int x,
+			int y,
+			int width,
+			String key,
+			java.util.function.Supplier<Boolean> getter,
+			java.util.function.Consumer<Boolean> setter) {
+		boolean enabled = getter.get();
+		addRenderableWidget(Button.builder(
+			Component.literal(key + ": " + (enabled ? "ON" : "OFF")),
+			button -> {
+				setter.accept(!getter.get());
+				init();
+			}
+		).bounds(x, y, width, 20).build());
 	}
 
-	private void cycleEditingProfile(Button button) {
-		model.cycleEditingProfile();
-		button.setMessage(Component.literal("Editing profile: " + model.getEditingProfile()));
-		rebuildFilterButtons();
+	private void cyclePreset(Button button) {
+		presetIndex = (presetIndex + 1) % ConfigPreset.all().size();
+		button.setMessage(Component.literal("Preset: " + ConfigPreset.all().get(presetIndex).getLabel()));
 	}
 
-	private void toggleIgnoreCase(Button button) {
-		model.setIgnoreCase(!model.isIgnoreCase());
-		button.setMessage(toggleLabel("ignoreCase", model.isIgnoreCase()));
-	}
-
-	private void toggleWhitelist(Button button) {
-		model.setWhitelistMode(!model.isWhitelistMode());
-		button.setMessage(toggleLabel("whitelistMode", model.isWhitelistMode()));
-	}
-
-	private void toggleFilterLog(Button button) {
-		model.setFilterLatestLog(!model.isFilterLatestLog());
-		button.setMessage(toggleLabel("filterLatestLog", model.isFilterLatestLog()));
-	}
-
-	private void rebuildFilterButtons() {
-		init();
+	private void applyPreset() {
+		try {
+			ConfigPreset preset = ConfigPreset.all().get(presetIndex);
+			preset.apply(configPath);
+			model = ConfigEditorModel.load(configPath);
+			init();
+			notifyPlayer("Preset applied: " + preset.getLabel());
+		} catch (Exception exception) {
+			LOGGER.error("Failed to apply preset", exception);
+			notifyPlayer("Failed to apply preset.");
+		}
 	}
 
 	private void saveAndApply() {
@@ -137,20 +149,10 @@ public class ConsoleFilterConfigScreen extends Screen {
 			if (mod != null) {
 				mod.reloadConfigFromDisk();
 			}
-			if (minecraft.player != null) {
-				minecraft.player.displayClientMessage(
-					Component.literal("Console Filter Next config saved."),
-					false
-				);
-			}
-		} catch (Exception e) {
-			LOGGER.error("Failed to save config from in-game editor", e);
-			if (minecraft.player != null) {
-				minecraft.player.displayClientMessage(
-					Component.literal("Failed to save config. See log for details."),
-					false
-				);
-			}
+			notifyPlayer("Console Filter Next config saved.");
+		} catch (Exception exception) {
+			LOGGER.error("Failed to save config from in-game editor", exception);
+			notifyPlayer("Failed to save config. See log for details.");
 		}
 	}
 
@@ -162,26 +164,30 @@ public class ConsoleFilterConfigScreen extends Screen {
 		minecraft.setScreen(new ConsoleFilterConfigScreen(parent));
 	}
 
-	private static Component toggleLabel(String key, boolean enabled) {
-		return Component.literal(key + ": " + (enabled ? "ON" : "OFF"));
+	private void notifyPlayer(String message) {
+		if (minecraft.player != null) {
+			minecraft.player.displayClientMessage(Component.literal(message), false);
+		}
 	}
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		renderBackground(graphics);
 		graphics.drawCenteredString(font, title, width / 2, 12, 0xFFFFFF);
-		graphics.drawString(
-			font,
-			"File: " + configPath.getFileName(),
-			20,
-			height - 44,
-			0x888888
-		);
+		graphics.drawString(font, "File: " + configPath.getFileName(), 20, height - 44, 0x888888);
 		super.render(graphics, mouseX, mouseY, partialTick);
 	}
 
 	@Override
 	public void onClose() {
 		minecraft.setScreen(parent);
+	}
+
+	ConfigEditorModel getModel() {
+		return model;
+	}
+
+	void setModel(ConfigEditorModel model) {
+		this.model = model;
 	}
 }

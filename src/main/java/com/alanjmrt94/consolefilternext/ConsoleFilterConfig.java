@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -19,12 +20,14 @@ public class ConsoleFilterConfig {
 	private ForgeConfigSpec.ConfigValue<Boolean> ignoreCase;
 	private ForgeConfigSpec.ConfigValue<Boolean> whitelistMode;
 	private ForgeConfigSpec.ConfigValue<Boolean> filterLatestLog;
+	private ForgeConfigSpec.ConfigValue<Boolean> skipMessagesWithStackTrace;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> basicFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> regexFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> levelFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> threadFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> sourceFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> loggerFilters;
+	private ForgeConfigSpec.ConfigValue<List<? extends String>> modIdFilters;
 
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugBasicFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugRegexFilters;
@@ -32,6 +35,7 @@ public class ConsoleFilterConfig {
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugThreadFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugSourceFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugLoggerFilters;
+	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugModIdFilters;
 
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionBasicFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionRegexFilters;
@@ -39,11 +43,13 @@ public class ConsoleFilterConfig {
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionThreadFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionSourceFilters;
 	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionLoggerFilters;
+	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionModIdFilters;
 
 	private ForgeConfigSpec spec;
 
-	private final List<FilterEntry> filterList = new ArrayList<>();
+	private final List<ActiveFilter> filterList = new ArrayList<>();
 	private final List<Pattern> compiledRegexPatterns = new ArrayList<>();
+	private final List<FilterType> compiledRegexTypes = new ArrayList<>();
 	private String profileOverride;
 
 	public void init() {
@@ -52,20 +58,24 @@ public class ConsoleFilterConfig {
 		builder.push("general");
 
 		activeProfile = builder
-				.comment("Active filter profile: default (uses [general] lists), debug, or production (uses [profiles.*] sections).")
-				.define("activeProfile", PROFILE_DEFAULT);
+			.comment("Active filter profile: default (uses [general] lists), debug, or production (uses [profiles.*] sections).")
+			.define("activeProfile", PROFILE_DEFAULT);
 
 		ignoreCase = builder
-				.comment("When true, basic, thread, source, logger, and regex filters ignore letter case.")
-				.define("ignoreCase", false);
+			.comment("When true, basic, thread, source, logger, mod id, and regex filters ignore letter case.")
+			.define("ignoreCase", false);
 
 		whitelistMode = builder
-				.comment("When false (default), matching messages are hidden. When true, only matching messages are shown.")
-				.define("whitelistMode", false);
+			.comment("When false (default), matching messages are hidden. When true, only matching messages are shown.")
+			.define("whitelistMode", false);
 
 		filterLatestLog = builder
-				.comment("When true, filters also apply to latest.log and other Log4j file appenders. When false, only console output is filtered.")
-				.define("filterLatestLog", true);
+			.comment("When true, filters also apply to latest.log and other Log4j file appenders. When false, only console output is filtered.")
+			.define("filterLatestLog", true);
+
+		skipMessagesWithStackTrace = builder
+			.comment("When true, messages with an attached exception/stack trace are never filtered.")
+			.define("skipMessagesWithStackTrace", false);
 
 		basicFilters = defineFilterList(builder, "basicFilters",
 			"Any console messages containing any of these strings will be hidden (unless whitelistMode is enabled).");
@@ -79,6 +89,8 @@ public class ConsoleFilterConfig {
 			"Filter by source/logger name (contains match).");
 		loggerFilters = defineFilterList(builder, "loggerFilters",
 			"Legacy alias for source/logger filtering (contains match). Merged with sourceFilters.");
+		modIdFilters = defineFilterList(builder, "modIdFilters",
+			"Filter messages from Forge mods by mod id (e.g. create, jei).");
 
 		builder.pop();
 
@@ -91,6 +103,7 @@ public class ConsoleFilterConfig {
 		debugThreadFilters = defineFilterList(builder, "threadFilters", "Debug profile thread filters.");
 		debugSourceFilters = defineFilterList(builder, "sourceFilters", "Debug profile source filters.");
 		debugLoggerFilters = defineFilterList(builder, "loggerFilters", "Debug profile logger filters.");
+		debugModIdFilters = defineFilterList(builder, "modIdFilters", "Debug profile mod id filters.");
 		builder.pop();
 
 		builder.push(PROFILE_PRODUCTION);
@@ -100,6 +113,7 @@ public class ConsoleFilterConfig {
 		productionThreadFilters = defineFilterList(builder, "threadFilters", "Production profile thread filters.");
 		productionSourceFilters = defineFilterList(builder, "sourceFilters", "Production profile source filters.");
 		productionLoggerFilters = defineFilterList(builder, "loggerFilters", "Production profile logger filters.");
+		productionModIdFilters = defineFilterList(builder, "modIdFilters", "Production profile mod id filters.");
 		builder.pop();
 
 		builder.pop();
@@ -115,6 +129,7 @@ public class ConsoleFilterConfig {
 	public void load() {
 		filterList.clear();
 		compiledRegexPatterns.clear();
+		compiledRegexTypes.clear();
 
 		boolean caseInsensitive = ignoreCase.get();
 		FilterLists lists = resolveActiveLists();
@@ -126,13 +141,13 @@ public class ConsoleFilterConfig {
 		return switch (profile) {
 			case PROFILE_DEBUG -> listsFrom(
 				debugBasicFilters, debugRegexFilters, debugLevelFilters,
-				debugThreadFilters, debugSourceFilters, debugLoggerFilters);
+				debugThreadFilters, debugSourceFilters, debugLoggerFilters, debugModIdFilters);
 			case PROFILE_PRODUCTION -> listsFrom(
 				productionBasicFilters, productionRegexFilters, productionLevelFilters,
-				productionThreadFilters, productionSourceFilters, productionLoggerFilters);
+				productionThreadFilters, productionSourceFilters, productionLoggerFilters, productionModIdFilters);
 			default -> listsFrom(
 				basicFilters, regexFilters, levelFilters,
-				threadFilters, sourceFilters, loggerFilters);
+				threadFilters, sourceFilters, loggerFilters, modIdFilters);
 		};
 	}
 
@@ -142,14 +157,16 @@ public class ConsoleFilterConfig {
 			ForgeConfigSpec.ConfigValue<List<? extends String>> level,
 			ForgeConfigSpec.ConfigValue<List<? extends String>> thread,
 			ForgeConfigSpec.ConfigValue<List<? extends String>> source,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> logger) {
+			ForgeConfigSpec.ConfigValue<List<? extends String>> logger,
+			ForgeConfigSpec.ConfigValue<List<? extends String>> modId) {
 		return new FilterLists(
 			copyList(basic.get()),
 			copyList(regex.get()),
 			copyList(level.get()),
 			copyList(thread.get()),
 			copyList(source.get()),
-			copyList(logger.get())
+			copyList(logger.get()),
+			copyList(modId.get())
 		);
 	}
 
@@ -166,7 +183,7 @@ public class ConsoleFilterConfig {
 	private void buildFilterList(FilterLists lists, boolean caseInsensitive) {
 		for (String entry : lists.basicFilters()) {
 			if (!entry.isEmpty()) {
-				filterList.add(FilterEntry.wildcard(entry, caseInsensitive));
+				filterList.add(new ActiveFilter(FilterType.BASIC, FilterEntry.wildcard(entry, caseInsensitive)));
 			}
 		}
 
@@ -176,7 +193,8 @@ public class ConsoleFilterConfig {
 					int flags = caseInsensitive ? Pattern.CASE_INSENSITIVE : 0;
 					Pattern pattern = Pattern.compile(entry, flags);
 					compiledRegexPatterns.add(pattern);
-					filterList.add(FilterEntry.regex(pattern));
+					compiledRegexTypes.add(FilterType.REGEX);
+					filterList.add(new ActiveFilter(FilterType.REGEX, FilterEntry.regex(pattern)));
 				} catch (PatternSyntaxException ignored) {
 					// Expresión inválida en config; se omite
 				}
@@ -185,47 +203,62 @@ public class ConsoleFilterConfig {
 
 		for (String level : lists.levelFilters()) {
 			if (!level.isEmpty()) {
-				filterList.add(FilterEntry.level(level));
+				filterList.add(new ActiveFilter(FilterType.LEVEL, FilterEntry.level(level)));
 			}
 		}
 
 		for (String thread : lists.threadFilters()) {
 			if (!thread.isEmpty()) {
-				filterList.add(FilterEntry.thread(thread, caseInsensitive));
+				filterList.add(new ActiveFilter(FilterType.THREAD, FilterEntry.thread(thread, caseInsensitive)));
 			}
 		}
 
 		for (String source : lists.sourceFilters()) {
 			if (!source.isEmpty()) {
-				filterList.add(FilterEntry.source(source, caseInsensitive));
+				filterList.add(new ActiveFilter(FilterType.SOURCE, FilterEntry.source(source, caseInsensitive)));
 			}
 		}
 
 		for (String logger : lists.loggerFilters()) {
 			if (!logger.isEmpty()) {
-				filterList.add(FilterEntry.logger(logger, caseInsensitive));
+				filterList.add(new ActiveFilter(FilterType.LOGGER, FilterEntry.logger(logger, caseInsensitive)));
 			}
 		}
+
+		for (String modId : lists.modIdFilters()) {
+			if (!modId.isEmpty()) {
+				filterList.add(new ActiveFilter(FilterType.MOD_ID, FilterEntry.modId(modId)));
+			}
+		}
+	}
+
+	public FilterEvaluation evaluate(LogMessage message) {
+		if (skipMessagesWithStackTrace.get() && message.hasStackTraceHint()) {
+			return FilterEvaluation.passThrough();
+		}
+
+		Optional<FilterType> matchType = findMatchingFilter(message);
+		boolean matches = matchType.isPresent();
+		boolean filtered = applyFilterMode(matches, whitelistMode.get());
+		return new FilterEvaluation(filtered, matchType.orElse(null));
 	}
 
 	public boolean shouldFilter(LogMessage message) {
-		boolean matches = false;
-		for (FilterEntry entry : filterList) {
-			if (entry.shouldFilter(message)) {
-				matches = true;
-				break;
-			}
-		}
-		return applyFilterMode(matches, whitelistMode.get());
+		return evaluate(message).filtered();
 	}
 
-	public boolean shouldFilterPlain(String text) {
+	public FilterEvaluation evaluatePlain(String text) {
 		if (text == null || text.isEmpty()) {
-			return applyFilterMode(false, whitelistMode.get());
+			return new FilterEvaluation(applyFilterMode(false, whitelistMode.get()), null);
+		}
+
+		if (skipMessagesWithStackTrace.get() && StackTraceDetector.looksLikeStackTrace(text)) {
+			return FilterEvaluation.passThrough();
 		}
 
 		boolean caseInsensitive = ignoreCase.get();
 		boolean matches = false;
+		FilterType matchType = null;
 
 		FilterLists lists = resolveActiveLists();
 		for (String entry : lists.basicFilters()) {
@@ -235,24 +268,41 @@ public class ConsoleFilterConfig {
 			if (caseInsensitive) {
 				if (text.toLowerCase(Locale.ROOT).contains(entry.toLowerCase(Locale.ROOT))) {
 					matches = true;
+					matchType = FilterType.BASIC;
 					break;
 				}
 			} else if (text.contains(entry)) {
 				matches = true;
+				matchType = FilterType.BASIC;
 				break;
 			}
 		}
 
 		if (!matches) {
-			for (Pattern pattern : compiledRegexPatterns) {
-				if (pattern.matcher(text).find()) {
+			for (int i = 0; i < compiledRegexPatterns.size(); i++) {
+				if (compiledRegexPatterns.get(i).matcher(text).find()) {
 					matches = true;
+					matchType = compiledRegexTypes.get(i);
 					break;
 				}
 			}
 		}
 
-		return applyFilterMode(matches, whitelistMode.get());
+		boolean filtered = applyFilterMode(matches, whitelistMode.get());
+		return new FilterEvaluation(filtered, matchType);
+	}
+
+	public boolean shouldFilterPlain(String text) {
+		return evaluatePlain(text).filtered();
+	}
+
+	private Optional<FilterType> findMatchingFilter(LogMessage message) {
+		for (ActiveFilter activeFilter : filterList) {
+			if (activeFilter.entry().shouldFilter(message)) {
+				return Optional.of(activeFilter.type());
+			}
+		}
+		return Optional.empty();
 	}
 
 	static boolean applyFilterMode(boolean matches, boolean whitelistMode) {
@@ -266,6 +316,10 @@ public class ConsoleFilterConfig {
 			profileOverride = profile;
 		}
 		load();
+	}
+
+	public void clearProfileOverride() {
+		profileOverride = null;
 	}
 
 	public String getEffectiveProfile() {
@@ -292,6 +346,10 @@ public class ConsoleFilterConfig {
 		return filterLatestLog.get();
 	}
 
+	public boolean isSkipMessagesWithStackTrace() {
+		return skipMessagesWithStackTrace.get();
+	}
+
 	public int countNonEmpty(List<? extends String> values) {
 		int count = 0;
 		for (String value : values) {
@@ -312,16 +370,27 @@ public class ConsoleFilterConfig {
 			countNonEmpty(lists.levelFilters()),
 			countNonEmpty(lists.threadFilters()),
 			sourceCount + loggerCount,
+			countNonEmpty(lists.modIdFilters()),
 			filterCount(),
 			getEffectiveProfile(),
 			isIgnoreCase(),
 			isWhitelistMode(),
-			isFilterLatestLog()
+			isFilterLatestLog(),
+			isSkipMessagesWithStackTrace()
 		);
 	}
 
 	public ForgeConfigSpec getSpec() {
 		return spec;
+	}
+
+	public record FilterEvaluation(boolean filtered, FilterType matchType) {
+		public static FilterEvaluation passThrough() {
+			return new FilterEvaluation(false, null);
+		}
+	}
+
+	private record ActiveFilter(FilterType type, FilterEntry entry) {
 	}
 
 	public record FilterSummary(
@@ -330,11 +399,13 @@ public class ConsoleFilterConfig {
 		int level,
 		int thread,
 		int source,
+		int modId,
 		int total,
 		String activeProfile,
 		boolean ignoreCase,
 		boolean whitelistMode,
-		boolean filterLatestLog
+		boolean filterLatestLog,
+		boolean skipMessagesWithStackTrace
 	) {
 	}
 }

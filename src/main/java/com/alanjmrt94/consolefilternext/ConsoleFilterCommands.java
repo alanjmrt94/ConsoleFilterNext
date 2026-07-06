@@ -2,6 +2,7 @@ package com.alanjmrt94.consolefilternext;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -84,13 +85,14 @@ public class ConsoleFilterCommands {
 
 		ConsoleFilterConfig.FilterSummary summary = mod.getConfig().getSummary();
 		source.sendSuccess(() -> Component.literal(String.format(
-			"Profile '%s' — basic: %d, regex: %d, level: %d, thread: %d, source/logger: %d (total: %d)",
+			"Profile '%s' — basic: %d, regex: %d, level: %d, thread: %d, source/logger: %d, modId: %d (total: %d)",
 			summary.activeProfile(),
 			summary.basic(),
 			summary.regex(),
 			summary.level(),
 			summary.thread(),
 			summary.source(),
+			summary.modId(),
 			summary.total()
 		)), false);
 		return 1;
@@ -103,14 +105,26 @@ public class ConsoleFilterCommands {
 		}
 
 		ConsoleFilterConfig.FilterSummary summary = mod.getConfig().getSummary();
+		Map<FilterType, Long> byType = mod.getStats().snapshotByType();
 		source.sendSuccess(() -> Component.literal(String.format(
-			"Status — profile: %s, filters: %d, hidden: %d, ignoreCase: %s, whitelistMode: %s, filterLatestLog: %s",
+			"Status — profile: %s, filters: %d, hidden: %d, ignoreCase: %s, whitelistMode: %s, filterLatestLog: %s, skipStackTrace: %s",
 			summary.activeProfile(),
 			summary.total(),
 			mod.getStats().getFilteredCount(),
 			summary.ignoreCase(),
 			summary.whitelistMode(),
-			summary.filterLatestLog()
+			summary.filterLatestLog(),
+			summary.skipMessagesWithStackTrace()
+		)), false);
+		source.sendSuccess(() -> Component.literal(String.format(
+			"Hits — basic: %d, regex: %d, level: %d, thread: %d, source: %d, logger: %d, modId: %d",
+			byType.get(FilterType.BASIC),
+			byType.get(FilterType.REGEX),
+			byType.get(FilterType.LEVEL),
+			byType.get(FilterType.THREAD),
+			byType.get(FilterType.SOURCE),
+			byType.get(FilterType.LOGGER),
+			byType.get(FilterType.MOD_ID)
 		)), false);
 		return 1;
 	}
@@ -132,8 +146,8 @@ public class ConsoleFilterCommands {
 			ConfigFileHelper.exportConfig(configPath.get(), target);
 			source.sendSuccess(() -> Component.literal("Exported config to " + target), true);
 			return 1;
-		} catch (IOException e) {
-			source.sendFailure(Component.literal("Export failed: " + e.getMessage()));
+		} catch (IOException exception) {
+			source.sendFailure(Component.literal("Export failed: " + exception.getMessage()));
 			return 0;
 		}
 	}
@@ -144,15 +158,14 @@ public class ConsoleFilterCommands {
 			return 0;
 		}
 
-		Optional<Path> configPath = mod.getConfigPath();
-		if (configPath.isEmpty()) {
+		if (mod.getConfigPath().isEmpty()) {
 			source.sendFailure(Component.literal("Config path is not available."));
 			return 0;
 		}
 
 		Path sourcePath = Path.of(pathString);
 		try {
-			ConfigFileHelper.importConfig(sourcePath, configPath.get());
+			ConfigFileHelper.importConfig(sourcePath, mod.getConfigPath().get());
 			mod.reloadConfigFromDisk();
 			ConsoleFilterConfig.FilterSummary summary = mod.getConfig().getSummary();
 			source.sendSuccess(
@@ -160,8 +173,8 @@ public class ConsoleFilterCommands {
 				true
 			);
 			return 1;
-		} catch (IOException e) {
-			source.sendFailure(Component.literal("Import failed: " + e.getMessage()));
+		} catch (IOException exception) {
+			source.sendFailure(Component.literal("Import failed: " + exception.getMessage()));
 			return 0;
 		}
 	}
@@ -172,10 +185,14 @@ public class ConsoleFilterCommands {
 			return 0;
 		}
 
-		mod.getConfig().setProfileOverride(profile);
+		if (!mod.persistActiveProfile(profile)) {
+			source.sendFailure(Component.literal("Failed to persist profile to config file."));
+			return 0;
+		}
+
 		ConsoleFilterConfig.FilterSummary summary = mod.getConfig().getSummary();
 		source.sendSuccess(
-			() -> Component.literal("Active profile set to '" + summary.activeProfile() + "' (" + summary.total() + " filter(s))."),
+			() -> Component.literal("Active profile set to '" + summary.activeProfile() + "' (" + summary.total() + " filter(s), saved to TOML)."),
 			true
 		);
 		return 1;

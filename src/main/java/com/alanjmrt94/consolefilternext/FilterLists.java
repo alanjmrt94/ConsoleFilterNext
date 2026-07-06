@@ -9,9 +9,11 @@ public record FilterLists(
 	List<String> levelFilters,
 	List<String> threadFilters,
 	List<String> sourceFilters,
-	List<String> loggerFilters
+	List<String> loggerFilters,
+	List<String> modIdFilters
 ) {
 	public static final FilterLists EMPTY = new FilterLists(
+		Collections.emptyList(),
 		Collections.emptyList(),
 		Collections.emptyList(),
 		Collections.emptyList(),

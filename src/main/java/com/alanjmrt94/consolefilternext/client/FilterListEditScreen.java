@@ -2,7 +2,9 @@ package com.alanjmrt94.consolefilternext.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import com.alanjmrt94.consolefilternext.RegexValidator;
 import com.alanjmrt94.consolefilternext.client.config.ConfigEditorModel;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,6 +15,9 @@ import net.minecraft.network.chat.Component;
 
 public class FilterListEditScreen extends Screen {
 
+	private static final int ENTRIES_PER_PAGE = 8;
+	private static final int ROW_HEIGHT = 24;
+
 	private final Screen parent;
 	private final ConfigEditorModel model;
 	private final String listKey;
@@ -20,7 +25,9 @@ public class FilterListEditScreen extends Screen {
 	private final List<EditBox> entryBoxes = new ArrayList<>();
 
 	private EditBox addBox;
+	private int pageIndex;
 	private int contentTop = 48;
+	private String validationMessage = "";
 
 	public FilterListEditScreen(Screen parent, ConfigEditorModel model, String listKey) {
 		super(Component.literal(ConfigEditorModel.displayNameForList(listKey)));
@@ -34,10 +41,17 @@ public class FilterListEditScreen extends Screen {
 	protected void init() {
 		entryBoxes.clear();
 		clearWidgets();
+		validationMessage = "";
 
 		int rowWidth = width - 80;
+		int maxPage = Math.max(0, (entries.size() - 1) / ENTRIES_PER_PAGE);
+		pageIndex = Math.min(pageIndex, maxPage);
+
+		int start = pageIndex * ENTRIES_PER_PAGE;
+		int end = Math.min(start + ENTRIES_PER_PAGE, entries.size());
 		int y = contentTop;
-		for (int i = 0; i < entries.size(); i++) {
+
+		for (int i = start; i < end; i++) {
 			final int index = i;
 			EditBox box = new EditBox(font, 40, y, rowWidth - 70, 20, Component.empty());
 			box.setValue(entries.get(i));
@@ -47,7 +61,16 @@ public class FilterListEditScreen extends Screen {
 			addRenderableWidget(Button.builder(Component.literal("X"), button -> removeEntry(index))
 				.bounds(40 + rowWidth - 60, y, 20, 20)
 				.build());
-			y += 24;
+			y += ROW_HEIGHT;
+		}
+
+		if (entries.size() > ENTRIES_PER_PAGE) {
+			addRenderableWidget(Button.builder(Component.literal("<"), button -> changePage(-1))
+				.bounds(40, height - 108, 20, 20)
+				.build());
+			addRenderableWidget(Button.builder(Component.literal(">"), button -> changePage(1))
+				.bounds(66, height - 108, 20, 20)
+				.build());
 		}
 
 		addBox = new EditBox(font, 40, height - 84, rowWidth - 110, 20, Component.literal("New entry"));
@@ -65,12 +88,28 @@ public class FilterListEditScreen extends Screen {
 			.build());
 	}
 
+	private void changePage(int delta) {
+		rebuildEntriesFromBoxes();
+		int maxPage = Math.max(0, (entries.size() - 1) / ENTRIES_PER_PAGE);
+		pageIndex = Math.max(0, Math.min(pageIndex + delta, maxPage));
+		init();
+	}
+
 	private void addEntry() {
 		String value = addBox.getValue().trim();
 		if (!value.isEmpty()) {
+			if (ConfigEditorModel.isRegexList(listKey)) {
+				Optional<String> error = RegexValidator.validate(value, model.isIgnoreCase());
+				if (error.isPresent()) {
+					validationMessage = error.get();
+					return;
+				}
+			}
 			entries.add(value);
 			addBox.setValue("");
+			validationMessage = "";
 			rebuildEntriesFromBoxes();
+			pageIndex = Math.max(0, (entries.size() - 1) / ENTRIES_PER_PAGE);
 			init();
 		}
 	}
@@ -79,18 +118,37 @@ public class FilterListEditScreen extends Screen {
 		rebuildEntriesFromBoxes();
 		if (index >= 0 && index < entries.size()) {
 			entries.remove(index);
+			int maxPage = Math.max(0, (entries.size() - 1) / ENTRIES_PER_PAGE);
+			pageIndex = Math.min(pageIndex, maxPage);
 			init();
 		}
 	}
 
 	private void rebuildEntriesFromBoxes() {
-		for (int i = 0; i < entryBoxes.size() && i < entries.size(); i++) {
-			entries.set(i, entryBoxes.get(i).getValue().trim());
+		int start = pageIndex * ENTRIES_PER_PAGE;
+		for (int i = 0; i < entryBoxes.size(); i++) {
+			int entryIndex = start + i;
+			if (entryIndex < entries.size()) {
+				entries.set(entryIndex, entryBoxes.get(i).getValue().trim());
+			}
 		}
 	}
 
 	private void applyAndClose() {
 		rebuildEntriesFromBoxes();
+		if (ConfigEditorModel.isRegexList(listKey)) {
+			for (String entry : entries) {
+				if (entry.isBlank()) {
+					continue;
+				}
+				Optional<String> error = RegexValidator.validate(entry, model.isIgnoreCase());
+				if (error.isPresent()) {
+					validationMessage = "Invalid regex: " + error.get();
+					return;
+				}
+			}
+		}
+
 		List<String> cleaned = entries.stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
 		model.setFilterList(listKey, cleaned);
 		onClose();
@@ -107,6 +165,38 @@ public class FilterListEditScreen extends Screen {
 			30,
 			0xAAAAAA
 		);
+
+		if (entries.size() > ENTRIES_PER_PAGE) {
+			int maxPage = Math.max(0, (entries.size() - 1) / ENTRIES_PER_PAGE);
+			graphics.drawString(
+				font,
+				"Page " + (pageIndex + 1) + "/" + (maxPage + 1) + " (" + entries.size() + " entries)",
+				92,
+				height - 102,
+				0xAAAAAA
+			);
+		}
+
+		if (ConfigEditorModel.isRegexList(listKey)) {
+			int start = pageIndex * ENTRIES_PER_PAGE;
+			for (int i = 0; i < entryBoxes.size(); i++) {
+				String value = entryBoxes.get(i).getValue();
+				if (!value.isBlank()) {
+					Optional<String> error = RegexValidator.validate(value, model.isIgnoreCase());
+					int color = error.isPresent() ? 0xFF5555 : 0x55FF55;
+					graphics.drawString(font, error.isPresent() ? "!" : "OK", 24, contentTop + i * ROW_HEIGHT + 6, color);
+				}
+				int entryIndex = start + i;
+				if (entryIndex < entries.size()) {
+					entries.set(entryIndex, value.trim());
+				}
+			}
+		}
+
+		if (!validationMessage.isEmpty()) {
+			graphics.drawCenteredString(font, validationMessage, width / 2, height - 56, 0xFF5555);
+		}
+
 		super.render(graphics, mouseX, mouseY, partialTick);
 	}
 

@@ -39,4 +39,8 @@ public class LogMessage {
         return String.format("[%s] [%s/%s] [%s]: %s", 
             timestamp, thread, level, source, message);
     }
-} 
+
+    public boolean hasStackTraceHint() {
+        return StackTraceDetector.looksLikeStackTrace(message);
+    }
+}

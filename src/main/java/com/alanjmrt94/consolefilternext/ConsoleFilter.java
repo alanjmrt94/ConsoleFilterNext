@@ -1,5 +1,6 @@
 package com.alanjmrt94.consolefilternext;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -95,13 +96,36 @@ public class ConsoleFilter {
 	public boolean reloadConfigFromDisk() {
 		if (commonModConfig != null && commonModConfig.getConfigData() instanceof CommentedFileConfig fileConfig) {
 			fileConfig.load();
+			config.clearProfileOverride();
 			config.load();
 			LOGGER.info("Configuración recargada desde disco: {} filtro(s) activos.", config.filterCount());
 			return true;
 		}
 
+		config.clearProfileOverride();
 		config.load();
 		LOGGER.warn("ModConfig no disponible; recarga aplicada solo en memoria.");
+		return true;
+	}
+
+	public boolean persistActiveProfile(String profile) {
+		String normalized = profile == null || profile.isBlank()
+			? ConsoleFilterConfig.PROFILE_DEFAULT
+			: profile;
+
+		Optional<java.nio.file.Path> configPath = getConfigPath();
+		if (configPath.isPresent()) {
+			try {
+				ConfigFileHelper.setActiveProfile(configPath.get(), normalized);
+				config.clearProfileOverride();
+				return reloadConfigFromDisk();
+			} catch (IOException exception) {
+				LOGGER.error("No se pudo persistir activeProfile en TOML", exception);
+				return false;
+			}
+		}
+
+		config.setProfileOverride(normalized);
 		return true;
 	}
 
@@ -110,7 +134,7 @@ public class ConsoleFilter {
 			return false;
 		}
 
-		boolean filtered;
+		ConsoleFilterConfig.FilterEvaluation evaluation;
 		Matcher matcher = LOG_PATTERN.matcher(message);
 		if (matcher.matches()) {
 			LogMessage logMessage = new LogMessage(
@@ -120,16 +144,20 @@ public class ConsoleFilter {
 				matcher.group(4),
 				matcher.group(5)
 			);
-			filtered = config.shouldFilter(logMessage);
+			evaluation = config.evaluate(logMessage);
 		} else {
-			filtered = config.shouldFilterPlain(message);
+			evaluation = config.evaluatePlain(message);
 		}
 
-		if (filtered) {
-			stats.recordFiltered();
+		if (evaluation.filtered()) {
+			if (evaluation.matchType() != null) {
+				stats.recordFiltered(evaluation.matchType());
+			} else {
+				stats.recordFiltered();
+			}
 		}
 
-		return filtered;
+		return evaluation.filtered();
 	}
 
 	public ConsoleFilterConfig getConfig() {

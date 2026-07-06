@@ -51,6 +51,7 @@ For example, to filter all `INFO` messages from the `Server thread`, your `conso
 ignoreCase = false
 whitelistMode = false
 filterLatestLog = true
+skipMessagesWithStackTrace = false
 activeProfile = "default"
 
 # Filters messages that contain specific text
@@ -65,9 +66,14 @@ threadFilters = ["Server thread"]
 # Filters messages based on their source (logger or class name). Matches when the source **contains** the string (package prefixes work).
 sourceFilters = ["net.minecraft.server"]
 
+# Filters messages from Forge mods by mod id (e.g. jei, create)
+modIdFilters = []
+
 # Filters messages using regular expressions (advanced)
 regexFilters = []
 ````
+
+> Migrating from [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) (original)? See [MIGRATION.md](MIGRATION.md).
 
 ## 💡 Tips
 
@@ -137,6 +143,22 @@ loggerFilters = ["net.minecraft.server"]
 
 Same as `sourceFilters` (contains match on logger/source name). Both lists are applied.
 
+### ✅ Filter by Forge mod id
+
+```toml
+modIdFilters = ["jei", "create"]
+```
+
+Matches loggers/sources belonging to the given mod id (uses Forge `ModList` when available).
+
+### ✅ Skip messages with stack traces
+
+```toml
+skipMessagesWithStackTrace = true
+```
+
+When `true`, lines with an attached exception or stack-trace text are never hidden.
+
 ### ✅ Filter profiles
 
 ```toml
@@ -149,7 +171,7 @@ levelFilters = ["DEBUG"]
 levelFilters = ["WARN", "ERROR"]
 ```
 
-Profiles: `default` (uses `[general]`), `debug`, or `production`. Switch at runtime:
+Profiles: `default` (uses `[general]`), `debug`, or `production`. Switch at runtime (persisted to TOML):
 
 ```
 /consolefilter profile debug
@@ -175,6 +197,8 @@ When `true`, `latest.log` and other Log4j file appenders are filtered. When `fal
 ### ✅ In-game config (Forge)
 
 - **Options → Mods → Console Filter Next → Config** — edit booleans, profiles, and all filter lists
+- Paginated list editor (8 entries per page) with **regex validation** for `regexFilters`
+- **Presets** (Debug, Silent modpack, Minimal), **Import…** / **Export…** from the config screen
 - **Save & Apply** writes the TOML file and reloads filters without restarting
 
 > [Mod Menu](https://modrinth.com/mod/modmenu) is **Fabric-only**. This Forge mod uses the native Mod List Config button (no dependencies).
@@ -192,7 +216,7 @@ On a server with OP level 2+:
 /consolefilter import backups/consolefilter.toml
 ```
 
-`reload` re-reads `consolefilternext-common.toml`. `status` shows profile, filters, and hidden message count.
+`reload` re-reads `consolefilternext-common.toml`. `status` shows profile, filters, hidden message count, and **hits per filter type** (basic, regex, level, thread, source, logger, modId).
 
 ---
 
@@ -246,11 +270,11 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 ./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v3.5.0)
+## ⚠️ Known limitations (v4.0.0)
 
-- `/consolefilter profile` switches filters in memory until restart (does not rewrite `activeProfile` in the TOML file unless you use the in-game editor or edit the file).
 - Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
-- The in-game list editor shows entries as a vertical list (no search/pagination yet); very large lists are cumbersome to edit in UI.
+- The in-game list editor paginates long lists (8 per page) but has no search yet.
+- `modIdFilters` resolution depends on Forge `ModList` and logger/source names; edge cases may need `sourceFilters` instead.
 
 ## License
 

@@ -1,9 +1,12 @@
 package com.alanjmrt94.consolefilternext.client.config;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alanjmrt94.consolefilternext.ConfigFileHelper;
+import com.alanjmrt94.consolefilternext.ConfigPreset;
 import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 
@@ -21,7 +24,8 @@ public class ConfigEditorModel {
 		"levelFilters",
 		"threadFilters",
 		"sourceFilters",
-		"loggerFilters"
+		"loggerFilters",
+		"modIdFilters"
 	);
 
 	private final CommentedFileConfig fileConfig;
@@ -32,14 +36,31 @@ public class ConfigEditorModel {
 		this.editingProfile = getString("general.activeProfile", ConsoleFilterConfig.PROFILE_DEFAULT);
 	}
 
+	public void save(Path configPath) {
+		fileConfig.save();
+	}
+
 	public static ConfigEditorModel load(Path configPath) {
-		CommentedFileConfig config = CommentedFileConfig.builder(configPath).build();
+		CommentedFileConfig config = CommentedFileConfig.builder(configPath).sync().build();
 		config.load();
 		return new ConfigEditorModel(config);
 	}
 
-	public void save(Path configPath) {
-		fileConfig.save();
+	public void applyPreset(ConfigPreset preset, Path configPath) throws IOException {
+		preset.apply(configPath);
+		fileConfig.load();
+		editingProfile = getActiveProfile();
+	}
+
+	public void importFrom(Path sourcePath, Path configPath) throws IOException {
+		ConfigFileHelper.importConfig(sourcePath, configPath);
+		fileConfig.load();
+		editingProfile = getActiveProfile();
+	}
+
+	public void exportTo(Path targetPath, Path configPath) throws IOException {
+		save(configPath);
+		ConfigFileHelper.exportConfig(configPath, targetPath);
 	}
 
 	public String getEditingProfile() {
@@ -87,6 +108,14 @@ public class ConfigEditorModel {
 		fileConfig.set("general.filterLatestLog", value);
 	}
 
+	public boolean isSkipMessagesWithStackTrace() {
+		return getBoolean("general.skipMessagesWithStackTrace", false);
+	}
+
+	public void setSkipMessagesWithStackTrace(boolean value) {
+		fileConfig.set("general.skipMessagesWithStackTrace", value);
+	}
+
 	public String getActiveProfile() {
 		return getString("general.activeProfile", ConsoleFilterConfig.PROFILE_DEFAULT);
 	}
@@ -100,7 +129,7 @@ public class ConfigEditorModel {
 	}
 
 	public void setFilterList(String listKey, List<String> values) {
-		fileConfig.set(resolveListPath(editingProfile, listKey), values);
+		fileConfig.set(resolveListPath(editingProfile, listKey), new ArrayList<>(values));
 	}
 
 	public int countNonEmptyFilters(String profile) {
@@ -130,8 +159,13 @@ public class ConfigEditorModel {
 			case "threadFilters" -> "Thread filters";
 			case "sourceFilters" -> "Source filters";
 			case "loggerFilters" -> "Logger filters";
+			case "modIdFilters" -> "Mod id filters";
 			default -> listKey;
 		};
+	}
+
+	public static boolean isRegexList(String listKey) {
+		return "regexFilters".equals(listKey);
 	}
 
 	private boolean getBoolean(String path, boolean defaultValue) {

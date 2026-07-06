@@ -6,6 +6,18 @@
  - This fork maintained by alanjmrt94
 
 -----------------------------------------------------
+ VERSION 4.0.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - In-game editor: paginated filter lists, regex validation, import/export, embedded presets
+ - Add modIdFilters (filter logs by Forge mod id)
+ - Add skipMessagesWithStackTrace option
+ - Per-filter-type hit statistics (/consolefilter status)
+ - /consolefilter profile now persists activeProfile to TOML
+ - ConfigEditorModel round-trip tests; CI dedicated server smoke job
+ - Migration guide from original ConsoleFilter (MIGRATION.md)
+
+-----------------------------------------------------
  VERSION 3.5.0 - 1.20.1
 -----------------------------------------------------
 1.20.1:
