@@ -8,8 +8,9 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
-credits="Fork of ConsoleFilter by Matthew Czyr (MattCzyr). Original contributors: NgLoader, MarkKoz, ChaosTheDude."
+credits="Fork of ConsoleFilter by Matthew Czyr (MattCzyr). Original contributors: NgLoader, MarkKoz, ChaosTheDude. Licensed under CC BY-NC-SA 4.0."
 description='''${mod_description}'''
+modUrl="https://www.curseforge.com/minecraft/mc-mods/consolefilternext"
 # Environment: ${mod_environment} — client and dedicated server
 displayTest="IGNORE_ALL_VERSION"
 logoFile="icon.png"

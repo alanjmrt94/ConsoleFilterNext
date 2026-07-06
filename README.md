@@ -1,10 +1,32 @@
 # Console Filter Next
 
-An improved ConsoleFilter mod that filters log messages not only by text, but also by log level (info, error, etc.). Gain better control over your console output to reduce noise and focus on what's important — ideal for debugging and error tracking. Fork of ConsoleFilter by [Matthew Czyr](https://github.com/MattCzyr).
+An improved ConsoleFilter mod that filters log messages not only by text, but also by log level, thread, source, mod id, and regex. Reduce console noise on the client or dedicated server while debugging modpacks and development environments. Fork of ConsoleFilter by [Matthew Czyr](https://github.com/MattCzyr).
 
-[Downloads on CurseForge](https://minecraft.curseforge.com/projects/console-filter-next)
+**Current release:** `1.20.1-4.0.1` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
 
-> **Developers:** run `./scripts/release.sh` for environment setup, toolchain checks, and build configuration.
+## Downloads
+
+| Platform | Link |
+|----------|------|
+| **CurseForge** | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
+| **Modrinth** | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
+| **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
+
+> **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).
+
+---
+
+## Features
+
+- **Filter types:** basic text, regex, log level, thread, logger/source, Forge **mod id**
+- **Profiles:** `default`, `debug`, `production` — switch in-game, via TOML, or `/consolefilter profile` (persisted)
+- **Modes:** blacklist (hide matches) or **whitelist** (show only matches); optional `ignoreCase`
+- **`filterLatestLog`:** apply filters to `latest.log` and other Log4j file appenders
+- **`skipMessagesWithStackTrace`:** never hide lines with exceptions or stack traces
+- **In-game editor** (Forge Mod List → Config): paginated lists, regex validation, presets, import/export
+- **Commands** (OP 2): `reload`, `list`, `status`, `export`, `import`, `profile`
+- **Statistics:** per-filter-type hit counts in `/consolefilter status`
+- **Hot reload** from file, commands, or **Save & Apply** in the config UI
 
 ---
 
@@ -233,6 +255,7 @@ If **any** of the conditions match, the message will be **filtered out**.
 | **Mod loader** | Forge 47+ |
 | **Java (runtime)** | 17 (bundled with Minecraft) |
 | **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
+| **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) |
 
 ## 🛠️ Building from source
 
@@ -270,7 +293,18 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 ./scripts/release.sh
 ```
 
-## ⚠️ Known limitations (v4.0.0)
+### Publishing a release (maintainers)
+
+With API tokens in `scripts/.release.local` and `gh auth login`:
+
+```bash
+./scripts/release.sh publish --dry-run   # simulate
+./scripts/release.sh publish             # build + tag + GitHub + Modrinth + CurseForge
+```
+
+See `scripts/.release.local.example` for `CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, and project slugs.
+
+## ⚠️ Known limitations (v4.0.1)
 
 - Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
 - The in-game list editor paginates long lists (8 per page) but has no search yet.
@@ -278,4 +312,15 @@ The `run/` directory holds local world data, configs, and logs and is **gitignor
 
 ## License
 
-[Creative Commons Attribution-NonCommercial ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) — see [LICENSE.md](LICENSE.md).
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) (CC BY-NC-SA 4.0) — same as upstream ConsoleFilter. See [LICENSE.md](LICENSE.md) for attribution and terms.
+
+Free to download on CurseForge and Modrinth; redistribution and derivatives must follow CC BY-NC-SA 4.0 (attribution, non-commercial, share-alike).
+
+## Links
+
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
+- [Modrinth](https://modrinth.com/mod/consolefilternext)
+- [GitHub repository](https://github.com/alanjmrt94/ConsoleFilterNext)
+- [Report issues (this fork)](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
+- [Original ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter)
+- [Migration guide](MIGRATION.md)

@@ -2,6 +2,12 @@
 
 Console Filter Next is a **fork** with extra features. Config file name and several keys differ.
 
+## Downloads (this fork)
+
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
+- [Modrinth](https://modrinth.com/mod/consolefilternext)
+- [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext)
+
 ## File location
 
 | Original ConsoleFilter | Console Filter Next |
@@ -67,3 +73,5 @@ Use **Options → Mods → Console Filter Next → Config** (Forge Mod List). No
 
 - **This fork:** [alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 - **Original:** [MattCzyr/ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter/issues)
+
+Downloads: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext)

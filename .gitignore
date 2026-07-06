@@ -1,34 +1,53 @@
-.gradle
+# ─── Gradle ─────────────────────────────────────────────────────────────────
+.gradle/
 **/build/
 !src/**/build/
-
-# Ignore Gradle GUI config
 gradle-app.setting
-
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
-
-# Avoid ignore Gradle wrappper properties
-!gradle-wrapper.properties
-
-# Cache of project
 .gradletasknamecache
 
-# Eclipse Gradle plugin generated files
-# Eclipse Core
+# Wrapper (keep tracked)
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Local Maven repo (build.gradle publishing)
+mcmodsrepo/
+
+# ─── Forge / Minecraft dev runs ─────────────────────────────────────────────
+run/
+
+# ─── IDE ────────────────────────────────────────────────────────────────────
+# Eclipse
 .project
-# JDT-specific (Eclipse Java Development Tools)
 .classpath
+.settings/
+bin/
 
 # IntelliJ IDEA
 .idea/
 *.iml
+out/
 
-# Configuración local del script de entorno de desarrollo
-scripts/.release.local
+# VS Code / Cursor (editor settings are local)
+.vscode/
 
-# Cursor — plan de desarrollo local (no versionar)
+# Cursor — plan de desarrollo local
 .cursor/
 
-# Directorio de ejecución local (runClient / runServer)
-run/
+# ─── Scripts (secrets) ───────────────────────────────────────────────────────
+scripts/.release.local
+
+# Artefactos temporales de publicación
+scripts/*-response.json
+response.txt
+
+# ─── Release / build artifacts en raíz ───────────────────────────────────────
+/consolefilternext-*.jar
+
+# ─── Logs y crashes JVM ─────────────────────────────────────────────────────
+*.log
+hs_err_pid*
+replay_pid*
+
+# ─── Sistema operativo ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

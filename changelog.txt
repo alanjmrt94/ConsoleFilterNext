@@ -5,6 +5,17 @@
  - Original: https://github.com/MattCzyr/ConsoleFilter
  - This fork maintained by alanjmrt94
 
+ - Licensed under CC BY-NC-SA 4.0; see LICENSE.md for attribution (fork + upstream)
+
+-----------------------------------------------------
+ VERSION 4.0.1 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Update README and MIGRATION with CurseForge and Modrinth download links
+ - Add release publish workflow (GitHub + Modrinth + CurseForge) in release.sh
+ - Add modUrl to mods.toml; align project slugs for distribution APIs
+ - Clarify LICENSE.md (CC BY-NC-SA 4.0, attribution, free distribution on platforms)
+
 -----------------------------------------------------
  VERSION 4.0.0 - 1.20.1
 -----------------------------------------------------

@@ -11,6 +11,9 @@ GRADLE_PROPERTIES="${PROJECT_ROOT}/gradle.properties"
 GRADLE_WRAPPER="${PROJECT_ROOT}/gradle/wrapper/gradle-wrapper.properties"
 BUILD_GRADLE="${PROJECT_ROOT}/build.gradle"
 
+# shellcheck source=scripts/publish-release.sh disable=SC1091
+source "${SCRIPT_DIR}/publish-release.sh"
+
 # true cuando se invoca con argumentos (verify, build, etc.) o sin TTY
 INTERACTIVE=true
 if [[ ! -t 0 ]] || [[ -n "${1:-}" ]]; then
@@ -1146,6 +1149,8 @@ fix_permissions() {
   find "${PROJECT_ROOT}" -type f -not -path "${PROJECT_ROOT}/.git/*" ! -name 'gradlew' -exec chmod 644 {} + 2>/dev/null || true
   chmod 755 "${PROJECT_ROOT}/gradlew" 2>/dev/null || true
   chmod 755 "${SCRIPT_DIR}/release.sh" 2>/dev/null || true
+  chmod 755 "${SCRIPT_DIR}/publish-release.sh" 2>/dev/null || true
+  chmod 755 "${SCRIPT_DIR}/server-smoke.sh" 2>/dev/null || true
   log_ok "Permisos corregidos (dirs 755, archivos 644, gradlew 755)"
   pause
 }
@@ -1224,7 +1229,15 @@ USO RÁPIDO
   ./scripts/release.sh          # menú interactivo
   ./scripts/release.sh verify   # solo verificar entorno
   ./scripts/release.sh profile  # aplicar perfil recomendado
+  ./scripts/release.sh publish  # build + tag + GitHub + Modrinth + CurseForge
   ./scripts/release.sh commands # ver comandos de instalar/actualizar
+
+PUBLICACIÓN DE RELEASES (opción 9 / publish)
+  Requiere: gh auth login, jq, curl
+  Tokens en scripts/.release.local (ver .release.local.example):
+    CURSEFORGE_API_TOKEN, MODRINTH_TOKEN
+  Flujo: clean build → tag (mod_version) → push → GitHub Release → Modrinth → CurseForge
+  Dry-run: ./scripts/release.sh publish --dry-run
 
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk
@@ -1255,6 +1268,7 @@ main_menu() {
     echo "  6) Herramientas y utilidades"
     echo "  7) Ayuda"
     echo "  8) Comandos de instalación / actualización"
+    echo "  9) Publicar release (GitHub + Modrinth + CurseForge)"
     echo "  0) Salir"
     echo
     read -r -p "Opción: " choice
@@ -1267,6 +1281,7 @@ main_menu() {
       6) tools_menu ;;
       7) show_help ;;
       8) show_all_suggested_commands ;;
+      9) publish_release_menu ;;
       0) echo "Hasta luego."; exit 0 ;;
       *) log_error "Opción inválida"; pause ;;
     esac
@@ -1300,11 +1315,14 @@ case "${1:-}" in
   commands|cmds)
     show_all_suggested_commands
     ;;
+  publish|release)
+    publish_release_cli "${@:2}"
+    ;;
   "")
     main_menu
     ;;
   *)
-    echo "Uso: $(basename "$0") [verify|profile|java|build|commands|help]"
+    echo "Uso: $(basename "$0") [verify|profile|java|build|publish|commands|help]"
     exit 1
     ;;
 esac

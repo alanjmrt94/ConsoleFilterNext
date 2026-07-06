@@ -1,12 +1,23 @@
-# Copia este archivo a .release.local para fijar JAVA_HOME en tu máquina.
-# El script release.sh lo genera automáticamente al configurar Java.
+# Configuración local del entorno de desarrollo (no versionar)
+# Copiar: cp scripts/.release.local.example scripts/.release.local
+# El script release.sh también puede generar JAVA_HOME al configurar Java.
+
+export JAVA_HOME="/usr/lib/jvm/java-1.21.0-openjdk-amd64"
+export PATH="${JAVA_HOME}/bin:${PATH}"
+
+# ─── Publicación de releases (menú 9 / ./scripts/release.sh publish) ─────────
 #
-# cp scripts/.release.local.example scripts/.release.local
+# GitHub: autenticación vía `gh auth login` (no hace falta token aquí)
+export GITHUB_REMOTE=origin
 #
-# Recomendado (Forge oficial):
-# export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+# CurseForge: https://console.curseforge.com → Account → API tokens
+export CURSEFORGE_API_TOKEN="c7bbb4a0-..."
+export CURSEFORGE_PROJECT_SLUG="consolefilternext"
+export CURSEFORGE_PROJECT_ID="ConsoleFilterNext"   # opcional; si vacío se resuelve por slug
 #
-# Alternativa válida (compila OK en este proyecto):
-# export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+# Modrinth: https://modrinth.com/settings/account → Personal access tokens
+export MODRINTH_TOKEN="mrp_..."
+export MODRINTH_PROJECT_SLUG="consolefilternext"
+export MODRINTH_PROJECT_ID="ConsoleFilterNext"     # opcional; si vacío se resuelve por slug
 #
-# export PATH="${JAVA_HOME}/bin:${PATH}"
+export RELEASE_TYPE="release"     # release | beta | alpha
