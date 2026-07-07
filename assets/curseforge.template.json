@@ -1,0 +1,23 @@
+{
+  "_comment": "Plantilla CurseForge — copiar a curseforge.json o editar curseforge.json directamente. Social links y galería se configuran manualmente en Authors; publish-release.sh muestra checklist tras publicar.",
+  "social_username": "your-username",
+  "social_links": {
+    "discord": "https://discord.gg/your-invite",
+    "github": "https://github.com/{username}",
+    "x": "https://x.com/{username}",
+    "instagram": "https://instagram.com/{username}",
+    "facebook": "https://facebook.com/{username}"
+  },
+  "project_links": {
+    "issues": "https://github.com/{username}/YourRepo/issues",
+    "source": "https://github.com/{username}/YourRepo",
+    "wiki": "https://github.com/{username}/YourRepo#readme"
+  },
+  "gallery": [
+    {
+      "file": "gallery/sample-1.png",
+      "title": "Your mod title",
+      "description": "Screenshot description for the CurseForge gallery"
+    }
+  ]
+}

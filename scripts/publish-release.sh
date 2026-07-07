@@ -33,6 +33,7 @@ publish_load_secrets() {
 	load_local_config
 
 	CURSEFORGE_API_TOKEN="${CURSEFORGE_API_TOKEN:-${CF_API_TOKEN:-}}"
+	CURSEFORGE_AUTHOR_TOKEN="${CURSEFORGE_AUTHOR_TOKEN:-}"
 	CURSEFORGE_PROJECT_ID="${CURSEFORGE_PROJECT_ID:-}"
 	CURSEFORGE_PROJECT_SLUG="${CURSEFORGE_PROJECT_SLUG:-consolefilternext}"
 	MODRINTH_TOKEN="${MODRINTH_TOKEN:-}"
@@ -46,9 +47,15 @@ publish_show_secrets_status() {
 	echo -e "${BOLD}Credenciales y destinos${RESET}"
 	echo "────────────────────────────────────────"
 	if [[ -n "${CURSEFORGE_API_TOKEN}" ]]; then
-		log_ok "CURSEFORGE_API_TOKEN configurado"
+		log_ok "CURSEFORGE_API_TOKEN configurado (Profile API key / lectura)"
 	else
 		log_warn "CURSEFORGE_API_TOKEN no definido (scripts/.release.local)"
+	fi
+	if publish_curseforge_author_token &>/dev/null; then
+		log_ok "CURSEFORGE_AUTHOR_TOKEN configurado (subida de archivos)"
+	else
+		log_warn "CURSEFORGE_AUTHOR_TOKEN no definido — la subida a CurseForge requiere token de autor"
+		log_info "Generalo en https://www.curseforge.com/account/api-tokens (cfc_pat_ no sirve para upload)"
 	fi
 	echo "  CurseForge proyecto : ${CURSEFORGE_PROJECT_ID:-<auto slug: ${CURSEFORGE_PROJECT_SLUG}>}"
 	if [[ -n "${MODRINTH_TOKEN}" ]]; then
@@ -190,28 +197,101 @@ publish_resolve_modrinth_project_id() {
 	return 1
 }
 
+# Token de autor para Upload API (minecraft.curseforge.com). No acepta Profile API keys (cfc_pat_…).
+publish_curseforge_author_token() {
+	if [[ -n "${CURSEFORGE_AUTHOR_TOKEN:-}" ]]; then
+		echo "${CURSEFORGE_AUTHOR_TOKEN}"
+		return 0
+	fi
+	if [[ -n "${CURSEFORGE_API_TOKEN:-}" && "${CURSEFORGE_API_TOKEN}" != cfc_pat_* ]]; then
+		echo "${CURSEFORGE_API_TOKEN}"
+		return 0
+	fi
+	return 1
+}
+
+publish_curseforge_java_version_name() {
+	local mc_version="$1"
+	case "${mc_version}" in
+		1.21.*) echo "Java 21" ;;
+		*) echo "Java 17" ;;
+	esac
+}
+
 publish_curseforge_game_version_ids() {
 	local mc_version="$1"
+	local forge_version="${2:-$(get_prop forge_version "${GRADLE_PROPERTIES}")}"
 	publish_require_command curl || return 1
 	publish_require_command jq || return 1
 	[[ -n "${CURSEFORGE_API_TOKEN}" ]] || return 1
 
-	local mc_id forge_id
-	mc_id="$(curl -fsS \
-		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
-		-H "Accept: application/json" \
-		"https://api.curseforge.com/v1/minecraft/game/version" \
-		| jq -r --arg mc "${mc_version}" '.data[] | select(.versionString == $mc) | .id' | head -1)"
-	forge_id="$(curl -fsS \
-		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
-		-H "Accept: application/json" \
-		"https://api.curseforge.com/v1/minecraft/modloader" \
-		| jq -r '.data[] | select(.name == "Forge" or .slug == "forge") | .id' | head -1)"
+	local tmp http_code mc_gv_id forge_gv_id forge_name
+	forge_name="forge-${forge_version}"
 
-	if [[ -z "${mc_id}" || -z "${forge_id}" ]]; then
+	tmp="$(mktemp)"
+	http_code="$(curl -sS -o "${tmp}" -w "%{http_code}" \
+		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
+		-H "Accept: application/json" \
+		"https://api.curseforge.com/v1/minecraft/version/${mc_version}")"
+	if [[ ! "${http_code}" =~ ^2 ]]; then
+		log_error "CurseForge: versión MC ${mc_version} no encontrada (HTTP ${http_code})"
+		cat "${tmp}" >&2 2>/dev/null || true
+		rm -f "${tmp}"
 		return 1
 	fi
-	printf '%s,%s' "${mc_id}" "${forge_id}"
+	mc_gv_id="$(jq -r '.data.gameVersionId // empty' "${tmp}")"
+	rm -f "${tmp}"
+
+	tmp="$(mktemp)"
+	http_code="$(curl -sS -o "${tmp}" -w "%{http_code}" \
+		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
+		-H "Accept: application/json" \
+		"https://api.curseforge.com/v1/minecraft/modloader/${forge_name}")"
+	if [[ ! "${http_code}" =~ ^2 ]]; then
+		log_warn "CurseForge: modloader ${forge_name} no encontrado (HTTP ${http_code}); buscando en la lista..."
+		rm -f "${tmp}"
+		tmp="$(mktemp)"
+		http_code="$(curl -sS -o "${tmp}" -w "%{http_code}" \
+			-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
+			-H "Accept: application/json" \
+			"https://api.curseforge.com/v1/minecraft/modloader?version=${mc_version}")"
+		if [[ ! "${http_code}" =~ ^2 ]]; then
+			log_error "CurseForge: no se listaron modloaders para ${mc_version} (HTTP ${http_code})"
+			cat "${tmp}" >&2 2>/dev/null || true
+			rm -f "${tmp}"
+			return 1
+		fi
+		forge_name="$(jq -r --arg v "${forge_version}" '
+			(.data[] | select(.name == ("forge-" + $v)) | .name),
+			(.data[] | select(.recommended == true) | .name),
+			(.data[0].name // empty)
+		' "${tmp}" | head -1)"
+		rm -f "${tmp}"
+		if [[ -z "${forge_name}" ]]; then
+			log_error "CurseForge: no hay modloader Forge para ${mc_version}"
+			return 1
+		fi
+		tmp="$(mktemp)"
+		http_code="$(curl -sS -o "${tmp}" -w "%{http_code}" \
+			-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
+			-H "Accept: application/json" \
+			"https://api.curseforge.com/v1/minecraft/modloader/${forge_name}")"
+		if [[ ! "${http_code}" =~ ^2 ]]; then
+			log_error "CurseForge: modloader ${forge_name} no resolvió (HTTP ${http_code})"
+			cat "${tmp}" >&2 2>/dev/null || true
+			rm -f "${tmp}"
+			return 1
+		fi
+	fi
+	forge_gv_id="$(jq -r '.data.gameVersionId // empty' "${tmp}")"
+	rm -f "${tmp}"
+
+	if [[ -z "${mc_gv_id}" || -z "${forge_gv_id}" ]]; then
+		log_error "CurseForge: IDs incompletos (MC gameVersionId=${mc_gv_id:-?}, Forge gameVersionId=${forge_gv_id:-?})"
+		return 1
+	fi
+	log_info "CurseForge: gameVersionIds → ${mc_version}=${mc_gv_id}, ${forge_name}=${forge_gv_id}"
+	printf '%s,%s' "${mc_gv_id}" "${forge_gv_id}"
 }
 
 publish_git_tag_and_push() {
@@ -509,16 +589,53 @@ publish_modrinth_upload() {
 	return 1
 }
 
+publish_curseforge_upload_game_version_ids() {
+	local mc_version="$1"
+	local author_token="$2"
+	local mc_series="${mc_version%.*}"
+	local java_name forge_id=7498
+	local tmp types_id mc_id java_id
+
+	java_name="$(publish_curseforge_java_version_name "${mc_version}")"
+
+	tmp="$(mktemp)"
+	if ! curl -fsS -o "${tmp}" -H "X-Api-Token: ${author_token}" \
+		"https://minecraft.curseforge.com/api/game/version-types"; then
+		rm -f "${tmp}"
+		return 1
+	fi
+	types_id="$(jq -r --arg series "Minecraft ${mc_series}" '.[] | select(.name == $series) | .id' "${tmp}" | head -1)"
+	rm -f "${tmp}"
+	[[ -n "${types_id}" && "${types_id}" != "null" ]] || return 1
+
+	tmp="$(mktemp)"
+	if ! curl -fsS -o "${tmp}" -H "X-Api-Token: ${author_token}" \
+		"https://minecraft.curseforge.com/api/game/versions"; then
+		rm -f "${tmp}"
+		return 1
+	fi
+	mc_id="$(jq -r --arg mc "${mc_version}" --argjson tid "${types_id}" \
+		'.[] | select(.name == $mc and .gameVersionTypeID == $tid) | .id' "${tmp}" | head -1)"
+	java_id="$(jq -r --arg j "${java_name}" '.[] | select(.name == $j) | .id' "${tmp}" | head -1)"
+	rm -f "${tmp}"
+
+	[[ -n "${mc_id}" && -n "${java_id}" ]] || return 1
+	log_info "CurseForge: gameVersions → ${mc_version}=${mc_id}, ${java_name}=${java_id}, Forge=${forge_id}"
+	printf '%s,%s,%s' "${mc_id}" "${java_id}" "${forge_id}"
+}
+
 publish_curseforge_upload() {
 	local tag="$1"
 	local jar="$2"
 	local changelog="$3"
 	local dry_run="${4:-false}"
-	local mc_version project_id version_ids metadata http_code
+	local mc_version project_id metadata http_code author_token version_ids mc_id java_id forge_id
 
-	[[ -n "${CURSEFORGE_API_TOKEN}" ]] || {
-		log_warn "CURSEFORGE_API_TOKEN no configurado; omitiendo CurseForge"
-		return 0
+	author_token="$(publish_curseforge_author_token)" || {
+		log_error "CurseForge upload requiere CURSEFORGE_AUTHOR_TOKEN"
+		log_error "Generalo en https://www.curseforge.com/account/api-tokens"
+		log_error "El Profile API key (cfc_pat_…, console.curseforge.com) solo resuelve versiones/proyecto; no sube archivos."
+		return 1
 	}
 
 	publish_require_command curl || return 1
@@ -527,13 +644,13 @@ publish_curseforge_upload() {
 	project_id="$(publish_resolve_curseforge_project_id)" || return 1
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
-	version_ids="$(publish_curseforge_game_version_ids "${mc_version}")" || {
-		log_error "No se pudieron resolver IDs de juego CurseForge para ${mc_version} + Forge"
+	version_ids="$(publish_curseforge_upload_game_version_ids "${mc_version}" "${author_token}")" || {
+		log_error "No se pudieron resolver gameVersions de CurseForge para ${mc_version} + Forge"
 		return 1
 	}
-
-	local mc_id forge_id
 	mc_id="${version_ids%%,*}"
+	version_ids="${version_ids#*,}"
+	java_id="${version_ids%%,*}"
 	forge_id="${version_ids##*,}"
 
 	metadata="$(jq -n \
@@ -541,12 +658,13 @@ publish_curseforge_upload() {
 		--arg displayName "${tag}" \
 		--arg releaseType "${RELEASE_TYPE}" \
 		--argjson mcId "${mc_id}" \
+		--argjson javaId "${java_id}" \
 		--argjson forgeId "${forge_id}" \
 		'{
 			changelog: $changelog,
 			changelogType: "markdown",
 			displayName: $displayName,
-			gameVersions: [$mcId, $forgeId],
+			gameVersions: [$mcId, $javaId, $forgeId],
 			releaseType: $releaseType
 		}')"
 
@@ -558,11 +676,11 @@ publish_curseforge_upload() {
 
 	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
 	printf '%s' "${metadata}" >"${PUBLISH_TMP_DIR}/curseforge-metadata.json"
+	# Upload API espera metadata como campo de texto JSON, no como file part (@file).
 	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/curseforge-response.json" -w "%{http_code}" \
-		-X POST "https://api.curseforge.com/v1/mods/${project_id}/files" \
-		-H "x-api-key: ${CURSEFORGE_API_TOKEN}" \
-		-H "Accept: application/json" \
-		-F "metadata=@${PUBLISH_TMP_DIR}/curseforge-metadata.json;type=application/json" \
+		-X POST "https://minecraft.curseforge.com/api/projects/${project_id}/upload-file" \
+		-H "X-Api-Token: ${author_token}" \
+		-F "metadata=<${PUBLISH_TMP_DIR}/curseforge-metadata.json" \
 		-F "file=@${jar}")"
 
 	if [[ "${http_code}" =~ ^2 ]]; then
@@ -571,27 +689,59 @@ publish_curseforge_upload() {
 		return 0
 	fi
 
-	# Fallback API legacy de Minecraft
-	log_warn "API REST falló (HTTP ${http_code}); probando endpoint legacy..."
-	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/curseforge-legacy-response.json" -w "%{http_code}" \
-		-X POST "https://minecraft.curseforge.com/api/projects/${project_id}/upload-file" \
-		-H "X-Api-Token: ${CURSEFORGE_API_TOKEN}" \
-		-F "metadata=@${PUBLISH_TMP_DIR}/curseforge-metadata.json" \
-		-F "file=@${jar}")"
-
-	if [[ "${http_code}" =~ ^2 ]]; then
-		log_ok "CurseForge (legacy): archivo subido (HTTP ${http_code})"
-		publish_curseforge_remind_gallery
-		return 0
-	fi
-
 	log_error "CurseForge upload falló (HTTP ${http_code})"
-	cat "${PUBLISH_TMP_DIR}/curseforge-response.json" 2>/dev/null || true
-	cat "${PUBLISH_TMP_DIR}/curseforge-legacy-response.json" 2>/dev/null || true
+	if jq -e . "${PUBLISH_TMP_DIR}/curseforge-response.json" &>/dev/null; then
+		jq -r '.errorMessage // .message // .' "${PUBLISH_TMP_DIR}/curseforge-response.json" >&2
+	else
+		head -c 800 "${PUBLISH_TMP_DIR}/curseforge-response.json" >&2 2>/dev/null || true
+	fi
 	return 1
 }
 
+publish_curseforge_expand_social_url() {
+	local template="$1"
+	local username="$2"
+	printf '%s' "${template//\{username\}/${username}}"
+}
+
+publish_curseforge_remind_social_links() {
+	local cf_json="${PROJECT_ROOT}/assets/curseforge.json"
+	local username key template url label
+
+	[[ -f "${cf_json}" ]] || return 0
+	publish_require_command jq || return 0
+
+	username="$(jq -r '.social_username // "alanjmrt94"' "${cf_json}")"
+	if ! jq -e '.social_links | length > 0' "${cf_json}" &>/dev/null; then
+		return 0
+	fi
+
+	log_info "CurseForge: configurá Social Links manualmente (Authors → Console Filter Next → Links):"
+	local project_id="${CURSEFORGE_PROJECT_ID:-1257873}"
+	log_info "  https://authors.curseforge.com/#/projects/${project_id}/settings/links"
+	while IFS=$'\t' read -r key template; do
+		[[ -n "${key}" && -n "${template}" ]] || continue
+		url="$(publish_curseforge_expand_social_url "${template}" "${username}")"
+		case "${key}" in
+			discord) label="Discord" ;;
+			github) label="GitHub" ;;
+			x) label="X (Twitter)" ;;
+			instagram) label="Instagram" ;;
+			facebook) label="Facebook" ;;
+			*) label="${key}" ;;
+		esac
+		echo "  ${label}: ${url}"
+	done < <(jq -r '.social_links | to_entries[] | "\(.key)\t\(.value)"' "${cf_json}")
+
+	if jq -e '.project_links' "${cf_json}" &>/dev/null; then
+		echo
+		log_info "CurseForge: Project Links (misma pantalla o Project settings):"
+		jq -r '.project_links | to_entries[] | "  \(.key): \(.value)"' "${cf_json}"
+	fi
+}
+
 publish_curseforge_remind_gallery() {
+	publish_curseforge_remind_social_links
 	local cf_json="${PROJECT_ROOT}/assets/curseforge.json"
 	local assets_dir="${PROJECT_ROOT}/assets"
 	local count i file title description abs
@@ -638,8 +788,11 @@ publish_check_prerequisites() {
 	publish_load_secrets
 	publish_show_secrets_status
 
-	if [[ "${SKIP_CURSEFORGE:-false}" != "true" && -z "${CURSEFORGE_API_TOKEN}" ]]; then
-		log_warn "Sin CURSEFORGE_API_TOKEN — CurseForge se omitirá"
+	if [[ "${SKIP_CURSEFORGE:-false}" != "true" && -z "${CURSEFORGE_API_TOKEN}" && -z "${CURSEFORGE_PROJECT_ID}" ]]; then
+		log_warn "Sin CURSEFORGE_API_TOKEN ni CURSEFORGE_PROJECT_ID — CurseForge se omitirá"
+	fi
+	if [[ "${SKIP_CURSEFORGE:-false}" != "true" ]] && ! publish_curseforge_author_token &>/dev/null; then
+		log_warn "Sin CURSEFORGE_AUTHOR_TOKEN — la subida a CurseForge fallará (cfc_pat_ no es válido para upload)"
 	fi
 	if [[ "${SKIP_MODRINTH:-false}" != "true" && -z "${MODRINTH_TOKEN}" ]]; then
 		log_warn "Sin MODRINTH_TOKEN — Modrinth se omitirá"

@@ -1,5 +1,18 @@
 {
-  "_comment": "CurseForge no expone API pública para subir screenshots; publish-release.sh muestra estas rutas tras publicar el JAR.",
+  "_comment": "CurseForge no expone API pública para social links ni screenshots. publish-release.sh muestra checklist tras publicar.",
+  "social_username": "alanjmrt94",
+  "social_links": {
+    "discord": "https://discord.gg/qqF5UnHH4",
+    "github": "https://github.com/{username}",
+    "x": "https://x.com/{username}",
+    "instagram": "https://instagram.com/{username}",
+    "facebook": "https://facebook.com/{username}"
+  },
+  "project_links": {
+    "issues": "https://github.com/alanjmrt94/ConsoleFilterNext/issues",
+    "source": "https://github.com/alanjmrt94/ConsoleFilterNext",
+    "wiki": "https://github.com/alanjmrt94/ConsoleFilterNext#readme"
+  },
   "gallery": [
     {
       "file": "gallery/sample-1.png",

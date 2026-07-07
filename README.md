@@ -1,5 +1,8 @@
 # Console Filter Next
 
+[![CurseForge](https://img.shields.io/badge/CurseForge-consolefilternext-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
+[![Modrinth](https://img.shields.io/modrinth/dt/consolefilternext?logo=modrinth&label=Modrinth&color=00af5c)](https://modrinth.com/mod/consolefilternext)
+
 An improved console log filter for Minecraft Forge — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
 **Current release:** `1.20.1-4.0.3` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
@@ -314,7 +317,8 @@ cp scripts/.release.local.example scripts/.release.local
 |----------|----------|--------|---------------|
 | **Modrinth** | `MODRINTH_PROJECT_ID` | Base62 (e.g. `tFqJGW2q`) | **Required while the project is in Draft** — the public API cannot resolve the slug until the project is approved |
 | **Modrinth** | `MODRINTH_PROJECT_SLUG` | URL slug (e.g. `consolefilternext`) | Used for auto-resolution when `MODRINTH_PROJECT_ID` is empty |
-| **CurseForge** | `CURSEFORGE_API_TOKEN` | Profile API key (`cfc_pat_…`) | From [CurseForge profile](https://console.curseforge.com/#/profile) → **Profile API key** |
+| **CurseForge** | `CURSEFORGE_API_TOKEN` | Profile API key (`cfc_pat_…`) | From [CurseForge profile](https://console.curseforge.com/#/profile) — resolve versions/project |
+| **CurseForge** | `CURSEFORGE_AUTHOR_TOKEN` | Author API token | From [curseforge.com/account/api-tokens](https://www.curseforge.com/account/api-tokens) — **required to upload files** |
 | **CurseForge** | `CURSEFORGE_PROJECT_ID` | Numeric ID | Optional; leave empty to resolve by `CURSEFORGE_PROJECT_SLUG` |
 
 Find the Modrinth Base62 ID in [Modrinth → Projects](https://modrinth.com/dashboard/projects) (column **ID**). Do **not** put the display name (e.g. `ConsoleFilterNext`) in `MODRINTH_PROJECT_ID` — the API expects Base62 and will reject it.
@@ -364,9 +368,11 @@ Set `"submit_for_review": true` in `modrinth.json` to send the project to Modrin
 |---------|--------|-----|
 | `Base62 decoding overflowed` | `MODRINTH_PROJECT_ID` set to display name instead of Base62 ID | Use the ID from Modrinth → Projects |
 | `404` resolving Modrinth slug | Project is still in **Draft** | Set `MODRINTH_PROJECT_ID` |
-| `403` resolving CurseForge slug | Wrong or invalid **Profile API key** | Copy **Profile API key** from [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) (`cfc_pat_…`). Or set `CURSEFORGE_PROJECT_ID` (numeric ID from the project page sidebar) |
+| `403` / `API token is malformed` on CurseForge upload | Profile API key (`cfc_pat_`) used for file upload | Upload requires **Author API token** from [curseforge.com/account/api-tokens](https://www.curseforge.com/account/api-tokens) (`CURSEFORGE_AUTHOR_TOKEN`). Keep `cfc_pat_` as `CURSEFORGE_API_TOKEN` for version/project lookup only |
+| `403` resolving CurseForge slug | Wrong or invalid **Profile API key** | Copy **Profile API key** from [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) (`cfc_pat_…`). Update `scripts/.release.local` and the GitHub `publish` environment. Optional: set `CURSEFORGE_PROJECT_ID` (numeric ID from the project page sidebar, e.g. `1257873`) |
 | `EOF while parsing a string` (HTTP 400) | JSON metadata embedded in `curl -F` was truncated by the shell | Fixed in `publish-release.sh` (payload written to a temp file) |
 | CI skips Modrinth/CurseForge on tag push | Secrets stored only at repository level, or wrong environment name | Use environment **`publish`** with the secrets below; workflow must set `environment: publish` |
+| `404` resolving CurseForge game versions | Outdated API path (`/minecraft/game/version`) | Fixed in `publish-release.sh` — uses `/v1/minecraft/version/{mc}` and `/v1/minecraft/modloader/forge-{version}` |
 
 See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, `RELEASE_TYPE`, etc.).
 
@@ -388,7 +394,8 @@ Create **Settings → Environments → publish** (or use an existing environment
 |--------|--------------|-----------------|
 | `MODRINTH_TOKEN` | Modrinth upload | [modrinth.com/settings/account](https://modrinth.com/settings/account) → Personal access tokens (`mrp_…`; needs version upload permission) |
 | `MODRINTH_PROJECT_ID` | Modrinth while the project is in **Draft** (Base62 ID, e.g. `tFqJGW2q`) | [modrinth.com/dashboard/projects](https://modrinth.com/dashboard/projects) → column **ID** |
-| `CURSEFORGE_API_TOKEN` | CurseForge upload | [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) → **Profile API key** (`cfc_pat_…`) |
+| `CURSEFORGE_API_TOKEN` | Resolve MC/Forge versions and project (Profile API key `cfc_pat_…`) | [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) |
+| `CURSEFORGE_AUTHOR_TOKEN` | **Upload** mod files to CurseForge | [curseforge.com/account/api-tokens](https://www.curseforge.com/account/api-tokens) |
 | `CURSEFORGE_PROJECT_ID` | Optional; numeric project ID if slug resolution fails | CurseForge project page sidebar |
 
 **Environment variables** (same **publish** environment → Environment variables):

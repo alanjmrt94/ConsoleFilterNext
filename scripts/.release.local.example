@@ -10,13 +10,13 @@ export PATH="${JAVA_HOME}/bin:${PATH}"
 # GitHub: autenticación vía `gh auth login` (no hace falta token aquí)
 export GITHUB_REMOTE=origin
 #
-# CurseForge: https://console.curseforge.com/#/profile → "Profile API key" (cfc_pat_…)
-# Usar comillas simples si el valor contiene $.
-export CURSEFORGE_API_TOKEN='cfc_pat_...'
-# Opcional — solo si el fallback legacy lo pide: https://www.curseforge.com/account/api-tokens
-# export CURSEFORGE_AUTHOR_TOKEN='...'
+# CurseForge — dos tokens distintos:
+#   Profile API key (lectura: versiones, buscar proyecto): https://console.curseforge.com/#/profile
+export CURSEFORGE_API_TOKEN="cfc_pat_..."
+#   Author API token (subir archivos): https://www.curseforge.com/account/api-tokens
+export CURSEFORGE_AUTHOR_TOKEN="abcdef01-abcde-..."
 export CURSEFORGE_PROJECT_SLUG="consolefilternext"
-export CURSEFORGE_PROJECT_ID=""   # opcional; ID numérico de CurseForge (vacío = resolver por slug)
+export CURSEFORGE_PROJECT_ID=""   # opcional pero recomendado; ID numérico del sidebar en CurseForge (evita search por slug)
 #   No usar el nombre del proyecto; CurseForge usa IDs numéricos.
 #
 # Modrinth: https://modrinth.com/settings/account → Personal access tokens

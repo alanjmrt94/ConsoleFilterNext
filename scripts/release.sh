@@ -48,10 +48,10 @@ screen_clear() {
   fi
 }
 
-log_info()    { echo -e "${CYAN}ℹ${RESET}  $*"; }
-log_ok()      { echo -e "${GREEN}✔${RESET}  $*"; }
-log_warn()    { echo -e "${YELLOW}⚠${RESET}  $*"; }
-log_error()   { echo -e "${RED}✖${RESET}  $*"; }
+log_info()    { echo -e "${CYAN}ℹ${RESET}  $*" >&2; }
+log_ok()      { echo -e "${GREEN}✔${RESET}  $*" >&2; }
+log_warn()    { echo -e "${YELLOW}⚠${RESET}  $*" >&2; }
+log_error()   { echo -e "${RED}✖${RESET}  $*" >&2; }
 
 require_file() {
   if [[ ! -f "$1" ]]; then
@@ -1235,7 +1235,8 @@ USO RÁPIDO
 PUBLICACIÓN DE RELEASES (opción 9 / publish)
   Requiere: gh auth login, jq, curl
   Tokens en scripts/.release.local (ver .release.local.example):
-    CURSEFORGE_API_TOKEN  — Profile API key en https://console.curseforge.com/#/profile
+    CURSEFORGE_API_TOKEN  — Profile API key (cfc_pat_…) en https://console.curseforge.com/#/profile
+    CURSEFORGE_AUTHOR_TOKEN — Author API token en https://www.curseforge.com/account/api-tokens (obligatorio para subir JAR)
     MODRINTH_TOKEN
   IDs de proyecto:
     Modrinth  → MODRINTH_PROJECT_ID (Base62, ej. tFqJGW2q)
@@ -1249,7 +1250,7 @@ PUBLICACIÓN DE RELEASES (opción 9 / publish)
     publish --skip-build --skip-github --skip-modrinth
   CI: tag push → .github/workflows/release.yml (GitHub Release)
        tag push → .github/workflows/publish-distribution.yml (Modrinth + CurseForge)
-       Secrets/vars en GitHub → Environments → publish (MODRINTH_TOKEN, MODRINTH_PROJECT_ID, CURSEFORGE_API_TOKEN)
+       Secrets/vars en GitHub → Environments → publish (MODRINTH_*, CURSEFORGE_API_TOKEN, CURSEFORGE_AUTHOR_TOKEN)
 
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk

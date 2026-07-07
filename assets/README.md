@@ -9,7 +9,8 @@ Archivos usados al publicar en Modrinth (y referencia para otras plataformas).
 | `modrinth-body.md` | Descripción larga (campo **body**) del proyecto Modrinth. |
 | `modrinth.template.json` | Plantilla documentada; copiar a `modrinth.json` si empezás de cero. |
 | `gallery/sample-1.png` | Captura para galería Modrinth (destacada) y CurseForge (panel web) |
-| `curseforge.json` | Metadatos de galería CurseForge (subida manual en el panel) |
+| `curseforge.json` | Social links, project links y galería CurseForge (checklist manual tras `publish`) |
+| `curseforge.template.json` | Plantilla documentada; copiar a `curseforge.json` si empezás de cero. |
 
 ## Modrinth — checklist del panel
 
@@ -26,9 +27,23 @@ El script `publish_modrinth_sync_metadata` completa por API:
 
 Tras la primera sincronización, podés dejar `"gallery": []` en `modrinth.json` para no reintentar imágenes ya subidas.
 
-## CurseForge — galería (manual)
+## CurseForge — social links y galería (manual)
 
-La API de CurseForge no permite subir screenshots por REST. Tras `publish`, el script lista las rutas de `curseforge.json`. Subilas en el panel del proyecto → **Images** / **Gallery**.
+La API de CurseForge **no permite** actualizar social links ni screenshots por REST. Tras `publish`, el script lista los valores de `assets/curseforge.json`.
+
+Editá `social_username` y `social_links` en `curseforge.json`. Las URLs con `{username}` se expanden con tu usuario (por defecto `alanjmrt94`):
+
+| Campo | URL resultante |
+|-------|----------------|
+| Discord | `https://discord.gg/qqF5UnHH4` (fija) |
+| GitHub | `https://github.com/alanjmrt94` |
+| X | `https://x.com/alanjmrt94` |
+| Instagram | `https://instagram.com/alanjmrt94` |
+| Facebook | `https://facebook.com/alanjmrt94` |
+
+En el panel: [Authors → proyecto → Links](https://authors.curseforge.com/#/projects/1257873/settings/links) → **Social Links**.
+
+Galería: **Images** / **Gallery** → subir `assets/gallery/sample-1.png`.
 
 ## Sincronizar solo metadatos
 
