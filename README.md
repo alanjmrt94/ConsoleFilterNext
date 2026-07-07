@@ -356,7 +356,7 @@ Sync metadata only (no JAR upload):
 ./scripts/release.sh publish --modrinth-sync-only
 ```
 
-Set `"submit_for_review": true` in `modrinth.json` when ready for moderators (or submit manually in the Modrinth dashboard).
+Set `"submit_for_review": true` in `modrinth.json` to send the project to Modrinth moderators on the next metadata sync (currently enabled in this repo).
 
 #### Troubleshooting
 
@@ -366,7 +366,7 @@ Set `"submit_for_review": true` in `modrinth.json` when ready for moderators (or
 | `404` resolving Modrinth slug | Project is still in **Draft** | Set `MODRINTH_PROJECT_ID` |
 | `403` resolving CurseForge slug | Wrong or invalid **Profile API key** | Copy **Profile API key** from [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) (`cfc_pat_…`). Or set `CURSEFORGE_PROJECT_ID` (numeric ID from the project page sidebar) |
 | `EOF while parsing a string` (HTTP 400) | JSON metadata embedded in `curl -F` was truncated by the shell | Fixed in `publish-release.sh` (payload written to a temp file) |
-| Changelog includes every old version | `changelog.txt` section parser did not stop at the next `VERSION` header | Fixed in `publish-release.sh` |
+| CI skips Modrinth/CurseForge on tag push | Secrets stored only at repository level, or wrong environment name | Use environment **`publish`** with the secrets below; workflow must set `environment: publish` |
 
 See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, `RELEASE_TYPE`, etc.).
 
@@ -376,19 +376,32 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 |----------|---------|---------|
 | [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | `./gradlew build`, upload JAR artifact, dedicated server smoke test |
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`*`) | Build, create GitHub Release with the mod JAR |
-| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload the built JAR to Modrinth and CurseForge (optional; requires repository secrets) |
+| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload the built JAR to Modrinth and CurseForge (requires the `publish` environment) |
 
-**Repository secrets** for distribution publish (Settings → Secrets and variables → Actions):
+#### GitHub environment `publish`
 
-| Secret | Required for |
-|--------|----------------|
-| `MODRINTH_TOKEN` | Modrinth upload |
-| `MODRINTH_PROJECT_ID` | Modrinth when the project is in Draft (Base62 ID) |
-| `CURSEFORGE_API_TOKEN` | CurseForge upload — [Profile API key](https://console.curseforge.com/#/profile) (`cfc_pat_…`) |
+Create **Settings → Environments → publish** (or use an existing environment with that name). The `publish-distribution` job sets `environment: publish` so it reads **environment** secrets and variables — not repository-level secrets.
 
-Optional variables: `MODRINTH_PROJECT_SLUG`, `CURSEFORGE_PROJECT_SLUG`, `CURSEFORGE_PROJECT_ID`, `RELEASE_TYPE` (defaults match `scripts/.release.local.example`).
+**Environment secrets** (Settings → Environments → **publish** → Environment secrets):
 
-If distribution secrets are not configured, the publish workflow skips upload steps with a notice.
+| Secret | Required for | Where to get it |
+|--------|--------------|-----------------|
+| `MODRINTH_TOKEN` | Modrinth upload | [modrinth.com/settings/account](https://modrinth.com/settings/account) → Personal access tokens (`mrp_…`; needs version upload permission) |
+| `MODRINTH_PROJECT_ID` | Modrinth while the project is in **Draft** (Base62 ID, e.g. `tFqJGW2q`) | [modrinth.com/dashboard/projects](https://modrinth.com/dashboard/projects) → column **ID** |
+| `CURSEFORGE_API_TOKEN` | CurseForge upload | [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) → **Profile API key** (`cfc_pat_…`) |
+| `CURSEFORGE_PROJECT_ID` | Optional; numeric project ID if slug resolution fails | CurseForge project page sidebar |
+
+**Environment variables** (same **publish** environment → Environment variables):
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MODRINTH_PROJECT_SLUG` | `consolefilternext` | Slug when `MODRINTH_PROJECT_ID` is empty and the project is public |
+| `CURSEFORGE_PROJECT_SLUG` | `consolefilternext` | Resolve CurseForge project when `CURSEFORGE_PROJECT_ID` is empty |
+| `RELEASE_TYPE` | `release` | Modrinth/CurseForge release channel (`release`, `beta`, `alpha`) |
+
+Local publishes use the same names in `scripts/.release.local` (see `scripts/.release.local.example`).
+
+If neither `MODRINTH_TOKEN` nor `CURSEFORGE_API_TOKEN` is set in the `publish` environment, the workflow skips upload steps with a notice (no failure).
 
 ## ⚠️ Known limitations (v4.0.3)
 

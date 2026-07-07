@@ -22,7 +22,7 @@ El script `publish_modrinth_sync_metadata` completa por API:
 - Enlaces externos (`issues_url`, `source_url`, `wiki_url`)
 - Tags / categorías (`categories`)
 
-**Submit for review** no se envía por defecto (`submit_for_review: false`). Cuando el proyecto esté listo, poné `"submit_for_review": true` en `modrinth.json` o enviá manualmente desde el panel de Modrinth.
+**Submit for review:** con `"submit_for_review": true` en `modrinth.json`, el próximo sync envía el proyecto a moderación de Modrinth (ya activado en este repo). Para no reenviar en cada publish, dejalo en `false` una vez aprobado.
 
 Tras la primera sincronización, podés dejar `"gallery": []` en `modrinth.json` para no reintentar imágenes ya subidas.
 

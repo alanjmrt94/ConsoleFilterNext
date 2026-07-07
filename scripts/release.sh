@@ -1248,7 +1248,8 @@ PUBLICACIÓN DE RELEASES (opción 9 / publish)
     publish --skip-build --skip-github              # solo Modrinth + CurseForge
     publish --skip-build --skip-github --skip-modrinth
   CI: tag push → .github/workflows/release.yml (GitHub Release)
-       tag push → .github/workflows/publish-distribution.yml (Modrinth + CurseForge, secrets)
+       tag push → .github/workflows/publish-distribution.yml (Modrinth + CurseForge)
+       Secrets/vars en GitHub → Environments → publish (MODRINTH_TOKEN, MODRINTH_PROJECT_ID, CURSEFORGE_API_TOKEN)
 
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk
