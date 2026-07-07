@@ -118,6 +118,35 @@ publish_extract_changelog() {
 	fi
 }
 
+publish_extract_assets_version_changelog() {
+	local config_json="$1"
+	local assets_dir="${PROJECT_ROOT}/assets"
+	local rel_path abs_path
+
+	[[ -f "${config_json}" ]] || return 1
+	publish_require_command jq || return 1
+
+	rel_path="$(jq -r '.version_changelog_file // empty' "${config_json}")"
+	[[ -n "${rel_path}" && "${rel_path}" != "null" ]] || return 1
+
+	if [[ "${rel_path}" == */* ]]; then
+		abs_path="${PROJECT_ROOT}/${rel_path}"
+	else
+		abs_path="${assets_dir}/${rel_path}"
+	fi
+
+	[[ -f "${abs_path}" ]] || return 1
+	cat "${abs_path}"
+}
+
+publish_extract_modrinth_changelog() {
+	publish_extract_assets_version_changelog "${PROJECT_ROOT}/assets/modrinth.json"
+}
+
+publish_extract_curseforge_changelog() {
+	publish_extract_assets_version_changelog "${PROJECT_ROOT}/assets/curseforge.json"
+}
+
 publish_build_release() {
 	log_info "Compilando (clean build)..."
 	load_local_config
@@ -210,12 +239,36 @@ publish_curseforge_author_token() {
 	return 1
 }
 
-publish_curseforge_java_version_name() {
+publish_modrinth_version_environment() {
+	local config_file
+	config_file="$(publish_modrinth_config_file)" || {
+		echo "client_or_server"
+		return 0
+	}
+	jq -r '.version_environment // "client_or_server"' "${config_file}"
+}
+
+publish_curseforge_java_versions() {
 	local mc_version="$1"
+	local cf_json="${PROJECT_ROOT}/assets/curseforge.json"
+	local from_config
+
+	if [[ -f "${cf_json}" ]]; then
+		from_config="$(jq -r '.java_versions[]? // empty' "${cf_json}" 2>/dev/null)"
+		if [[ -n "${from_config}" ]]; then
+			printf '%s\n' "${from_config}"
+			return 0
+		fi
+	fi
+
 	case "${mc_version}" in
 		1.21.*) echo "Java 21" ;;
-		*) echo "Java 17" ;;
+		*) printf '%s\n' "Java 17" "Java 21" ;;
 	esac
+}
+
+publish_curseforge_java_version_name() {
+	publish_curseforge_java_versions "$1" | head -1
 }
 
 publish_curseforge_game_version_ids() {
@@ -408,7 +461,7 @@ publish_modrinth_build_patch_json() {
 	patch="$(jq \
 		--arg body "${body}" \
 		--argjson submit "${submit}" \
-		'del(._comment, .body_file, .icon_file, .gallery, .submit_for_review)
+		'del(._comment, .body_file, .version_changelog_file, .version_environment, .java_versions, .icon_file, .gallery, .submit_for_review)
 		| .body = $body
 		| if $submit then .requested_status = "approved" else . end' "${config_file}")"
 	printf '%s' "${patch}"
@@ -524,7 +577,7 @@ publish_modrinth_upload() {
 	local jar="$2"
 	local changelog="$3"
 	local dry_run="${4:-false}"
-	local mc_version project_id json response http_code
+	local mc_version project_id json response http_code modrinth_env
 
 	[[ -n "${MODRINTH_TOKEN}" ]] || {
 		log_warn "MODRINTH_TOKEN no configurado; omitiendo Modrinth"
@@ -545,6 +598,7 @@ publish_modrinth_upload() {
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
 	PUBLISH_TMP_DIR="$(mktemp -d)"
+	modrinth_env="$(publish_modrinth_version_environment)"
 	json="$(jq -n \
 		--arg project_id "${project_id}" \
 		--arg version_number "${tag}" \
@@ -552,6 +606,7 @@ publish_modrinth_upload() {
 		--arg changelog "${changelog}" \
 		--arg mc "${mc_version}" \
 		--arg vtype "${RELEASE_TYPE}" \
+		--arg environment "${modrinth_env}" \
 		'{
 			project_id: $project_id,
 			version_number: $version_number,
@@ -561,6 +616,7 @@ publish_modrinth_upload() {
 			game_versions: [$mc],
 			version_type: $vtype,
 			loaders: ["forge"],
+			environment: $environment,
 			featured: false,
 			file_parts: ["file"],
 			primary_file: "file"
@@ -593,10 +649,9 @@ publish_curseforge_upload_game_version_ids() {
 	local mc_version="$1"
 	local author_token="$2"
 	local mc_series="${mc_version%.*}"
-	local java_name forge_id=7498
-	local tmp types_id mc_id java_id
-
-	java_name="$(publish_curseforge_java_version_name "${mc_version}")"
+	local forge_id=7498
+	local tmp types_id mc_id java_name java_id
+	local -a game_ids=()
 
 	tmp="$(mktemp)"
 	if ! curl -fsS -o "${tmp}" -H "X-Api-Token: ${author_token}" \
@@ -616,12 +671,27 @@ publish_curseforge_upload_game_version_ids() {
 	fi
 	mc_id="$(jq -r --arg mc "${mc_version}" --argjson tid "${types_id}" \
 		'.[] | select(.name == $mc and .gameVersionTypeID == $tid) | .id' "${tmp}" | head -1)"
-	java_id="$(jq -r --arg j "${java_name}" '.[] | select(.name == $j) | .id' "${tmp}" | head -1)"
+	[[ -n "${mc_id}" && "${mc_id}" != "null" ]] || {
+		rm -f "${tmp}"
+		return 1
+	}
+
+	game_ids+=("${mc_id}")
+	while IFS= read -r java_name; do
+		[[ -n "${java_name}" ]] || continue
+		java_id="$(jq -r --arg j "${java_name}" '.[] | select(.name == $j) | .id' "${tmp}" | head -1)"
+		if [[ -z "${java_id}" || "${java_id}" == "null" ]]; then
+			log_error "CurseForge: versión ${java_name} no encontrada en game/versions"
+			rm -f "${tmp}"
+			return 1
+		fi
+		game_ids+=("${java_id}")
+	done < <(publish_curseforge_java_versions "${mc_version}")
 	rm -f "${tmp}"
 
-	[[ -n "${mc_id}" && -n "${java_id}" ]] || return 1
-	log_info "CurseForge: gameVersions → ${mc_version}=${mc_id}, ${java_name}=${java_id}, Forge=${forge_id}"
-	printf '%s,%s,%s' "${mc_id}" "${java_id}" "${forge_id}"
+	game_ids+=("${forge_id}")
+	log_info "CurseForge: gameVersions → ${mc_version}=${mc_id}, Java=$(publish_curseforge_java_versions "${mc_version}" | paste -sd, -), Forge=${forge_id}"
+	jq -n --argjson ids "$(printf '%s\n' "${game_ids[@]}" | jq -R 'tonumber' | jq -s '.')" '$ids'
 }
 
 publish_curseforge_upload() {
@@ -629,7 +699,7 @@ publish_curseforge_upload() {
 	local jar="$2"
 	local changelog="$3"
 	local dry_run="${4:-false}"
-	local mc_version project_id metadata http_code author_token version_ids mc_id java_id forge_id
+	local mc_version project_id metadata http_code author_token game_version_ids
 
 	author_token="$(publish_curseforge_author_token)" || {
 		log_error "CurseForge upload requiere CURSEFORGE_AUTHOR_TOKEN"
@@ -644,27 +714,21 @@ publish_curseforge_upload() {
 	project_id="$(publish_resolve_curseforge_project_id)" || return 1
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
-	version_ids="$(publish_curseforge_upload_game_version_ids "${mc_version}" "${author_token}")" || {
-		log_error "No se pudieron resolver gameVersions de CurseForge para ${mc_version} + Forge"
+	game_version_ids="$(publish_curseforge_upload_game_version_ids "${mc_version}" "${author_token}")" || {
+		log_error "No se pudieron resolver gameVersions de CurseForge para ${mc_version} + Forge + Java"
 		return 1
 	}
-	mc_id="${version_ids%%,*}"
-	version_ids="${version_ids#*,}"
-	java_id="${version_ids%%,*}"
-	forge_id="${version_ids##*,}"
 
 	metadata="$(jq -n \
 		--arg changelog "${changelog}" \
 		--arg displayName "${tag}" \
 		--arg releaseType "${RELEASE_TYPE}" \
-		--argjson mcId "${mc_id}" \
-		--argjson javaId "${java_id}" \
-		--argjson forgeId "${forge_id}" \
+		--argjson gameVersions "${game_version_ids}" \
 		'{
 			changelog: $changelog,
 			changelogType: "markdown",
 			displayName: $displayName,
-			gameVersions: [$mcId, $javaId, $forgeId],
+			gameVersions: $gameVersions,
 			releaseType: $releaseType
 		}')"
 
@@ -809,11 +873,15 @@ publish_release_full() {
 	trap publish_cleanup EXIT
 	publish_load_secrets
 
-	local tag jar changelog mc_version mod_name
+	local tag jar changelog modrinth_changelog curseforge_changelog mc_version mod_name
 	tag="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
 	mod_name="$(get_prop mod_name "${GRADLE_PROPERTIES}")"
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
 	changelog="$(publish_extract_changelog "${tag}")"
+	modrinth_changelog="$(publish_extract_modrinth_changelog 2>/dev/null || true)"
+	curseforge_changelog="$(publish_extract_curseforge_changelog 2>/dev/null || true)"
+	[[ -n "${modrinth_changelog}" ]] || modrinth_changelog="${changelog}"
+	[[ -n "${curseforge_changelog}" ]] || curseforge_changelog="${changelog}"
 
 	screen_clear
 	echo -e "${BOLD}${CYAN}═══ Publicar release ═══${RESET}"
@@ -863,11 +931,11 @@ publish_release_full() {
 	fi
 
 	if [[ "${SKIP_MODRINTH:-false}" != "true" ]]; then
-		publish_modrinth_upload "${tag}" "${jar}" "${changelog}" "${dry_run}" || { pause; return 1; }
+		publish_modrinth_upload "${tag}" "${jar}" "${modrinth_changelog}" "${dry_run}" || { pause; return 1; }
 	fi
 
 	if [[ "${SKIP_CURSEFORGE:-false}" != "true" ]]; then
-		publish_curseforge_upload "${tag}" "${jar}" "${changelog}" "${dry_run}" || { pause; return 1; }
+		publish_curseforge_upload "${tag}" "${jar}" "${curseforge_changelog}" "${dry_run}" || { pause; return 1; }
 	fi
 
 	echo

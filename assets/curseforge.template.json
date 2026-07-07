@@ -1,5 +1,9 @@
 {
   "_comment": "Plantilla CurseForge — copiar a curseforge.json o editar curseforge.json directamente. Social links y galería se configuran manualmente en Authors; publish-release.sh muestra checklist tras publicar.",
+  "version_changelog_file": "curseforge-version-changelog.md",
+  "client_side": "optional",
+  "server_side": "optional",
+  "java_versions": ["Java 17", "Java 21"],
   "social_username": "your-username",
   "social_links": {
     "discord": "https://discord.gg/your-invite",

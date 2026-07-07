@@ -1,5 +1,9 @@
 {
   "_comment": "CurseForge no expone API pública para social links ni screenshots. publish-release.sh muestra checklist tras publicar.",
+  "version_changelog_file": "curseforge-version-changelog.md",
+  "client_side": "optional",
+  "server_side": "optional",
+  "java_versions": ["Java 17", "Java 21"],
   "social_username": "alanjmrt94",
   "social_links": {
     "discord": "https://discord.gg/qqF5UnHH4",

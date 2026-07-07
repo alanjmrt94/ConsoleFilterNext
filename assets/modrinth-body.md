@@ -78,6 +78,7 @@ If **any** filter matches, the message is **filtered out** (unless whitelist mod
 |---|---|
 | **Minecraft** | 1.20.1 |
 | **Mod loader** | Forge 47+ |
+| **Java** | 17 or 21 (launcher; mod bytecode targets Java 17) |
 | **Side** | Client and dedicated server (optional on each) |
 
 Migrating from the original ConsoleFilter? See [MIGRATION.md](https://github.com/alanjmrt94/ConsoleFilterNext/blob/master/MIGRATION.md).

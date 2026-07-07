@@ -7,10 +7,14 @@ Archivos usados al publicar en Modrinth (y referencia para otras plataformas).
 | `icon.png` | Icono principal del mod (256 KiB máx. en Modrinth). Sustituir aquí para cambiar el icono en tiendas. |
 | `modrinth.json` | Metadatos del proyecto Modrinth; lo aplica `publish-release.sh` vía API. |
 | `modrinth-body.md` | Descripción larga (campo **body**) del proyecto Modrinth. |
+| `modrinth-version-changelog.md` | Changelog de la versión para Modrinth (solo código; usado al publicar el JAR). |
+| `modrinth-version-changelog.template.md` | Plantilla del changelog de versión; copiar/actualizar antes de cada release. |
 | `modrinth.template.json` | Plantilla documentada; copiar a `modrinth.json` si empezás de cero. |
 | `gallery/sample-1.png` | Captura para galería Modrinth (destacada) y CurseForge (panel web) |
-| `curseforge.json` | Social links, project links y galería CurseForge (checklist manual tras `publish`) |
+| `curseforge.json` | Social links, project links, changelog de versión y galería CurseForge |
 | `curseforge.template.json` | Plantilla documentada; copiar a `curseforge.json` si empezás de cero. |
+| `curseforge-version-changelog.md` | Changelog de la versión para CurseForge (solo código; usado al publicar el JAR). |
+| `curseforge-version-changelog.template.md` | Plantilla del changelog de versión para CurseForge. |
 
 ## Modrinth — checklist del panel
 
@@ -22,6 +26,9 @@ El script `publish_modrinth_sync_metadata` completa por API:
 - Imagen destacada de galería (`gallery` con `featured: true`)
 - Enlaces externos (`issues_url`, `source_url`, `wiki_url`)
 - Tags / categorías (`categories`)
+- Entorno: `client_side` y `server_side` → `optional` (cliente y servidor opcionales)
+- Versión: `version_environment` → `client_or_server` (al publicar el JAR)
+- Java: `java_versions` → `["Java 17", "Java 21"]` (referencia; CurseForge los aplica en `gameVersions`)
 
 **Submit for review:** con `"submit_for_review": true` en `modrinth.json`, el próximo sync envía el proyecto a moderación de Modrinth (ya activado en este repo). Para no reenviar en cada publish, dejalo en `false` una vez aprobado.
 
