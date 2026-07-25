@@ -24,6 +24,8 @@ dependencies {
     // Alineado con Log4j de Minecraft 1.20.1 / Forge
     api 'org.apache.logging.log4j:log4j-api:2.19.0'
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+    api 'com.electronwill.night-config:core:3.6.7'
+    api 'com.electronwill.night-config:toml:3.6.7'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testImplementation 'org.apache.logging.log4j:log4j-core:2.19.0'

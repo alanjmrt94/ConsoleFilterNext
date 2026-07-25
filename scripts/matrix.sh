@@ -121,10 +121,33 @@ gradle_cmd() {
 	(cd "${PROJECT_ROOT}" && ./gradlew "$@")
 }
 
+fabric_gradle() {
+	(cd "${PROJECT_ROOT}/fabric" && ./gradlew "$@")
+}
+
+neoforge_gradle() {
+	(cd "${PROJECT_ROOT}/neoforge" && ./gradlew "$@")
+}
+
+is_fabric_project() {
+	[[ "$1" == ":fabric" || "$1" == "fabric" ]]
+}
+
+is_neoforge_project() {
+	[[ "$1" == ":neoforge" || "$1" == "neoforge" ]]
+}
+
+is_isolated_project() {
+	is_fabric_project "$1" || is_neoforge_project "$1"
+}
+
 cmd_verify() {
 	local filter="${1:-}"
 	require_matrix
 	local any=0
+	local need_common=0
+	local need_fabric=0
+	local need_neoforge=0
 	while IFS='|' read -r id mc loader java enabled project; do
 		any=1
 		log_info "Verificando ${id} (MC ${mc}, ${loader}, Java ${java}, ${project})"
@@ -132,13 +155,17 @@ cmd_verify() {
 			log_info "  omitida (enabled=false)"
 			continue
 		fi
-		if [[ ! -d "${PROJECT_ROOT}/${project#:}" && "$project" == :* ]]; then
-			# project like :forge → directory forge
-			local dir="${project#:}"
-			if [[ ! -d "${PROJECT_ROOT}/${dir}" ]]; then
-				log_error "No existe el módulo ${dir} para ${id}"
-				exit 1
-			fi
+		local dir="${project#:}"
+		if [[ ! -d "${PROJECT_ROOT}/${dir}" ]]; then
+			log_error "No existe el módulo ${dir} para ${id}"
+			exit 1
+		fi
+		if is_fabric_project "${project}"; then
+			need_fabric=1
+		elif is_neoforge_project "${project}"; then
+			need_neoforge=1
+		else
+			need_common=1
 		fi
 		log_ok "${id} OK"
 	done < <(select_targets "$filter")
@@ -146,31 +173,73 @@ cmd_verify() {
 		log_error "No hay celdas para verificar"
 		exit 1
 	fi
-	gradle_cmd :common:compileJava
+	if [[ "$need_common" -eq 1 ]]; then
+		gradle_cmd :common:compileJava
+	fi
+	if [[ "$need_fabric" -eq 1 ]]; then
+		fabric_gradle compileJava
+	fi
+	if [[ "$need_neoforge" -eq 1 ]]; then
+		neoforge_gradle compileJava
+	fi
 	log_ok "verify completado"
 }
 
 cmd_build() {
 	local filter="${1:-}"
 	require_matrix
-	local projects=(":common:build")
+	local root_projects=()
+	local build_fabric=0
+	local build_neoforge=0
 	while IFS='|' read -r id mc loader java enabled project; do
-		log_info "Build ${id} → ${project}:build"
-		projects+=("${project}:build")
+		log_info "Build ${id} → ${project}"
+		if is_fabric_project "${project}"; then
+			build_fabric=1
+		elif is_neoforge_project "${project}"; then
+			build_neoforge=1
+		else
+			root_projects+=("${project}:build")
+		fi
 	done < <(select_targets "$filter")
-	gradle_cmd "${projects[@]}"
+	if [[ ${#root_projects[@]} -gt 0 ]]; then
+		gradle_cmd ":common:build" "${root_projects[@]}"
+	fi
+	if [[ "$build_fabric" -eq 1 ]]; then
+		fabric_gradle build
+	fi
+	if [[ "$build_neoforge" -eq 1 ]]; then
+		neoforge_gradle build
+	fi
 	log_ok "build completado"
 }
 
 cmd_test() {
 	local filter="${1:-}"
 	require_matrix
-	local projects=(":common:test")
+	local root_projects=()
+	local test_fabric=0
+	local test_neoforge=0
 	while IFS='|' read -r id mc loader java enabled project; do
-		log_info "Test ${id} → ${project}:test"
-		projects+=("${project}:test")
+		log_info "Test ${id} → ${project}"
+		if is_fabric_project "${project}"; then
+			test_fabric=1
+		elif is_neoforge_project "${project}"; then
+			test_neoforge=1
+		else
+			root_projects+=("${project}:test")
+		fi
 	done < <(select_targets "$filter")
-	gradle_cmd "${projects[@]}"
+	if [[ ${#root_projects[@]} -gt 0 ]]; then
+		gradle_cmd ":common:test" "${root_projects[@]}"
+	elif [[ "$test_fabric" -eq 0 && "$test_neoforge" -eq 0 ]]; then
+		gradle_cmd :common:test
+	fi
+	if [[ "$test_fabric" -eq 1 ]]; then
+		fabric_gradle test
+	fi
+	if [[ "$test_neoforge" -eq 1 ]]; then
+		neoforge_gradle test
+	fi
 	log_ok "test completado"
 }
 

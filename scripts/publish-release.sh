@@ -79,10 +79,17 @@ publish_find_jar() {
 
 	for libs_dir in \
 		"${PROJECT_ROOT}/forge/build/libs" \
+		"${PROJECT_ROOT}/fabric/build/libs" \
 		"${PROJECT_ROOT}/build/libs"; do
 		pattern="${libs_dir}/${mod_id}-${version}.jar"
 		if [[ -f "${pattern}" ]]; then
 			echo "${pattern}"
+			return 0
+		fi
+		# Prefer classifier-less forge jar; fabric uses -fabric classifier
+		jar="$(find "${libs_dir}" -maxdepth 1 -name "${mod_id}-${version}.jar" 2>/dev/null | head -1)"
+		if [[ -n "${jar}" && -f "${jar}" ]]; then
+			echo "${jar}"
 			return 0
 		fi
 		jar="$(find "${libs_dir}" -maxdepth 1 -name "${mod_id}-*.jar" \

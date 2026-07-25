@@ -13,14 +13,14 @@ targets:
     minecraft: "1.20.1"
     loader: fabric
     java: 17
-    enabled: false
+    enabled: true
     project: ":fabric"
 
   - id: mc1.20.1-neoforge
     minecraft: "1.20.1"
     loader: neoforge
     java: 17
-    enabled: false
+    enabled: true
     project: ":neoforge"
 
   - id: mc1.21-forge

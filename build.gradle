@@ -15,3 +15,25 @@ tasks.register('testAll') {
     description = 'Ejecuta tests de common y forge'
     dependsOn ':common:test', ':forge:test'
 }
+
+tasks.register('buildFabric') {
+    group = 'build'
+    description = 'Compila el adaptador Fabric (wrapper Gradle 9 + Loom aislado)'
+    doLast {
+        exec {
+            workingDir = file('fabric')
+            commandLine './gradlew', 'build', '--no-daemon'
+        }
+    }
+}
+
+tasks.register('testFabric') {
+    group = 'verification'
+    description = 'Tests del adaptador Fabric'
+    doLast {
+        exec {
+            workingDir = file('fabric')
+            commandLine './gradlew', 'test', '--no-daemon'
+        }
+    }
+}
