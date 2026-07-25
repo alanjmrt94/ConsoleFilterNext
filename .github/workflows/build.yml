@@ -50,10 +50,13 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v4
+      # Loom 1.14+ requiere JVM 21; el toolchain del proyecto sigue en 17 (MC 1.20.1).
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: |
+            17
+            21
           cache: gradle
       - name: Grant execute permission
         run: chmod +x fabric/gradlew
@@ -105,7 +108,7 @@ jobs:
       - name: Dedicated server smoke (Forge)
         timeout-minutes: 15
         env:
-          SMOKE_TIMEOUT_SECONDS: 420
+          SMOKE_TIMEOUT_SECONDS: 300
         run: ./scripts/server-smoke.sh forge
 
   server-smoke-fabric:
@@ -116,7 +119,9 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: |
+            17
+            21
           cache: gradle
       - name: Grant execute permission
         run: chmod +x fabric/gradlew scripts/server-smoke.sh
@@ -125,7 +130,7 @@ jobs:
       - name: Dedicated server smoke (Fabric)
         timeout-minutes: 15
         env:
-          SMOKE_TIMEOUT_SECONDS: 420
+          SMOKE_TIMEOUT_SECONDS: 300
         run: ./scripts/server-smoke.sh fabric
 
   server-smoke-neoforge:
@@ -145,5 +150,5 @@ jobs:
       - name: Dedicated server smoke (NeoForge)
         timeout-minutes: 15
         env:
-          SMOKE_TIMEOUT_SECONDS: 420
+          SMOKE_TIMEOUT_SECONDS: 300
         run: ./scripts/server-smoke.sh neoforge
