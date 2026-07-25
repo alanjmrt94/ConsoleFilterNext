@@ -9,7 +9,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 LOCAL_CONFIG="${SCRIPT_DIR}/.release.local"
 GRADLE_PROPERTIES="${PROJECT_ROOT}/gradle.properties"
 GRADLE_WRAPPER="${PROJECT_ROOT}/gradle/wrapper/gradle-wrapper.properties"
-BUILD_GRADLE="${PROJECT_ROOT}/build.gradle"
+BUILD_GRADLE="${PROJECT_ROOT}/forge/build.gradle"
 
 # shellcheck source=scripts/publish-release.sh disable=SC1091
 source "${SCRIPT_DIR}/publish-release.sh"
@@ -449,7 +449,7 @@ show_toolchain_refresh_commands() {
   print_cmd "./gradlew --stop"
   print_cmd "./gradlew --refresh-dependencies"
   print_cmd "./gradlew clean build"
-  print_cmd "./gradlew runClient"
+  print_cmd "./gradlew :forge:runClient"
   echo
 }
 
@@ -1070,7 +1070,7 @@ run_build() {
   if gradle_cmd build; then
     log_ok "Build exitoso"
     echo
-    ls -la "${PROJECT_ROOT}/build/libs/" 2>/dev/null | sed 's/^/  /' || true
+    ls -la "${PROJECT_ROOT}/forge/build/libs/" 2>/dev/null | sed 's/^/  /' || true
   else
     log_error "Build falló"
   fi
@@ -1105,8 +1105,8 @@ build_menu() {
     echo
     echo "  1) ./gradlew build"
     echo "  2) ./gradlew clean build"
-    echo "  3) ./gradlew runClient   — cliente local (desarrollo)"
-    echo "  4) ./gradlew runServer   — servidor dedicado (EULA auto en run/)"
+    echo "  3) ./gradlew :forge:runClient   — cliente local (desarrollo)"
+    echo "  4) ./gradlew :forge:runServer   — servidor dedicado (EULA auto en run/)"
     echo "  5) ./gradlew --version"
     echo "  6) Tarea personalizada"
     echo "  0) Volver"
@@ -1115,8 +1115,8 @@ build_menu() {
     case "${choice}" in
       1) run_build ;;
       2) run_clean_build ;;
-      3) run_gradle_task runClient ;;
-      4) run_gradle_task runServer ;;
+      3) run_gradle_task :forge:runClient ;;
+      4) run_gradle_task :forge:runServer ;;
       5) run_gradle_task --version ;;
       6)
         read -r -p "Nombre de la tarea Gradle: " task
@@ -1208,8 +1208,8 @@ REGLAS IMPORTANTES
   • El mod funciona en cliente y servidor; ambos entornos se pueden probar con Gradle.
 
 EJECUCIÓN LOCAL (cliente y servidor)
-  • ./gradlew runClient  — inicia el cliente con el mod cargado desde run/
-  • ./gradlew runServer  — inicia servidor dedicado; genera run/eula.txt (eula=true)
+  • ./gradlew :forge:runClient  — inicia el cliente con el mod cargado desde run/
+  • ./gradlew :forge:runServer  — inicia servidor dedicado; genera run/eula.txt (eula=true)
   • run/ está en .gitignore (datos locales de desarrollo, no versionar)
 
 ARCHIVOS QUE MODIFICA

@@ -5,7 +5,7 @@
 
 An improved console log filter for Minecraft Forge — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
-**Current release:** `1.20.1-4.0.3` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
+**Current release:** `1.20.1-4.1.0` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
 
 ## Downloads
 
@@ -274,10 +274,11 @@ If **any** of the conditions match, the message will be **filtered out**.
 git clone https://github.com/alanjmrt94/ConsoleFilterNext.git
 cd ConsoleFilterNext
 ./scripts/release.sh verify   # check your setup
-./gradlew build
+./scripts/matrix.sh test      # common + enabled matrix cells
+./gradlew :forge:build
 ```
 
-The JAR is produced in `build/libs/`. Use `./scripts/release.sh verify` if the build fails due to Java/Gradle mismatch.
+The JAR is produced in `forge/build/libs/`. Use `./scripts/release.sh verify` if the build fails due to Java/Gradle mismatch.
 
 ### Local development runs (client and server)
 
@@ -285,8 +286,8 @@ The mod is verified for **both** client and dedicated server. Use Gradle from th
 
 | Command | Purpose |
 |---------|---------|
-| `./gradlew runClient` | Launch the Minecraft **client** with the mod in `run/mods/` |
-| `./gradlew runServer` | Launch a local **dedicated server** (auto-accepts EULA via `run/eula.txt`) |
+| `./gradlew :forge:runClient` | Launch the Minecraft **client** with the mod in `run/mods/` |
+| `./gradlew :forge:runServer` | Launch a local **dedicated server** (auto-accepts EULA via `run/eula.txt`) |
 
 The `run/` directory holds local world data, configs, and logs and is **gitignored**.
 
@@ -410,7 +411,7 @@ Local publishes use the same names in `scripts/.release.local` (see `scripts/.re
 
 If neither `MODRINTH_TOKEN` nor `CURSEFORGE_API_TOKEN` is set in the `publish` environment, the workflow skips upload steps with a notice (no failure).
 
-## ⚠️ Known limitations (v4.0.3)
+## ⚠️ Known limitations (v4.1.0)
 
 - Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
 - The in-game list editor paginates long lists (8 per page) but has no search yet.

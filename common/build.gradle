@@ -1,0 +1,39 @@
+plugins {
+    id 'java-library'
+}
+
+version = rootProject.findProperty('mod_version')
+group = rootProject.findProperty('mod_group_id')
+
+base {
+    archivesName = "${rootProject.findProperty('mod_id')}-common"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Alineado con Log4j de Minecraft 1.20.1 / Forge
+    api 'org.apache.logging.log4j:log4j-api:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+test {
+    useJUnitPlatform()
+}

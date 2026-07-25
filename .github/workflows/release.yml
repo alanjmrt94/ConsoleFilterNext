@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew build --no-daemon
 
       - name: Stage release JAR
-        run: cp build/libs/consolefilternext-*.jar ./
+        run: cp forge/build/libs/consolefilternext-*.jar ./
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

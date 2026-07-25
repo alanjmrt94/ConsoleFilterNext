@@ -7,6 +7,15 @@
  - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
 -----------------------------------------------------
+ VERSION 4.1.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Split project into common + forge modules (multiloader foundation)
+ - Extract FilterEngine, FilterHost, FilterConfigView, and ModIdLookup from Forge-specific code
+ - Add versions/matrix.yml and scripts/matrix.sh for multi-version / multi-loader builds
+ - Update CI and publish scripts for forge/build/libs layout
+
+-----------------------------------------------------
  VERSION 4.0.3 - 1.20.1
 -----------------------------------------------------
 1.20.1:

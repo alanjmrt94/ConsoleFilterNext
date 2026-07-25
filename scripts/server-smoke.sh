@@ -18,7 +18,7 @@ echo "Server log: $LOG_FILE"
 echo "Smoke timeout: ${SMOKE_TIMEOUT_SECONDS}s"
 
 set +e
-timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" ./gradlew runServer --no-daemon >"$LOG_FILE" 2>&1
+timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" ./gradlew :forge:runServer --no-daemon >"$LOG_FILE" 2>&1
 EXIT_CODE=$?
 set -e
 

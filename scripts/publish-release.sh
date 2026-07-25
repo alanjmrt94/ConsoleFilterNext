@@ -73,22 +73,25 @@ publish_show_secrets_status() {
 }
 
 publish_find_jar() {
-	local mod_id version pattern jar
+	local mod_id version pattern jar libs_dir
 	mod_id="$(get_prop mod_id "${GRADLE_PROPERTIES}")"
 	version="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
-	pattern="${PROJECT_ROOT}/build/libs/${mod_id}-${version}.jar"
 
-	if [[ -f "${pattern}" ]]; then
-		echo "${pattern}"
-		return 0
-	fi
-
-	jar="$(find "${PROJECT_ROOT}/build/libs" -maxdepth 1 -name "${mod_id}-*.jar" \
-		! -name "*-sources.jar" ! -name "*-javadoc.jar" 2>/dev/null | head -1)"
-	if [[ -n "${jar}" && -f "${jar}" ]]; then
-		echo "${jar}"
-		return 0
-	fi
+	for libs_dir in \
+		"${PROJECT_ROOT}/forge/build/libs" \
+		"${PROJECT_ROOT}/build/libs"; do
+		pattern="${libs_dir}/${mod_id}-${version}.jar"
+		if [[ -f "${pattern}" ]]; then
+			echo "${pattern}"
+			return 0
+		fi
+		jar="$(find "${libs_dir}" -maxdepth 1 -name "${mod_id}-*.jar" \
+			! -name "*-sources.jar" ! -name "*-javadoc.jar" ! -name "*-common-*.jar" 2>/dev/null | head -1)"
+		if [[ -n "${jar}" && -f "${jar}" ]]; then
+			echo "${jar}"
+			return 0
+		fi
+	done
 
 	return 1
 }
@@ -150,13 +153,13 @@ publish_extract_curseforge_changelog() {
 publish_build_release() {
 	log_info "Compilando (clean build)..."
 	load_local_config
-	if ! gradle_cmd clean build; then
+	if ! gradle_cmd clean :common:build :forge:build; then
 		log_error "La compilación falló"
 		return 1
 	fi
 	log_ok "Compilación exitosa"
 	publish_find_jar >/dev/null || {
-		log_error "No se encontró el JAR en build/libs/"
+		log_error "No se encontró el JAR en forge/build/libs/"
 		return 1
 	}
 	return 0
@@ -1010,7 +1013,7 @@ publish_release_cli() {
 Uso: $(basename "$0") publish [opciones]
 
   --dry-run           Simular sin git push ni subidas
-  --skip-build        Usar JAR existente en build/libs/
+  --skip-build        Usar JAR existente en forge/build/libs/
   --push-branch       Subir la rama actual antes del tag (default en menú opción 2)
   --no-push-branch    No subir la rama
   --skip-github       Omitir tag y GitHub Release

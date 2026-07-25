@@ -16,6 +16,14 @@
 
 ---
 
+## 4.1.0 · Minecraft 1.20.1
+
+- Monorepo `common` + `forge`: el motor de filtrado ya no depende de Forge
+- `FilterEngine` / `FilterHost` / `ModIdLookup` como base para Fabric y NeoForge
+- Sin cambios en reglas de filtrado ni en el formato TOML de configuración
+
+---
+
 ## 4.0.3 · Minecraft 1.20.1
 
 _Sin cambios funcionales en el mod._

@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: consolefilternext-mod
-          path: build/libs/consolefilternext-*.jar
+          path: forge/build/libs/consolefilternext-*.jar
           if-no-files-found: error
 
   server-smoke:
