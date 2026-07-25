@@ -818,7 +818,7 @@ publish_curseforge_upload_game_version_ids() {
 	local author_token="$2"
 	local loader="${3:-forge}"
 	local mc_series="${mc_version%.*}"
-	local tmp types_id mc_id java_name java_id loader_id
+	local tmp types_id mc_id java_name java_id loader_id env_id
 	local -a game_ids=()
 
 	tmp="$(mktemp)"
@@ -860,10 +860,21 @@ publish_curseforge_upload_game_version_ids() {
 		rm -f "${tmp}"
 		return 1
 	}
+	game_ids+=("${loader_id}")
+
+	# CurseForge exige ≥1 versión del grupo Environment (Client / Server).
+	for env_name in Client Server; do
+		env_id="$(jq -r --arg n "${env_name}" '.[] | select(.name == $n) | .id' "${tmp}" | head -1)"
+		if [[ -z "${env_id}" || "${env_id}" == "null" ]]; then
+			log_error "CurseForge: versión Environment '${env_name}' no encontrada"
+			rm -f "${tmp}"
+			return 1
+		fi
+		game_ids+=("${env_id}")
+	done
 	rm -f "${tmp}"
 
-	game_ids+=("${loader_id}")
-	log_info "CurseForge [${loader}]: gameVersions → ${mc_version}=${mc_id}, Java=$(publish_curseforge_java_versions "${mc_version}" | paste -sd, -), $(publish_loader_display_name "${loader}")=${loader_id}"
+	log_info "CurseForge [${loader}]: gameVersions → ${mc_version}=${mc_id}, Java=$(publish_curseforge_java_versions "${mc_version}" | paste -sd, -), $(publish_loader_display_name "${loader}")=${loader_id}, Environment=Client+Server"
 	jq -n --argjson ids "$(printf '%s\n' "${game_ids[@]}" | jq -R 'tonumber' | jq -s '.')" '$ids'
 }
 
