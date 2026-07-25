@@ -1,5 +1,6 @@
 # ─── Gradle ─────────────────────────────────────────────────────────────────
 .gradle/
+**/.gradle/
 **/build/
 !src/**/build/
 gradle-app.setting
@@ -14,6 +15,10 @@ mcmodsrepo/
 
 # ─── Forge / Minecraft dev runs ─────────────────────────────────────────────
 run/
+
+# Fabric Loom / NeoForge MDG run directories
+run-fabric/
+run-neoforge/
 
 # ─── IDE ────────────────────────────────────────────────────────────────────
 # Eclipse

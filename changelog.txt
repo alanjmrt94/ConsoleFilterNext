@@ -7,6 +7,24 @@
  - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
 -----------------------------------------------------
+ VERSION 4.2.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Shared in-game config editor (client/) on Forge, Fabric (Mod Menu), and NeoForge
+ - Multi-JAR publish: GitHub / Modrinth TAG+loader / CurseForge per loader
+ - JAR classifiers *-forge / *-fabric / *-neoforge; isolated CI lint + per-loader build/smoke
+ - Docs and scripts aligned with the three-loader release path
+
+-----------------------------------------------------
+ VERSION 4.1.0 - 1.20.1
+-----------------------------------------------------
+1.20.1:
+ - Multiloader: Forge + Fabric + NeoForge on shared common filter core
+ - Extract FilterEngine, FilterHost, FilterConfigView, and ModIdLookup
+ - Same TOML schema (consolefilternext-common.toml) across all loaders
+ - versions/matrix.yml and scripts/matrix.sh for multi-version / multi-loader builds
+
+-----------------------------------------------------
  VERSION 4.0.3 - 1.20.1
 -----------------------------------------------------
 1.20.1:

@@ -1,5 +1,21 @@
 # Console Filter Next — Changelog (solo código)
 
+## 4.2.0 · Minecraft 1.20.1
+
+- Editor in-game compartido (`client/`): Mod Menu (Fabric) / Mods → Config (Forge y NeoForge)
+- Mismos filtros y TOML `consolefilternext-common.toml` en los tres loaders
+- JARs con classifier por loader (`*-forge` / `*-fabric` / `*-neoforge`)
+
+---
+
+## 4.1.0 · Minecraft 1.20.1
+
+- Ports **Fabric** y **NeoForge** además de Forge
+- Motor común (`FilterEngine` / `FilterHost` / `ModIdLookup`) sin cambios en reglas de filtrado
+- Mismo esquema TOML `consolefilternext-common.toml`
+
+---
+
 ## 4.0.3 · Minecraft 1.20.1
 
 _Sin cambios funcionales en el mod._

@@ -22,20 +22,34 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission
+        run: |
+          chmod +x gradlew fabric/gradlew neoforge/gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+      - name: Build Forge
+        run: ./gradlew clean :common:build :forge:build --no-daemon
 
-      - name: Stage release JAR
-        run: cp build/libs/consolefilternext-*.jar ./
+      - name: Build Fabric
+        run: cd fabric && ./gradlew clean build --no-daemon
+
+      - name: Build NeoForge
+        run: cd neoforge && ./gradlew clean build --no-daemon
+
+      - name: Stage release JARs
+        run: |
+          mkdir -p dist
+          cp forge/build/libs/consolefilternext-*-forge.jar dist/ || true
+          cp fabric/build/libs/consolefilternext-*-fabric.jar dist/ || true
+          cp neoforge/build/libs/consolefilternext-*-neoforge.jar dist/ || true
+          # Excluir sources/javadoc del staging
+          rm -f dist/*-sources.jar dist/*-javadoc.jar
+          ls -la dist/
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: consolefilternext-mod
-          path: consolefilternext-*.jar
+          path: dist/*.jar
           if-no-files-found: error
 
       - name: Create GitHub Release
@@ -43,7 +57,7 @@ jobs:
         with:
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          artifacts: consolefilternext-*.jar
+          artifacts: dist/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
           generateReleaseNotes: true
           allowUpdates: true

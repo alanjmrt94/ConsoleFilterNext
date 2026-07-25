@@ -1,0 +1,101 @@
+mod_id: consolefilternext
+mod_semver: "4.1.0"
+
+targets:
+  - id: mc1.20.1-forge
+    minecraft: "1.20.1"
+    loader: forge
+    java: 17
+    enabled: true
+    project: ":forge"
+
+  - id: mc1.20.1-fabric
+    minecraft: "1.20.1"
+    loader: fabric
+    java: 17
+    enabled: true
+    project: ":fabric"
+
+  - id: mc1.20.1-neoforge
+    minecraft: "1.20.1"
+    loader: neoforge
+    java: 17
+    enabled: true
+    project: ":neoforge"
+
+  - id: mc1.21-forge
+    minecraft: "1.21.1"
+    loader: forge
+    java: 21
+    enabled: false
+    project: ":forge"
+
+  - id: mc1.21-fabric
+    minecraft: "1.21.1"
+    loader: fabric
+    java: 21
+    enabled: false
+    project: ":fabric"
+
+  - id: mc1.21-neoforge
+    minecraft: "1.21.1"
+    loader: neoforge
+    java: 21
+    enabled: false
+    project: ":neoforge"
+
+  - id: mc26.1-fabric
+    minecraft: "26.1"
+    loader: fabric
+    java: 21
+    enabled: false
+    project: ":fabric"
+
+  - id: mc26.1-neoforge
+    minecraft: "26.1"
+    loader: neoforge
+    java: 21
+    enabled: false
+    project: ":neoforge"
+
+  - id: mc1.16.1-forge
+    minecraft: "1.16.1"
+    loader: forge
+    java: 8
+    enabled: false
+    project: ":forge"
+
+  - id: mc1.16.1-fabric
+    minecraft: "1.16.1"
+    loader: fabric
+    java: 8
+    enabled: false
+    project: ":fabric"
+
+  - id: mc1.16.5-forge
+    minecraft: "1.16.5"
+    loader: forge
+    java: 8
+    enabled: false
+    project: ":forge"
+
+  - id: mc1.16.5-fabric
+    minecraft: "1.16.5"
+    loader: fabric
+    java: 8
+    enabled: false
+    project: ":fabric"
+
+  - id: mc1.12.2-forge
+    minecraft: "1.12.2"
+    loader: forge
+    java: 8
+    enabled: false
+    project: ":forge"
+
+  - id: mc1.8.9-forge
+    minecraft: "1.8.9"
+    loader: forge
+    java: 8
+    enabled: false
+    project: ":forge"

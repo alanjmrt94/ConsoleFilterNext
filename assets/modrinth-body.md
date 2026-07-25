@@ -1,15 +1,15 @@
 # Console Filter Next
 
-An improved fork of [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) for Minecraft Forge. Filter console output by **text**, **regex**, **log level**, **thread**, **logger/source**, and **Forge mod id** — not just plain text. Reduce noise on the client or dedicated server while debugging modpacks and development environments.
+An improved fork of [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) for Minecraft **Forge, Fabric, and NeoForge**. Filter console output by **text**, **regex**, **log level**, **thread**, **logger/source**, and **mod id** — not just plain text. Reduce noise on the client or dedicated server while debugging modpacks and development environments.
 
 Install on **either or both sides** (optional on client and server): use it only where you read logs.
 
 ## Features
 
-- **Filter types:** basic text, regex, log level, thread, logger/source, Forge **mod id**
+- **Filter types:** basic text, regex, log level, thread, logger/source, **mod id**
 - **Profiles:** `default`, `debug`, `production` — switch in-game, via TOML, or `/consolefilter profile` (persisted)
 - **Modes:** blacklist (hide matches) or **whitelist** (show only matches); optional `ignoreCase`
-- **In-game editor** (Options → Mods → Config): paginated lists, regex validation, presets, import/export
+- **In-game editor** (Forge/NeoForge Mods → Config; Fabric Mod Menu): paginated lists, regex validation, presets, import/export
 - **Commands** (OP 2): `reload`, `list`, `status`, `export`, `import`, `profile`
 - **`filterLatestLog`** — apply filters to `latest.log` and other Log4j file appenders
 - **`skipMessagesWithStackTrace`** — never hide lines with exceptions or stack traces

@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+issueTrackerURL="https://github.com/alanjmrt94/ConsoleFilterNext/issues"
+
+# Build NeoForge 1.20.1: el loader sigue exponiendo modId "forge" (paquetes net.minecraftforge.*).
+# Config UI: Options → Mods → Config (ConfigScreenFactory).
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+credits="Originally based on ConsoleFilter by Matthew Czyr (MattCzyr). Contributors: NgLoader, MarkKoz, ChaosTheDude. Maintained by alanjmrt94. CC BY-NC-SA 4.0."
+description='''${mod_description}'''
+modUrl="https://www.curseforge.com/minecraft/mc-mods/consolefilternext"
+# Environment: ${mod_environment} — client and dedicated server
+displayTest="IGNORE_ALL_VERSION"
+logoFile="icon.png"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+mandatory=true
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="forge"
+mandatory=true
+versionRange="${forge_version_range}"
+ordering="AFTER"
+side="BOTH"

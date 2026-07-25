@@ -1,0 +1,133 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.fabricmc.net/' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath "net.fabricmc:fabric-loom:1.14.1"
+    }
+    configurations.classpath {
+        resolutionStrategy {
+            force 'com.google.code.gson:gson:2.10.1'
+        }
+    }
+}
+
+apply plugin: 'fabric-loom'
+apply plugin: 'maven-publish'
+
+def props = new Properties()
+file('../gradle.properties').withInputStream { props.load(it) }
+props.each { key, value ->
+    if (!project.hasProperty(key)) {
+        project.ext.set(key as String, value)
+    }
+}
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+    archivesName = props['mod_id'] as String
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url = 'https://maven.terraformersmc.com/releases/' }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir '../common/src/main/java'
+            srcDir '../client/src/main/java'
+        }
+    }
+    test {
+        java {
+            srcDir '../client/src/test/java'
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${props['minecraft_version']}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${props['fabric_loader_version']}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${props['fabric_api_version']}"
+    modCompileOnly "com.terraformersmc:modmenu:${props['modmenu_version']}"
+
+    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+    implementation 'com.electronwill.night-config:core:3.6.7'
+    implementation 'com.electronwill.night-config:toml:3.6.7'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+loom {
+    runs {
+        client {
+            client()
+            setConfigName('Fabric Client')
+            ideConfigGenerated true
+            runDir '../run-fabric'
+        }
+        server {
+            server()
+            setConfigName('Fabric Server')
+            ideConfigGenerated true
+            runDir '../run-fabric'
+        }
+    }
+}
+
+processResources {
+    def ver = project.version
+    def modId = props['mod_id']
+    def modName = props['mod_name']
+    def modDescription = props['mod_description']
+    def modAuthors = props['mod_authors']
+    def modLicense = props['mod_license']
+
+    inputs.property 'version', ver
+    filesMatching('fabric.mod.json') {
+        expand([
+                version        : ver,
+                mod_id         : modId,
+                mod_name       : modName,
+                mod_description: modDescription,
+                mod_authors    : modAuthors,
+                mod_license    : modLicense
+        ])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+tasks.named('remapJar', net.fabricmc.loom.task.RemapJarTask).configure {
+    archiveClassifier.set('fabric')
+}
+
+jar {
+    from(file('../LICENSE.md')) {
+        rename { "${it}_${props['mod_id']}" }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

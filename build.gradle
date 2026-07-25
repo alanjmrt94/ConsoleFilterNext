@@ -1,248 +1,102 @@
 plugins {
-    id 'eclipse'
-    id 'idea'
-    id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '6.0.47'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'base'
+    id 'com.diffplug.spotless' version '6.25.0'
 }
-
-version = mod_version
-group = mod_group_id
-
-base {
-    archivesName = mod_id
-}
-
-// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-minecraft {
-    // The mappings can be changed at any time and must be in the following format.
-    // Channel:   Version:
-    // official   MCVersion             Official field/method names from Mojang mapping files
-    // parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official
-    //
-    // You must be aware of the Mojang license when using the 'official' or 'parchment' mappings.
-    // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
-    //
-    // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
-    // Additional setup is needed to use their mappings: https://parchmentmc.org/docs/getting-started
-    //
-    // Use non-default mappings at your own risk. They may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: mapping_channel, version: mapping_version
-
-    // When true, this property will have all Eclipse run configurations run the "prepareX" task for the given run configuration before launching the game.
-    // In most cases, it is not necessary to enable.
-    // enableEclipsePrepareRuns = true
-
-    // When true, this property will have all IntelliJ IDEA run configurations run the "prepareX" task for the given run configuration before launching the game.
-    // In most cases, it is not necessary to enable.
-    // enableIdeaPrepareRuns = true
-
-    // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
-    // It is REQUIRED to be set to true for this template to function.
-    // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-    copyIdeResources = true
-
-    // When true, this property will add the folder name of all declared run configurations to generated IDE run configurations.
-    // The folder name can be set on a run configuration using the "folderName" property.
-    // By default, the folder name of a run configuration is the name of the Gradle project containing it.
-    // generateRunFolders = true
-
-    // This property enables access transformers for use in development.
-    // They will be applied to the Minecraft artifact.
-    // The access transformer file can be anywhere in the project.
-    // However, it must be at "META-INF/accesstransformer.cfg" in the final mod jar to be loaded by Forge.
-    // This default location is a best practice to automatically put the file in the right place in the final jar.
-    // See https://docs.minecraftforge.net/en/latest/advanced/accesstransformers/ for more information.
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
-    runs {
-        client {
-            workingDirectory project.file('run')
-
-            // Recommended logging data for a userdev environment
-            // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
-            // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-            property 'forge.logging.console.level', 'debug'
-
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', mod_id
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            property 'forge.enabledGameTestNamespaces', mod_id
-
-            args 'nogui'
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
-        gameTestServer {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            property 'forge.enabledGameTestNamespaces', mod_id
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
-}
-
-// Accept Minecraft EULA automatically for local dev server runs.
-def ensureRunEula = tasks.register('ensureRunEula') {
-    doLast {
-        def runDir = layout.projectDirectory.dir('run').asFile
-        runDir.mkdirs()
-        def eulaFile = new File(runDir, 'eula.txt')
-        eulaFile.text = """#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://aka.ms/MinecraftEULA).
-#${new Date()}
-eula=true
-"""
-    }
-}
-
-tasks.whenTaskAdded { task ->
-    if (task.name == 'runServer' || task.name == 'runGameTestServer') {
-        task.dependsOn(ensureRunEula)
-    }
-}
-
-// Include resources generated by data generators.
-sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenCentral()
-    maven {
-        name = "Forge"
-        url = "https://maven.minecraftforge.net/"
-    }
-    maven {
-        name = "ParchmentMC"
-        url = "https://maven.parchmentmc.org"
-    }
 }
 
-dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-}
-
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
-// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta']
-def replaceProperties = [
-        minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-        forge_version: forge_version, forge_version_range: forge_version_range,
-        loader_version_range: loader_version_range,
-        mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-        mod_authors: mod_authors, mod_description: mod_description, mod_environment: mod_environment
-]
-processResources {
-    inputs.properties replaceProperties
-    replaceProperties.put 'project', project
-
-    filesMatching(resourceTargets) {
-        expand replaceProperties
-    }
-}
-
-// Example for how to get properties into the manifest for reading at runtime.
-jar {
-    manifest {
-        attributes([
-                "Specification-Title"     : mod_id,
-                "Specification-Vendor"    : mod_authors,
-                "Specification-Version"   : mod_version,
-                "Implementation-Title"    : mod_name,
-                "Implementation-Version"  : mod_version,
-                "Implementation-Vendor"   : mod_authors,
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-}
-
-// Example configuration to allow publishing using the maven-publish plugin
-// This is the preferred method to reobfuscate your jar file
-jar.finalizedBy('reobfJar')
-// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
-// publish.dependsOn('reobfJar')
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
+allprojects {
+    group = findProperty('mod_group_id') ?: 'com.alanjmrt94.consolefilternext'
     repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
+        mavenCentral()
+    }
+}
+
+subprojects {
+    pluginManager.withPlugin('java') {
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-serial', '-Xlint:-processing'])
+            if (findProperty('failOnWarnings') == 'true') {
+                options.compilerArgs.add('-Werror')
+            }
+        }
+    }
+    pluginManager.withPlugin('java-library') {
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-serial', '-Xlint:-processing'])
+            if (findProperty('failOnWarnings') == 'true') {
+                options.compilerArgs.add('-Werror')
+            }
         }
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
-    options.release = 17
+// Formato / imports no usados sobre todo el árbol Java del monorepo (incl. loaders aislados).
+spotless {
+    java {
+        target(
+            'common/src/**/*.java',
+            'client/src/**/*.java',
+            'forge/src/**/*.java',
+            'fabric/src/**/*.java',
+            'neoforge/src/**/*.java'
+        )
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
-test {
-    useJUnitPlatform()
+tasks.register('lintCheck') {
+    group = 'verification'
+    description = 'Verifica formato Spotless (imports no usados, whitespace)'
+    dependsOn 'spotlessCheck'
+}
+
+tasks.register('lintCi') {
+    group = 'verification'
+    description = 'Lint CI: Spotless + compile common/forge con -Werror'
+    dependsOn 'spotlessCheck', ':common:compileJava', ':forge:compileJava'
+}
+
+tasks.register('lintFix') {
+    group = 'formatting'
+    description = 'Aplica autofix Spotless (imports no usados, whitespace)'
+    dependsOn 'spotlessApply'
+}
+
+tasks.named('build').configure {
+    dependsOn ':common:build', ':forge:build'
+}
+
+tasks.register('testAll') {
+    group = 'verification'
+    description = 'Ejecuta tests de common y forge'
+    dependsOn ':common:test', ':forge:test'
+}
+
+tasks.register('buildFabric') {
+    group = 'build'
+    description = 'Compila el adaptador Fabric (wrapper Gradle 9 + Loom aislado)'
+    doLast {
+        exec {
+            workingDir = file('fabric')
+            commandLine './gradlew', 'build', '--no-daemon'
+        }
+    }
+}
+
+tasks.register('testFabric') {
+    group = 'verification'
+    description = 'Tests del adaptador Fabric'
+    doLast {
+        exec {
+            workingDir = file('fabric')
+            commandLine './gradlew', 'test', '--no-daemon'
+        }
+    }
 }
