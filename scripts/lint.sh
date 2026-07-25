@@ -15,7 +15,7 @@ Uso: lint.sh [check|fix|compile|ci]
   check    Spotless check (imports no usados, whitespace) — default
   fix      Autofix Spotless
   compile  Compila common+forge con -Xlint:all -Werror
-  ci       Igual que CI: Spotless + compile -Werror + --warning-mode fail
+  ci       Igual que CI: Spotless + compile common/forge con -Werror
 
 Ejemplos:
   ./scripts/lint.sh
@@ -26,13 +26,14 @@ EOF
 
 run_ci_lint() {
 	# Limpia para no reusar class files compilados sin -Werror.
+	# No usamos --warning-mode fail: ForgeGradle emite deprecaciones propias
+	# (Project.javaexec) que no controlamos y tumbarían el job.
 	./gradlew \
 		:common:clean :forge:clean \
 		lintCi \
 		-PfailOnWarnings=true \
-		--warning-mode fail \
 		--no-daemon
-	echo "[ok] Lint CI OK (Spotless + -Xlint/-Werror + sin deprecaciones Gradle)"
+	echo "[ok] Lint CI OK (Spotless + -Xlint/-Werror)"
 }
 
 case "${MODE}" in
@@ -46,7 +47,7 @@ case "${MODE}" in
 		;;
 	compile)
 		./gradlew :common:clean :forge:clean :common:compileJava :forge:compileJava \
-			-PfailOnWarnings=true --warning-mode fail --no-daemon
+			-PfailOnWarnings=true --no-daemon
 		echo "[ok] Compilación common+forge con -Xlint:all -Werror"
 		;;
 	ci)

@@ -21,7 +21,7 @@ jobs:
           cache: gradle
       - name: Grant execute permission
         run: chmod +x gradlew scripts/lint.sh
-      - name: Lint (Spotless + -Werror, sin warnings)
+      - name: Lint (Spotless + -Werror)
         run: ./scripts/lint.sh ci
 
   build-forge:
@@ -37,7 +37,7 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
       - name: Build Forge
-        run: ./gradlew clean :common:build :forge:build --warning-mode fail --no-daemon
+        run: ./gradlew clean :common:build :forge:build --no-daemon
       - name: Upload Forge JAR
         uses: actions/upload-artifact@v4
         with:
@@ -58,7 +58,7 @@ jobs:
       - name: Grant execute permission
         run: chmod +x fabric/gradlew
       - name: Build Fabric
-        run: cd fabric && ./gradlew clean build --warning-mode fail --no-daemon
+        run: cd fabric && ./gradlew clean build --no-daemon
       - name: Upload Fabric JAR
         uses: actions/upload-artifact@v4
         with:
@@ -79,7 +79,7 @@ jobs:
       - name: Grant execute permission
         run: chmod +x neoforge/gradlew
       - name: Build NeoForge
-        run: cd neoforge && ./gradlew clean build --warning-mode fail --no-daemon
+        run: cd neoforge && ./gradlew clean build --no-daemon
       - name: Upload NeoForge JAR
         uses: actions/upload-artifact@v4
         with:

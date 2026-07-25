@@ -14,7 +14,7 @@
 
 `release.yml` no usa `scripts/`: construye con `gradlew` / `fabric/gradlew` / `neoforge/gradlew` y publica el GitHub Release con la Action. Los assets esperados son `*-forge.jar`, `*-fabric.jar` y `*-neoforge.jar`.
 
-El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warnings ni errores** (Spotless + `-Xlint`/`-Werror` + `--warning-mode fail`). Los builds de Forge/Fabric/NeoForge dependen de ese job.
+El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warnings de Java ni errores** (Spotless + `-Xlint`/`-Werror`). No se usa `--warning-mode fail` porque ForgeGradle/Loom emiten deprecaciones de Gradle ajenas al proyecto. Los builds de Forge/Fabric/NeoForge dependen de ese job.
 
 ## Qué no quitar del repo
 
@@ -26,7 +26,7 @@ El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warn
 ## Comandos útiles
 
 ```bash
-./scripts/lint.sh ci           # igual que CI (falla con warnings)
+./scripts/lint.sh ci           # igual que CI (Spotless + -Werror)
 ./scripts/lint.sh fix          # quita imports no usados, trim, newlines
 ./scripts/lint.sh check
 ./scripts/matrix.sh test
