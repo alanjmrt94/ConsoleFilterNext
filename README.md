@@ -9,10 +9,17 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 
 ## Downloads
 
-| Platform | Link |
-|----------|------|
-| **CurseForge** | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
-| **Modrinth** | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
+| Loader | CurseForge | Modrinth |
+|--------|------------|----------|
+| **Forge** | [1.20.1 · Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) | [`1.20.1-4.2.0+forge`](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) |
+| **Fabric** | [1.20.1 · Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) | [`1.20.1-4.2.0+fabric`](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) |
+| **NeoForge** | [1.20.1 · NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6) | [`1.20.1-4.2.0+neoforge`](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i) |
+
+| Hub | Link |
+|-----|------|
+| **CurseForge** (proyecto) | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
+| **Modrinth** (proyecto) | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
+| **GitHub Release** | [`1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0) (3 JARs) |
 | **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
 > **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).
@@ -259,7 +266,7 @@ If **any** of the conditions match, the message will be **filtered out**.
 | **Mod loaders** | Forge 47+ · Fabric · NeoForge 1.20.1 |
 | **Java (runtime)** | 17 (bundled with Minecraft) |
 | **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
-| **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) |
+| **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) · [GitHub `1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0) |
 
 ## 🛠️ Building from source
 
@@ -429,9 +436,10 @@ Free to download on CurseForge and Modrinth; redistribution and derivatives must
 
 ## Links
 
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
-- [Modrinth](https://modrinth.com/mod/consolefilternext)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) — [Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) · [Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) · [NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6)
+- [Modrinth](https://modrinth.com/mod/consolefilternext) — [Forge](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) · [Fabric](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) · [NeoForge](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i)
 - [GitHub repository](https://github.com/alanjmrt94/ConsoleFilterNext)
+- [GitHub Release `1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0)
 - [Report issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 - [ConsoleFilter by Matthew Czyr](https://github.com/MattCzyr/ConsoleFilter)
 - [Migration guide](MIGRATION.md)
