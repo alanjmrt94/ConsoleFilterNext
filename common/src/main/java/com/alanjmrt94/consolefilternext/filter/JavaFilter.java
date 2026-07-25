@@ -28,7 +28,7 @@ public class JavaFilter implements Filter, CustomFilter {
 	public boolean isLoggable(LogRecord record) {
 		LogMessage logMessage = new LogMessage(
 			record.getMillis() + "",
-			record.getThreadID() + "",
+			Long.toString(record.getLongThreadID()),
 			record.getLevel().getName(),
 			record.getLoggerName(),
 			record.getMessage()

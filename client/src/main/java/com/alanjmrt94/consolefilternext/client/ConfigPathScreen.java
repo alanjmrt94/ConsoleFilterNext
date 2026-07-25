@@ -2,7 +2,7 @@ package com.alanjmrt94.consolefilternext.client;
 
 import java.nio.file.Path;
 
-import com.alanjmrt94.consolefilternext.ConsoleFilter;
+import com.alanjmrt94.consolefilternext.ConfigScreenHost;
 import com.alanjmrt94.consolefilternext.client.config.ConfigEditorModel;
 import com.mojang.logging.LogUtils;
 
@@ -53,9 +53,9 @@ public class ConfigPathScreen extends Screen {
 			if (importMode) {
 				model.importFrom(target, configPath);
 				parent.setModel(ConfigEditorModel.load(configPath));
-				ConsoleFilter mod = ConsoleFilter.getInstance();
-				if (mod != null) {
-					mod.reloadConfigFromDisk();
+				ConfigScreenHost host = parent.getHost();
+				if (host != null) {
+					host.reloadConfigFromDisk();
 				}
 				statusMessage = "Imported from " + target;
 			} else {

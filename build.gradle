@@ -1,9 +1,72 @@
 plugins {
     id 'base'
+    id 'com.diffplug.spotless' version '6.25.0'
+}
+
+repositories {
+    mavenCentral()
 }
 
 allprojects {
     group = findProperty('mod_group_id') ?: 'com.alanjmrt94.consolefilternext'
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    pluginManager.withPlugin('java') {
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-serial', '-Xlint:-processing'])
+            if (findProperty('failOnWarnings') == 'true') {
+                options.compilerArgs.add('-Werror')
+            }
+        }
+    }
+    pluginManager.withPlugin('java-library') {
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-serial', '-Xlint:-processing'])
+            if (findProperty('failOnWarnings') == 'true') {
+                options.compilerArgs.add('-Werror')
+            }
+        }
+    }
+}
+
+// Formato / imports no usados sobre todo el árbol Java del monorepo (incl. loaders aislados).
+spotless {
+    java {
+        target(
+            'common/src/**/*.java',
+            'client/src/**/*.java',
+            'forge/src/**/*.java',
+            'fabric/src/**/*.java',
+            'neoforge/src/**/*.java'
+        )
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+tasks.register('lintCheck') {
+    group = 'verification'
+    description = 'Verifica formato Spotless (imports no usados, whitespace)'
+    dependsOn 'spotlessCheck'
+}
+
+tasks.register('lintCi') {
+    group = 'verification'
+    description = 'Lint CI: Spotless + compile common/forge con -Werror'
+    dependsOn 'spotlessCheck', ':common:compileJava', ':forge:compileJava'
+}
+
+tasks.register('lintFix') {
+    group = 'formatting'
+    description = 'Aplica autofix Spotless (imports no usados, whitespace)'
+    dependsOn 'spotlessApply'
 }
 
 tasks.named('build').configure {

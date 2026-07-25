@@ -16,11 +16,19 @@
 
 ---
 
+## 4.2.0 · Minecraft 1.20.1
+
+- Editor in-game compartido (`client/`): Mod Menu (Fabric) / Mods → Config (Forge y NeoForge)
+- Mismos filtros y TOML `consolefilternext-common.toml` en los tres loaders
+- JARs con classifier por loader (`*-forge` / `*-fabric` / `*-neoforge`)
+
+---
+
 ## 4.1.0 · Minecraft 1.20.1
 
-- Monorepo `common` + `forge`: el motor de filtrado ya no depende de Forge
-- `FilterEngine` / `FilterHost` / `ModIdLookup` como base para Fabric y NeoForge
-- Sin cambios en reglas de filtrado ni en el formato TOML de configuración
+- Ports **Fabric** y **NeoForge** además de Forge
+- Motor común (`FilterEngine` / `FilterHost` / `ModIdLookup`) sin cambios en reglas de filtrado
+- Mismo esquema TOML `consolefilternext-common.toml`
 
 ---
 

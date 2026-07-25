@@ -13,7 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.alanjmrt94.consolefilternext.ConfigFileHelper;
 import com.alanjmrt94.consolefilternext.ConfigPreset;
-import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.FilterProfiles;
 
 class ConfigEditorModelTest {
 
@@ -63,7 +63,7 @@ class ConfigEditorModelTest {
 		ConfigFileHelper.applyPresetToml(configPath, ConfigPreset.DEBUG.getToml());
 		ConfigEditorModel model = ConfigEditorModel.load(configPath);
 
-		assertEquals(ConsoleFilterConfig.PROFILE_DEBUG, model.getActiveProfile());
+		assertEquals(FilterProfiles.DEBUG, model.getActiveProfile());
 		assertEquals(List.of("DEBUG"), model.getFilterList("levelFilters"));
 	}
 

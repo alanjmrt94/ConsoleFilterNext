@@ -17,18 +17,16 @@ import com.alanjmrt94.consolefilternext.filter.SystemErrFilter;
 import com.alanjmrt94.consolefilternext.filter.SystemOutFilter;
 import com.mojang.logging.LogUtils;
 
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
  * Adaptador NeoForge 1.20.1 (API FML 47.1.x / paquetes {@code net.minecraftforge.*}).
  */
 @Mod(ConsoleFilterNeoForge.MODID)
-public final class ConsoleFilterNeoForge implements FilterHost {
+public final class ConsoleFilterNeoForge implements FilterHost, ConfigScreenHost {
 
 	public static final String MODID = "consolefilternext";
 	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");
@@ -49,11 +47,7 @@ public final class ConsoleFilterNeoForge implements FilterHost {
 
 		var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		modEventBus.addListener(this::commonSetup);
-
-		// Dist marker evita cargar lógica cliente en dedicated server.
-		if (FMLEnvironment.dist == Dist.CLIENT) {
-			LOGGER.debug("NeoForge client dist detectado (sin editor in-game aún).");
-		}
+		ConsoleFilterNeoForgeClient.register();
 	}
 
 	public static ConsoleFilterNeoForge getInstance() {

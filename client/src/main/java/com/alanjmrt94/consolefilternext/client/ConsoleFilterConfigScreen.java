@@ -1,19 +1,19 @@
 package com.alanjmrt94.consolefilternext.client;
 
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 import com.alanjmrt94.consolefilternext.ConfigFileHelper;
 import com.alanjmrt94.consolefilternext.ConfigPreset;
-import com.alanjmrt94.consolefilternext.ConsoleFilter;
+import com.alanjmrt94.consolefilternext.ConfigScreenHost;
+import com.alanjmrt94.consolefilternext.FilterProfiles;
 import com.alanjmrt94.consolefilternext.client.config.ConfigEditorModel;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 
 public class ConsoleFilterConfigScreen extends Screen {
@@ -21,27 +21,26 @@ public class ConsoleFilterConfigScreen extends Screen {
 	private static final Logger LOGGER = LogUtils.getLogger();
 
 	private final Screen parent;
+	private final ConfigScreenHost host;
+	private final Supplier<Path> fallbackConfigPath;
 	private final Path configPath;
 	private ConfigEditorModel model;
 	private int presetIndex;
 
-	public ConsoleFilterConfigScreen(Screen parent) {
+	public ConsoleFilterConfigScreen(Screen parent, ConfigScreenHost host, Supplier<Path> fallbackConfigPath) {
 		super(Component.literal("Console Filter Next"));
 		this.parent = parent;
+		this.host = host;
+		this.fallbackConfigPath = fallbackConfigPath;
 		this.configPath = resolveConfigPath();
 		this.model = ConfigEditorModel.load(configPath);
 	}
 
-	private static Path resolveConfigPath() {
-		ConsoleFilter mod = ConsoleFilter.getInstance();
-		if (mod != null) {
-			return mod.getConfigPath().orElseGet(ConsoleFilterConfigScreen::defaultConfigPath);
+	private Path resolveConfigPath() {
+		if (host != null) {
+			return host.getConfigPath().orElseGet(fallbackConfigPath);
 		}
-		return defaultConfigPath();
-	}
-
-	private static Path defaultConfigPath() {
-		return FMLPaths.CONFIGDIR.get().resolve("consolefilternext-common.toml");
+		return fallbackConfigPath.get();
 	}
 
 	@Override
@@ -146,9 +145,8 @@ public class ConsoleFilterConfigScreen extends Screen {
 	private void saveAndApply() {
 		try {
 			model.save(configPath);
-			ConsoleFilter mod = ConsoleFilter.getInstance();
-			if (mod != null) {
-				mod.reloadConfigFromDisk();
+			if (host != null) {
+				host.reloadConfigFromDisk();
 			}
 			notifyPlayer("Console Filter Next config saved.");
 		} catch (Exception exception) {
@@ -158,11 +156,10 @@ public class ConsoleFilterConfigScreen extends Screen {
 	}
 
 	private void reloadFromDisk() {
-		ConsoleFilter mod = ConsoleFilter.getInstance();
-		if (mod != null) {
-			mod.reloadConfigFromDisk();
+		if (host != null) {
+			host.reloadConfigFromDisk();
 		}
-		minecraft.setScreen(new ConsoleFilterConfigScreen(parent));
+		minecraft.setScreen(new ConsoleFilterConfigScreen(parent, host, fallbackConfigPath));
 	}
 
 	private void notifyPlayer(String message) {
@@ -190,5 +187,18 @@ public class ConsoleFilterConfigScreen extends Screen {
 
 	void setModel(ConfigEditorModel model) {
 		this.model = model;
+	}
+
+	ConfigScreenHost getHost() {
+		return host;
+	}
+
+	Path getConfigFilePath() {
+		return configPath;
+	}
+
+	/** Nombre de archivo de config canónico (documentación / fallbacks). */
+	public static String configFileName() {
+		return FilterProfiles.CONFIG_FILE_NAME;
 	}
 }

@@ -20,7 +20,7 @@ import com.alanjmrt94.consolefilternext.filter.SystemOutFilter;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 
-public final class ConsoleFilterFabric implements ModInitializer, FilterHost {
+public final class ConsoleFilterFabric implements ModInitializer, FilterHost, ConfigScreenHost {
 
 	public static final String MODID = "consolefilternext";
 	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");

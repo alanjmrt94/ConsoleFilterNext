@@ -7,16 +7,12 @@ import java.util.List;
 
 import com.alanjmrt94.consolefilternext.ConfigFileHelper;
 import com.alanjmrt94.consolefilternext.ConfigPreset;
-import com.alanjmrt94.consolefilternext.ConsoleFilterConfig;
+import com.alanjmrt94.consolefilternext.FilterProfiles;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 
 public class ConfigEditorModel {
 
-	public static final List<String> PROFILE_OPTIONS = List.of(
-		ConsoleFilterConfig.PROFILE_DEFAULT,
-		ConsoleFilterConfig.PROFILE_DEBUG,
-		ConsoleFilterConfig.PROFILE_PRODUCTION
-	);
+	public static final List<String> PROFILE_OPTIONS = FilterProfiles.ALL;
 
 	public static final List<String> FILTER_LIST_KEYS = List.of(
 		"basicFilters",
@@ -29,11 +25,11 @@ public class ConfigEditorModel {
 	);
 
 	private final CommentedFileConfig fileConfig;
-	private String editingProfile = ConsoleFilterConfig.PROFILE_DEFAULT;
+	private String editingProfile = FilterProfiles.DEFAULT;
 
 	public ConfigEditorModel(CommentedFileConfig fileConfig) {
 		this.fileConfig = fileConfig;
-		this.editingProfile = getString("general.activeProfile", ConsoleFilterConfig.PROFILE_DEFAULT);
+		this.editingProfile = getString("general.activeProfile", FilterProfiles.DEFAULT);
 	}
 
 	public void save(Path configPath) {
@@ -117,7 +113,7 @@ public class ConfigEditorModel {
 	}
 
 	public String getActiveProfile() {
-		return getString("general.activeProfile", ConsoleFilterConfig.PROFILE_DEFAULT);
+		return getString("general.activeProfile", FilterProfiles.DEFAULT);
 	}
 
 	public void setActiveProfile(String profile) {
@@ -145,7 +141,7 @@ public class ConfigEditorModel {
 	}
 
 	public static String resolveListPath(String profile, String listKey) {
-		if (ConsoleFilterConfig.PROFILE_DEFAULT.equals(profile)) {
+		if (FilterProfiles.DEFAULT.equals(profile)) {
 			return "general." + listKey;
 		}
 		return "profiles." + profile + "." + listKey;

@@ -29,5 +29,5 @@ versionRange="${forge_version_range}"
 ordering="AFTER"
 side="BOTH"
 
-# Mod Menu is Fabric-only. Forge clients use Options -> Mods -> Config (ForgeConfigSpec UI)
-# and the optional ConfigScreenFactory registered by this mod.
+# Config UI: Forge/NeoForge use Mods → Config (ConfigScreenFactory).
+# Fabric uses Mod Menu when installed (optional dependency).

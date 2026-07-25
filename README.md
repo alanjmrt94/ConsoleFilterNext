@@ -3,9 +3,9 @@
 [![CurseForge](https://img.shields.io/badge/CurseForge-consolefilternext-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
 [![Modrinth](https://img.shields.io/modrinth/dt/consolefilternext?logo=modrinth&label=Modrinth&color=00af5c)](https://modrinth.com/mod/consolefilternext)
 
-An improved console log filter for Minecraft Forge — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
+An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
-**Current release:** `1.20.1-4.1.0` · Minecraft **1.20.1** · **Forge 47+** · Client & dedicated server
+**Current release:** `1.20.1-4.2.0` · Minecraft **1.20.1** · **Forge / Fabric / NeoForge** · Client & dedicated server
 
 ## Downloads
 
@@ -21,12 +21,12 @@ An improved console log filter for Minecraft Forge — by text, regex, log level
 
 ## Features
 
-- **Filter types:** basic text, regex, log level, thread, logger/source, Forge **mod id**
+- **Filter types:** basic text, regex, log level, thread, logger/source, **mod id**
 - **Profiles:** `default`, `debug`, `production` — switch in-game, via TOML, or `/consolefilter profile` (persisted)
 - **Modes:** blacklist (hide matches) or **whitelist** (show only matches); optional `ignoreCase`
 - **`filterLatestLog`:** apply filters to `latest.log` and other Log4j file appenders
 - **`skipMessagesWithStackTrace`:** never hide lines with exceptions or stack traces
-- **In-game editor** (Forge Mod List → Config): paginated lists, regex validation, presets, import/export
+- **In-game editor** (Forge/NeoForge Mods → Config; Fabric Mod Menu): paginated lists, regex validation, presets, import/export
 - **Commands** (OP 2): `reload`, `list`, `status`, `export`, `import`, `profile`
 - **Statistics:** per-filter-type hit counts in `/consolefilter status`
 - **Hot reload** from file, commands, or **Save & Apply** in the config UI
@@ -55,12 +55,12 @@ To configure the mod, you have two options:
 
 ### 🕹️ In-Game
 
-1. Go to **Options → Mods**
+1. Go to **Options → Mods** (Forge / NeoForge) or open **Mod Menu** (Fabric)
 2. Find **Console Filter Next**
-3. Click **Config**
+3. Open **Config**
 4. Edit booleans, profiles, and filter lists; use **Save & Apply** to write `consolefilternext-common.toml` and reload filters
 
-No extra mods required — uses Forge's built-in Mod List config button.
+Forge and NeoForge use the built-in Mods config button. Fabric uses [Mod Menu](https://modrinth.com/mod/modmenu) when installed (optional).
 
 ### 🛠️ Editing the Configuration File
 
@@ -219,14 +219,15 @@ When `true`, `latest.log` and other Log4j file appenders are filtered. When `fal
 /consolefilter import backups/consolefilter.toml
 ```
 
-### ✅ In-game config (Forge)
+### ✅ In-game config
 
-- **Options → Mods → Console Filter Next → Config** — edit booleans, profiles, and all filter lists
+- **Forge / NeoForge:** Options → Mods → Console Filter Next → Config
+- **Fabric:** Mod Menu → Console Filter Next → Config (optional dependency)
 - Paginated list editor (8 entries per page) with **regex validation** for `regexFilters`
 - **Presets** (Debug, Silent modpack, Minimal), **Import…** / **Export…** from the config screen
 - **Save & Apply** writes the TOML file and reloads filters without restarting
 
-> [Mod Menu](https://modrinth.com/mod/modmenu) is **Fabric-only**. This Forge mod uses the native Mod List Config button (no dependencies).
+> All three loaders edit the same `consolefilternext-common.toml`.
 
 ### ✅ Reload and manage filters
 
@@ -254,8 +255,8 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 | | |
 |---|---|
-| **Minecraft** | 1.20.1 |
-| **Mod loader** | Forge 47+ |
+| **Minecraft** | 1.20.1 (única línea lista para release hoy) |
+| **Mod loaders** | Forge 47+ · Fabric · NeoForge 1.20.1 |
 | **Java (runtime)** | 17 (bundled with Minecraft) |
 | **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
 | **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) |
@@ -276,9 +277,12 @@ cd ConsoleFilterNext
 ./scripts/release.sh verify   # check your setup
 ./scripts/matrix.sh test      # common + enabled matrix cells
 ./gradlew :forge:build
+cd fabric && ./gradlew build
+cd ../neoforge && ./gradlew build
+./scripts/server-smoke.sh forge   # also: fabric | neoforge
+./scripts/lint.sh fix             # autofix imports no usados / whitespace
 ```
-
-The JAR is produced in `forge/build/libs/`. Use `./scripts/release.sh verify` if the build fails due to Java/Gradle mismatch.
+The release JARs are produced in `forge/build/libs/` (`*-forge.jar`), `fabric/build/libs/` (`*-fabric.jar`), and `neoforge/build/libs/` (`*-neoforge.jar`). Use `./scripts/release.sh verify` if the Forge build fails due to Java/Gradle mismatch.
 
 ### Local development runs (client and server)
 
@@ -326,11 +330,11 @@ Find the Modrinth Base62 ID in [Modrinth → Projects](https://modrinth.com/dash
 
 #### Publish flow
 
-1. `clean build` → JAR in `build/libs/`
+1. Clean build de **Forge + Fabric + NeoForge** → `*-forge.jar` / `*-fabric.jar` / `*-neoforge.jar`
 2. Git annotated tag (`mod_version` from `gradle.properties`) → push to `origin`
-3. GitHub Release (`gh`) with the JAR and `changelog.txt` excerpt
-4. Modrinth version upload (`POST /v2/version` with `file_parts` / `primary_file`)
-5. CurseForge file upload
+3. GitHub Release (`gh`) with **three** JAR assets and `changelog.txt` excerpt
+4. Modrinth: **one version per loader** (`version_number` = `TAG+forge` / `TAG+fabric` / `TAG+neoforge`)
+5. CurseForge: **one file upload per loader** (gameVersions include Forge / Fabric / NeoForge)
 
 #### Partial re-runs
 
@@ -381,9 +385,9 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | `./gradlew build`, upload JAR artifact, dedicated server smoke test |
-| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`*`) | Build, create GitHub Release with the mod JAR |
-| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload the built JAR to Modrinth and CurseForge (requires the `publish` environment) |
+| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`*`) | Build Forge+Fabric+NeoForge, create GitHub Release with the three JARs |
+| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload the three JARs to Modrinth and CurseForge (requires the `publish` environment) |
 
 #### GitHub environment `publish`
 
@@ -411,11 +415,11 @@ Local publishes use the same names in `scripts/.release.local` (see `scripts/.re
 
 If neither `MODRINTH_TOKEN` nor `CURSEFORGE_API_TOKEN` is set in the `publish` environment, the workflow skips upload steps with a notice (no failure).
 
-## ⚠️ Known limitations (v4.1.0)
+## ⚠️ Known limitations (v4.2.0)
 
 - Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
 - The in-game list editor paginates long lists (8 per page) but has no search yet.
-- `modIdFilters` resolution depends on Forge `ModList` and logger/source names; edge cases may need `sourceFilters` instead.
+- `modIdFilters` resolution depends on the loader mod list and logger/source names; edge cases may need `sourceFilters` instead.
 
 ## License
 

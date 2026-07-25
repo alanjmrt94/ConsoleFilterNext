@@ -101,7 +101,7 @@ public class FilterListEditScreen extends Screen {
 			if (ConfigEditorModel.isRegexList(listKey)) {
 				Optional<String> error = RegexValidator.validate(value, model.isIgnoreCase());
 				if (error.isPresent()) {
-					validationMessage = error.get();
+					validationMessage = error.orElseThrow();
 					return;
 				}
 			}
@@ -143,7 +143,7 @@ public class FilterListEditScreen extends Screen {
 				}
 				Optional<String> error = RegexValidator.validate(entry, model.isIgnoreCase());
 				if (error.isPresent()) {
-					validationMessage = "Invalid regex: " + error.get();
+					validationMessage = "Invalid regex: " + error.orElseThrow();
 					return;
 				}
 			}

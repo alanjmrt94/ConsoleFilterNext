@@ -1,6 +1,6 @@
 name: Publish distribution
 
-# Sube el JAR a Modrinth y CurseForge cuando se publica un tag.
+# Sube los JARs (Forge + Fabric + NeoForge) a Modrinth y CurseForge cuando se publica un tag.
 # Requiere secrets en el environment "publish" (ver README → CI/CD).
 
 on:
@@ -30,10 +30,22 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Grant execute permission
-        run: chmod +x gradlew scripts/release.sh scripts/publish-release.sh
+        run: |
+          chmod +x gradlew scripts/release.sh scripts/publish-release.sh
+          chmod +x fabric/gradlew neoforge/gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+      - name: Build Forge (root Gradle)
+        run: ./gradlew clean :common:build :forge:build --no-daemon
+
+      - name: Build Fabric
+        run: cd fabric && ./gradlew clean build --no-daemon
+
+      - name: Build NeoForge
+        run: cd neoforge && ./gradlew clean build --no-daemon
+
+      - name: List release artifacts
+        run: |
+          ls -la forge/build/libs/ fabric/build/libs/ neoforge/build/libs/ || true
 
       - name: Publish to Modrinth and CurseForge
         env:
@@ -46,9 +58,9 @@ jobs:
           CURSEFORGE_PROJECT_SLUG: ${{ vars.CURSEFORGE_PROJECT_SLUG }}
           RELEASE_TYPE: ${{ vars.RELEASE_TYPE }}
         run: |
-          if [ -z "${MODRINTH_TOKEN}" ] && [ -z "${CURSEFORGE_API_TOKEN}" ]; then
+          if [ -z "${MODRINTH_TOKEN}" ] && [ -z "${CURSEFORGE_API_TOKEN}" ] && [ -z "${CURSEFORGE_AUTHOR_TOKEN}" ]; then
             echo "No distribution secrets configured; skipping Modrinth and CurseForge upload."
-            echo "Configure MODRINTH_TOKEN and/or CURSEFORGE_API_TOKEN in the publish environment (Settings → Environments → publish)."
+            echo "Configure MODRINTH_TOKEN and/or CURSEFORGE_* tokens in the publish environment (Settings → Environments → publish)."
             exit 0
           fi
           ./scripts/release.sh publish --skip-build --skip-github

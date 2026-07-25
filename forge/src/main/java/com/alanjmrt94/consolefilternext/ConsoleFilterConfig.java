@@ -11,9 +11,9 @@ import net.minecraftforge.common.ForgeConfigSpec;
  */
 public class ConsoleFilterConfig implements FilterConfigView {
 
-	public static final String PROFILE_DEFAULT = "default";
-	public static final String PROFILE_DEBUG = "debug";
-	public static final String PROFILE_PRODUCTION = "production";
+	public static final String PROFILE_DEFAULT = FilterProfiles.DEFAULT;
+	public static final String PROFILE_DEBUG = FilterProfiles.DEBUG;
+	public static final String PROFILE_PRODUCTION = FilterProfiles.PRODUCTION;
 
 	private ForgeConfigSpec.ConfigValue<String> activeProfile;
 	private ForgeConfigSpec.ConfigValue<Boolean> ignoreCase;
@@ -137,10 +137,10 @@ public class ConsoleFilterConfig implements FilterConfigView {
 	private FilterLists resolveActiveLists() {
 		String profile = getEffectiveProfile();
 		return switch (profile) {
-			case PROFILE_DEBUG -> listsFrom(
+			case FilterProfiles.DEBUG -> listsFrom(
 				debugBasicFilters, debugRegexFilters, debugLevelFilters,
 				debugThreadFilters, debugSourceFilters, debugLoggerFilters, debugModIdFilters);
-			case PROFILE_PRODUCTION -> listsFrom(
+			case FilterProfiles.PRODUCTION -> listsFrom(
 				productionBasicFilters, productionRegexFilters, productionLevelFilters,
 				productionThreadFilters, productionSourceFilters, productionLoggerFilters, productionModIdFilters);
 			default -> listsFrom(

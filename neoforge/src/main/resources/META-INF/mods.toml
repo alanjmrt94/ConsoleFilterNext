@@ -4,6 +4,7 @@ license="${mod_license}"
 issueTrackerURL="https://github.com/alanjmrt94/ConsoleFilterNext/issues"
 
 # Build NeoForge 1.20.1: el loader sigue exponiendo modId "forge" (paquetes net.minecraftforge.*).
+# Config UI: Options → Mods → Config (ConfigScreenFactory).
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"

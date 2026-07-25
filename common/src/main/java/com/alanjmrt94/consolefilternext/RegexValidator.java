@@ -1,6 +1,5 @@
 package com.alanjmrt94.consolefilternext;
 
-import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;

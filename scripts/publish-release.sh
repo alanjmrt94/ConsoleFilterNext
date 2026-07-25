@@ -72,35 +72,103 @@ publish_show_secrets_status() {
 	echo
 }
 
-publish_find_jar() {
-	local mod_id version pattern jar libs_dir
+# Loaders publicados para la línea moderna actual (orden estable).
+publish_release_loaders() {
+	printf '%s\n' forge fabric neoforge
+}
+
+publish_loader_display_name() {
+	case "$1" in
+		forge) echo "Forge" ;;
+		fabric) echo "Fabric" ;;
+		neoforge) echo "NeoForge" ;;
+		*) echo "$1" ;;
+	esac
+}
+
+# Emite: loader|ruta-absoluta-jar (solo artefactos existentes).
+publish_list_artifacts() {
+	local mod_id version loader jar
 	mod_id="$(get_prop mod_id "${GRADLE_PROPERTIES}")"
 	version="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
 
-	for libs_dir in \
-		"${PROJECT_ROOT}/forge/build/libs" \
-		"${PROJECT_ROOT}/fabric/build/libs" \
-		"${PROJECT_ROOT}/build/libs"; do
-		pattern="${libs_dir}/${mod_id}-${version}.jar"
-		if [[ -f "${pattern}" ]]; then
-			echo "${pattern}"
-			return 0
-		fi
-		# Prefer classifier-less forge jar; fabric uses -fabric classifier
-		jar="$(find "${libs_dir}" -maxdepth 1 -name "${mod_id}-${version}.jar" 2>/dev/null | head -1)"
+	while IFS= read -r loader; do
+		jar="$(publish_find_jar_for_loader "${loader}" "${mod_id}" "${version}" || true)"
 		if [[ -n "${jar}" && -f "${jar}" ]]; then
-			echo "${jar}"
-			return 0
+			printf '%s|%s\n' "${loader}" "${jar}"
 		fi
-		jar="$(find "${libs_dir}" -maxdepth 1 -name "${mod_id}-*.jar" \
-			! -name "*-sources.jar" ! -name "*-javadoc.jar" ! -name "*-common-*.jar" 2>/dev/null | head -1)"
-		if [[ -n "${jar}" && -f "${jar}" ]]; then
-			echo "${jar}"
-			return 0
-		fi
-	done
+	done < <(publish_release_loaders)
+}
 
+publish_find_jar_for_loader() {
+	local loader="$1"
+	local mod_id="${2:-$(get_prop mod_id "${GRADLE_PROPERTIES}")}"
+	local version="${3:-$(get_prop mod_version "${GRADLE_PROPERTIES}")}"
+	local jar=""
+
+	case "${loader}" in
+		forge)
+			for jar in \
+				"${PROJECT_ROOT}/forge/build/libs/${mod_id}-${version}-forge.jar" \
+				"${PROJECT_ROOT}/forge/build/libs/${mod_id}-${version}.jar" \
+				"${PROJECT_ROOT}/build/libs/${mod_id}-${version}-forge.jar" \
+				"${PROJECT_ROOT}/build/libs/${mod_id}-${version}.jar"; do
+				if [[ -f "${jar}" ]]; then
+					echo "${jar}"
+					return 0
+				fi
+			done
+			;;
+		fabric)
+			jar="${PROJECT_ROOT}/fabric/build/libs/${mod_id}-${version}-fabric.jar"
+			[[ -f "${jar}" ]] && { echo "${jar}"; return 0; }
+			jar="$(find "${PROJECT_ROOT}/fabric/build/libs" -maxdepth 1 -name "${mod_id}-*-fabric.jar" \
+				! -name "*-sources.jar" 2>/dev/null | head -1)"
+			[[ -n "${jar}" && -f "${jar}" ]] && { echo "${jar}"; return 0; }
+			;;
+		neoforge)
+			jar="${PROJECT_ROOT}/neoforge/build/libs/${mod_id}-${version}-neoforge.jar"
+			[[ -f "${jar}" ]] && { echo "${jar}"; return 0; }
+			jar="$(find "${PROJECT_ROOT}/neoforge/build/libs" -maxdepth 1 -name "${mod_id}-*-neoforge.jar" \
+				! -name "*-sources.jar" 2>/dev/null | head -1)"
+			[[ -n "${jar}" && -f "${jar}" ]] && { echo "${jar}"; return 0; }
+			;;
+		*)
+			return 1
+			;;
+	esac
 	return 1
+}
+
+# Compat: primer JAR disponible (preferencia forge → fabric → neoforge).
+publish_find_jar() {
+	local row
+	row="$(publish_list_artifacts | head -1)"
+	[[ -n "${row}" ]] || return 1
+	echo "${row#*|}"
+}
+
+publish_require_artifacts() {
+	local missing=0
+	local loader jar
+	local -a found=()
+
+	while IFS= read -r loader; do
+		jar="$(publish_find_jar_for_loader "${loader}" || true)"
+		if [[ -n "${jar}" && -f "${jar}" ]]; then
+			found+=("${loader}:$(basename "${jar}")")
+		else
+			log_error "Falta JAR para loader ${loader}"
+			missing=1
+		fi
+	done < <(publish_release_loaders)
+
+	if [[ "${missing}" -ne 0 ]]; then
+		log_error "Se esperan JARs para: $(publish_release_loaders | paste -sd', ' -)"
+		return 1
+	fi
+	log_ok "Artefactos: ${found[*]}"
+	return 0
 }
 
 publish_extract_changelog() {
@@ -158,17 +226,24 @@ publish_extract_curseforge_changelog() {
 }
 
 publish_build_release() {
-	log_info "Compilando (clean build)..."
+	log_info "Compilando loaders de release (Forge + Fabric + NeoForge)..."
 	load_local_config
+
 	if ! gradle_cmd clean :common:build :forge:build; then
-		log_error "La compilación falló"
+		log_error "Falló la compilación common/forge"
 		return 1
 	fi
-	log_ok "Compilación exitosa"
-	publish_find_jar >/dev/null || {
-		log_error "No se encontró el JAR en forge/build/libs/"
+	if ! (cd "${PROJECT_ROOT}/fabric" && ./gradlew clean build); then
+		log_error "Falló la compilación Fabric"
 		return 1
-	}
+	fi
+	if ! (cd "${PROJECT_ROOT}/neoforge" && ./gradlew clean build); then
+		log_error "Falló la compilación NeoForge"
+		return 1
+	fi
+
+	log_ok "Compilación multi-loader exitosa"
+	publish_require_artifacts || return 1
 	return 0
 }
 
@@ -381,29 +456,46 @@ publish_git_tag_and_push() {
 
 publish_github_release() {
 	local tag="$1"
-	local jar="$2"
-	local notes="$3"
-	local dry_run="${4:-false}"
+	local notes="$2"
+	local dry_run="${3:-false}"
+	shift 3 || true
+	local -a jars=("$@")
+	local jar slug
+
+	if [[ ${#jars[@]} -eq 0 ]]; then
+		while IFS='|' read -r _ jar; do
+			[[ -n "${jar}" ]] && jars+=("${jar}")
+		done < <(publish_list_artifacts)
+	fi
+
+	if [[ ${#jars[@]} -eq 0 ]]; then
+		log_error "GitHub Release: no hay JARs para subir"
+		return 1
+	fi
 
 	if [[ "${dry_run}" == "true" ]]; then
-		log_info "[dry-run] GitHub Release ${tag} con ${jar}"
+		log_info "[dry-run] GitHub Release ${tag} con ${#jars[@]} JAR(s):"
+		for jar in "${jars[@]}"; do
+			echo "  - $(basename "${jar}")"
+		done
 		return 0
 	fi
 
 	publish_require_command gh || return 1
+	slug="$(publish_github_repo_slug)"
 
-	if gh release view "${tag}" --repo "$(publish_github_repo_slug)" &>/dev/null; then
+	if gh release view "${tag}" --repo "${slug}" &>/dev/null; then
 		log_info "Actualizando GitHub Release existente..."
-		gh release upload "${tag}" "${jar}" --clobber --repo "$(publish_github_repo_slug)"
-		gh release edit "${tag}" --notes "${notes}" --repo "$(publish_github_repo_slug)"
+		gh release upload "${tag}" "${jars[@]}" --clobber --repo "${slug}"
+		gh release edit "${tag}" --notes "${notes}" --repo "${slug}"
 	else
-		log_info "Creando GitHub Release..."
-		gh release create "${tag}" "${jar}" \
+		log_info "Creando GitHub Release con ${#jars[@]} asset(s)..."
+		gh release create "${tag}" "${jars[@]}" \
 			--title "Console Filter Next ${tag}" \
 			--notes "${notes}" \
-			--repo "$(publish_github_repo_slug)"
+			--repo "${slug}"
 	fi
-	log_ok "GitHub Release publicado: ${tag}"
+	log_ok "GitHub Release publicado: ${tag} (${#jars[@]} JAR(s))"
 }
 
 publish_github_repo_slug() {
@@ -587,7 +679,9 @@ publish_modrinth_upload() {
 	local jar="$2"
 	local changelog="$3"
 	local dry_run="${4:-false}"
-	local mc_version project_id json response http_code modrinth_env
+	local loader="${5:-forge}"
+	local sync_metadata="${6:-true}"
+	local mc_version project_id json http_code modrinth_env version_number version_name
 
 	[[ -n "${MODRINTH_TOKEN}" ]] || {
 		log_warn "MODRINTH_TOKEN no configurado; omitiendo Modrinth"
@@ -599,7 +693,9 @@ publish_modrinth_upload() {
 
 	project_id="$(publish_resolve_modrinth_project_id)" || return 1
 
-	publish_modrinth_sync_metadata "${project_id}" "${dry_run}" || return 1
+	if [[ "${sync_metadata}" == "true" ]]; then
+		publish_modrinth_sync_metadata "${project_id}" "${dry_run}" || return 1
+	fi
 
 	if [[ "${SKIP_MODRINTH_VERSION_UPLOAD:-false}" == "true" ]]; then
 		[[ "${dry_run}" != "true" ]] && log_ok "Modrinth: omitida subida de versión (--skip-modrinth-version-upload)"
@@ -607,14 +703,17 @@ publish_modrinth_upload() {
 	fi
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
-	PUBLISH_TMP_DIR="$(mktemp -d)"
+	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
 	modrinth_env="$(publish_modrinth_version_environment)"
+	version_number="${tag}+${loader}"
+	version_name="${tag} ($(publish_loader_display_name "${loader}"))"
 	json="$(jq -n \
 		--arg project_id "${project_id}" \
-		--arg version_number "${tag}" \
-		--arg name "${tag}" \
+		--arg version_number "${version_number}" \
+		--arg name "${version_name}" \
 		--arg changelog "${changelog}" \
 		--arg mc "${mc_version}" \
+		--arg loader "${loader}" \
 		--arg vtype "${RELEASE_TYPE}" \
 		--arg environment "${modrinth_env}" \
 		'{
@@ -625,7 +724,7 @@ publish_modrinth_upload() {
 			dependencies: [],
 			game_versions: [$mc],
 			version_type: $vtype,
-			loaders: ["forge"],
+			loaders: [$loader],
 			environment: $environment,
 			featured: false,
 			file_parts: ["file"],
@@ -633,34 +732,93 @@ publish_modrinth_upload() {
 		}')"
 
 	if [[ "${dry_run}" == "true" ]]; then
-		log_info "[dry-run] Modrinth upload → proyecto ${project_id}"
+		log_info "[dry-run] Modrinth upload [${loader}] → proyecto ${project_id} ($(basename "${jar}"))"
 		echo "${json}" | jq .
 		return 0
 	fi
 
-	printf '%s' "${json}" >"${PUBLISH_TMP_DIR}/modrinth-payload.json"
-	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/modrinth-response.json" -w "%{http_code}" \
+	printf '%s' "${json}" >"${PUBLISH_TMP_DIR}/modrinth-payload-${loader}.json"
+	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/modrinth-response-${loader}.json" -w "%{http_code}" \
 		-X POST "https://api.modrinth.com/v2/version" \
 		-H "Authorization: ${MODRINTH_TOKEN}" \
-		-F "data=@${PUBLISH_TMP_DIR}/modrinth-payload.json;type=application/json" \
+		-F "data=@${PUBLISH_TMP_DIR}/modrinth-payload-${loader}.json;type=application/json" \
 		-F "file=@${jar}")"
 
 	if [[ "${http_code}" =~ ^2 ]]; then
-		log_ok "Modrinth: versión publicada (HTTP ${http_code})"
+		log_ok "Modrinth [${loader}]: versión ${version_number} publicada (HTTP ${http_code})"
 		return 0
 	fi
 
-	log_error "Modrinth upload falló (HTTP ${http_code})"
-	cat "${PUBLISH_TMP_DIR}/modrinth-response.json" 2>/dev/null || true
+	log_error "Modrinth upload [${loader}] falló (HTTP ${http_code})"
+	cat "${PUBLISH_TMP_DIR}/modrinth-response-${loader}.json" 2>/dev/null || true
 	return 1
+}
+
+publish_modrinth_upload_all() {
+	local tag="$1"
+	local changelog="$2"
+	local dry_run="${3:-false}"
+	local loader jar sync_metadata=true
+
+	while IFS='|' read -r loader jar; do
+		[[ -n "${loader}" && -n "${jar}" ]] || continue
+		publish_modrinth_upload "${tag}" "${jar}" "${changelog}" "${dry_run}" "${loader}" "${sync_metadata}" || return 1
+		sync_metadata=false
+	done < <(publish_list_artifacts)
+}
+
+publish_curseforge_fallback_loader_id() {
+	case "$1" in
+		forge) echo "7498" ;;
+		fabric) echo "7499" ;;
+		neoforge) echo "10150" ;;
+		*) return 1 ;;
+	esac
+}
+
+# Resuelve el gameVersion id del loader (Forge/Fabric/NeoForge) vía Upload API.
+publish_curseforge_resolve_loader_id() {
+	local loader="$1"
+	local author_token="$2"
+	local versions_json="$3"
+	local display_name id
+
+	display_name="$(publish_loader_display_name "${loader}")"
+	if [[ -n "${versions_json}" && -f "${versions_json}" ]]; then
+		id="$(jq -r --arg name "${display_name}" \
+			'.[] | select(.name == $name) | .id' "${versions_json}" | head -1)"
+		if [[ -n "${id}" && "${id}" != "null" ]]; then
+			echo "${id}"
+			return 0
+		fi
+	fi
+
+	if [[ -n "${author_token}" ]]; then
+		local tmp
+		tmp="$(mktemp)"
+		if curl -fsS -o "${tmp}" -H "X-Api-Token: ${author_token}" \
+			"https://minecraft.curseforge.com/api/game/versions"; then
+			id="$(jq -r --arg name "${display_name}" \
+				'.[] | select(.name == $name) | .id' "${tmp}" | head -1)"
+			rm -f "${tmp}"
+			if [[ -n "${id}" && "${id}" != "null" ]]; then
+				echo "${id}"
+				return 0
+			fi
+		else
+			rm -f "${tmp}"
+		fi
+	fi
+
+	publish_curseforge_fallback_loader_id "${loader}"
 }
 
 publish_curseforge_upload_game_version_ids() {
 	local mc_version="$1"
 	local author_token="$2"
+	local loader="${3:-forge}"
 	local mc_series="${mc_version%.*}"
-	local forge_id=7498
-	local tmp types_id mc_id java_name java_id
+	local tmp types_id mc_id java_name java_id loader_id
 	local -a game_ids=()
 
 	tmp="$(mktemp)"
@@ -697,10 +855,15 @@ publish_curseforge_upload_game_version_ids() {
 		fi
 		game_ids+=("${java_id}")
 	done < <(publish_curseforge_java_versions "${mc_version}")
+
+	loader_id="$(publish_curseforge_resolve_loader_id "${loader}" "${author_token}" "${tmp}")" || {
+		rm -f "${tmp}"
+		return 1
+	}
 	rm -f "${tmp}"
 
-	game_ids+=("${forge_id}")
-	log_info "CurseForge: gameVersions → ${mc_version}=${mc_id}, Java=$(publish_curseforge_java_versions "${mc_version}" | paste -sd, -), Forge=${forge_id}"
+	game_ids+=("${loader_id}")
+	log_info "CurseForge [${loader}]: gameVersions → ${mc_version}=${mc_id}, Java=$(publish_curseforge_java_versions "${mc_version}" | paste -sd, -), $(publish_loader_display_name "${loader}")=${loader_id}"
 	jq -n --argjson ids "$(printf '%s\n' "${game_ids[@]}" | jq -R 'tonumber' | jq -s '.')" '$ids'
 }
 
@@ -709,7 +872,8 @@ publish_curseforge_upload() {
 	local jar="$2"
 	local changelog="$3"
 	local dry_run="${4:-false}"
-	local mc_version project_id metadata http_code author_token game_version_ids
+	local loader="${5:-forge}"
+	local mc_version project_id metadata http_code author_token game_version_ids display_name
 
 	author_token="$(publish_curseforge_author_token)" || {
 		log_error "CurseForge upload requiere CURSEFORGE_AUTHOR_TOKEN"
@@ -724,14 +888,15 @@ publish_curseforge_upload() {
 	project_id="$(publish_resolve_curseforge_project_id)" || return 1
 
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
-	game_version_ids="$(publish_curseforge_upload_game_version_ids "${mc_version}" "${author_token}")" || {
-		log_error "No se pudieron resolver gameVersions de CurseForge para ${mc_version} + Forge + Java"
+	game_version_ids="$(publish_curseforge_upload_game_version_ids "${mc_version}" "${author_token}" "${loader}")" || {
+		log_error "No se pudieron resolver gameVersions de CurseForge para ${mc_version} + $(publish_loader_display_name "${loader}") + Java"
 		return 1
 	}
 
+	display_name="${tag} [$(publish_loader_display_name "${loader}")]"
 	metadata="$(jq -n \
 		--arg changelog "${changelog}" \
-		--arg displayName "${tag}" \
+		--arg displayName "${display_name}" \
 		--arg releaseType "${RELEASE_TYPE}" \
 		--argjson gameVersions "${game_version_ids}" \
 		'{
@@ -743,33 +908,53 @@ publish_curseforge_upload() {
 		}')"
 
 	if [[ "${dry_run}" == "true" ]]; then
-		log_info "[dry-run] CurseForge upload → proyecto ${project_id}"
+		log_info "[dry-run] CurseForge upload [${loader}] → proyecto ${project_id} ($(basename "${jar}"))"
 		echo "${metadata}" | jq .
 		return 0
 	fi
 
 	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
-	printf '%s' "${metadata}" >"${PUBLISH_TMP_DIR}/curseforge-metadata.json"
+	printf '%s' "${metadata}" >"${PUBLISH_TMP_DIR}/curseforge-metadata-${loader}.json"
 	# Upload API espera metadata como campo de texto JSON, no como file part (@file).
-	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/curseforge-response.json" -w "%{http_code}" \
+	http_code="$(curl -sS -o "${PUBLISH_TMP_DIR}/curseforge-response-${loader}.json" -w "%{http_code}" \
 		-X POST "https://minecraft.curseforge.com/api/projects/${project_id}/upload-file" \
 		-H "X-Api-Token: ${author_token}" \
-		-F "metadata=<${PUBLISH_TMP_DIR}/curseforge-metadata.json" \
+		-F "metadata=<${PUBLISH_TMP_DIR}/curseforge-metadata-${loader}.json" \
 		-F "file=@${jar}")"
 
 	if [[ "${http_code}" =~ ^2 ]]; then
-		log_ok "CurseForge: archivo subido (HTTP ${http_code})"
-		publish_curseforge_remind_gallery
+		log_ok "CurseForge [${loader}]: archivo subido (HTTP ${http_code})"
 		return 0
 	fi
 
-	log_error "CurseForge upload falló (HTTP ${http_code})"
-	if jq -e . "${PUBLISH_TMP_DIR}/curseforge-response.json" &>/dev/null; then
-		jq -r '.errorMessage // .message // .' "${PUBLISH_TMP_DIR}/curseforge-response.json" >&2
+	log_error "CurseForge upload [${loader}] falló (HTTP ${http_code})"
+	if jq -e . "${PUBLISH_TMP_DIR}/curseforge-response-${loader}.json" &>/dev/null; then
+		jq -r '.errorMessage // .message // .' "${PUBLISH_TMP_DIR}/curseforge-response-${loader}.json" >&2
 	else
-		head -c 800 "${PUBLISH_TMP_DIR}/curseforge-response.json" >&2 2>/dev/null || true
+		head -c 800 "${PUBLISH_TMP_DIR}/curseforge-response-${loader}.json" >&2 2>/dev/null || true
 	fi
 	return 1
+}
+
+publish_curseforge_upload_all() {
+	local tag="$1"
+	local changelog="$2"
+	local dry_run="${3:-false}"
+	local loader jar
+	local any=0
+
+	while IFS='|' read -r loader jar; do
+		[[ -n "${loader}" && -n "${jar}" ]] || continue
+		any=1
+		publish_curseforge_upload "${tag}" "${jar}" "${changelog}" "${dry_run}" "${loader}" || return 1
+	done < <(publish_list_artifacts)
+
+	[[ "${any}" -eq 1 ]] || {
+		log_error "CurseForge: no hay JARs para subir"
+		return 1
+	}
+	[[ "${dry_run}" != "true" ]] && publish_curseforge_remind_gallery
+	return 0
 }
 
 publish_curseforge_expand_social_url() {
@@ -883,7 +1068,9 @@ publish_release_full() {
 	trap publish_cleanup EXIT
 	publish_load_secrets
 
-	local tag jar changelog modrinth_changelog curseforge_changelog mc_version mod_name
+	local tag changelog modrinth_changelog curseforge_changelog mc_version mod_name
+	local -a jars=()
+	local loader jar
 	tag="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
 	mod_name="$(get_prop mod_name "${GRADLE_PROPERTIES}")"
 	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
@@ -899,6 +1086,7 @@ publish_release_full() {
 	echo "  Mod          : ${mod_name}"
 	echo "  Versión/tag  : ${tag}"
 	echo "  Minecraft    : ${mc_version}"
+	echo "  Loaders      : $(publish_release_loaders | awk '{printf sep$0; sep=", "}')"
 	echo "  Tipo         : ${RELEASE_TYPE}"
 	[[ "${dry_run}" == "true" ]] && echo -e "  ${YELLOW}Modo dry-run (sin subidas reales)${RESET}"
 	echo
@@ -918,7 +1106,7 @@ publish_release_full() {
 	fi
 
 	if [[ "${INTERACTIVE}" == "true" && "${dry_run}" != "true" ]]; then
-		read -r -p "¿Publicar ${tag} en GitHub + Modrinth + CurseForge? [s/N]: " confirm
+		read -r -p "¿Publicar ${tag} (Forge+Fabric+NeoForge) en GitHub + Modrinth + CurseForge? [s/N]: " confirm
 		[[ "${confirm,,}" == "s" || "${confirm,,}" == "si" ]] || return 0
 	fi
 
@@ -926,30 +1114,34 @@ publish_release_full() {
 		publish_build_release || { pause; return 1; }
 	fi
 
-	jar="$(publish_find_jar)" || {
-		log_error "JAR no encontrado. Ejecuta primero la compilación."
+	publish_require_artifacts || {
+		log_error "JARs incompletos. Ejecuta la compilación multi-loader primero."
 		pause
 		return 1
 	}
-	log_ok "JAR: $(basename "${jar}")"
+
+	while IFS='|' read -r loader jar; do
+		jars+=("${jar}")
+		log_ok "JAR [${loader}]: $(basename "${jar}")"
+	done < <(publish_list_artifacts)
 
 	if [[ "${SKIP_GITHUB:-false}" != "true" ]]; then
 		if [[ "${dry_run}" != "true" ]]; then
 			publish_git_tag_and_push "${tag}" "${push_branch}" || { pause; return 1; }
 		fi
-		publish_github_release "${tag}" "${jar}" "${changelog}" "${dry_run}" || { pause; return 1; }
+		publish_github_release "${tag}" "${changelog}" "${dry_run}" "${jars[@]}" || { pause; return 1; }
 	fi
 
 	if [[ "${SKIP_MODRINTH:-false}" != "true" ]]; then
-		publish_modrinth_upload "${tag}" "${jar}" "${modrinth_changelog}" "${dry_run}" || { pause; return 1; }
+		publish_modrinth_upload_all "${tag}" "${modrinth_changelog}" "${dry_run}" || { pause; return 1; }
 	fi
 
 	if [[ "${SKIP_CURSEFORGE:-false}" != "true" ]]; then
-		publish_curseforge_upload "${tag}" "${jar}" "${curseforge_changelog}" "${dry_run}" || { pause; return 1; }
+		publish_curseforge_upload_all "${tag}" "${curseforge_changelog}" "${dry_run}" || { pause; return 1; }
 	fi
 
 	echo
-	log_ok "Proceso de publicación completado para ${tag}"
+	log_ok "Proceso de publicación completado para ${tag} (${#jars[@]} JAR(s))"
 	if [[ "${SKIP_CURSEFORGE:-false}" == "true" ]]; then
 		publish_curseforge_remind_gallery
 	fi
@@ -969,7 +1161,7 @@ publish_release_menu() {
 		echo "  1) Verificar prerequisitos y credenciales"
 		echo "  2) Publicar release completo (build + tag + subidas)"
 		echo "  3) Dry-run (simular sin subir)"
-		echo "  4) Solo compilar JAR de release"
+		echo "  4) Solo compilar JARs de release (Forge+Fabric+NeoForge)"
 		echo "  0) Volver"
 		echo
 		read -r -p "Opción: " choice
@@ -981,7 +1173,7 @@ publish_release_menu() {
 				;;
 			2) publish_release_full false false true ;;
 			3) publish_release_full true ;;
-			4) publish_build_release && publish_find_jar && log_ok "JAR: $(basename "$(publish_find_jar)")"; pause ;;
+			4) publish_build_release && publish_require_artifacts; pause ;;
 			0) return ;;
 			*) log_error "Opción inválida"; pause ;;
 		esac
@@ -1020,16 +1212,21 @@ publish_release_cli() {
 Uso: $(basename "$0") publish [opciones]
 
   --dry-run           Simular sin git push ni subidas
-  --skip-build        Usar JAR existente en forge/build/libs/
+  --skip-build        Usar JARs existentes (forge/fabric/neoforge build/libs)
   --push-branch       Subir la rama actual antes del tag (default en menú opción 2)
   --no-push-branch    No subir la rama
   --skip-github       Omitir tag y GitHub Release
   --skip-modrinth     Omitir Modrinth
   --skip-curseforge   Omitir CurseForge
   --skip-modrinth-metadata         No actualizar descripción/licencia/icono/galería
-  --skip-modrinth-version-upload   Solo metadatos Modrinth (sin subir JAR)
+  --skip-modrinth-version-upload   Solo metadatos Modrinth (sin subir JARs)
   --modrinth-sync-only             Igual que --skip-build --skip-github --skip-curseforge
                                    y solo sincronizar assets/modrinth.json
+
+Publica un tag (mod_version) con 3 JARs:
+  • GitHub Release: forge + fabric + neoforge como assets
+  • Modrinth: una versión por loader (version_number = TAG+loader)
+  • CurseForge: un archivo por loader con gameVersions del loader correcto
 
 Configura tokens en scripts/.release.local (ver .release.local.example)
 Metadatos Modrinth: assets/modrinth.json, assets/modrinth-body.md, assets/icon.png

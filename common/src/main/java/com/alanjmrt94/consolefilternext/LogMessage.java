@@ -36,7 +36,7 @@ public class LogMessage {
     }
 
     public String getFullMessage() {
-        return String.format("[%s] [%s/%s] [%s]: %s", 
+        return String.format("[%s] [%s/%s] [%s]: %s",
             timestamp, thread, level, source, message);
     }
 

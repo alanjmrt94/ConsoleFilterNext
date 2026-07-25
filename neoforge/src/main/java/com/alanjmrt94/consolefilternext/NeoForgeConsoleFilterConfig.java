@@ -12,10 +12,10 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
  */
 public final class NeoForgeConsoleFilterConfig implements FilterConfigView {
 
-	public static final String PROFILE_DEFAULT = "default";
-	public static final String PROFILE_DEBUG = "debug";
-	public static final String PROFILE_PRODUCTION = "production";
-	public static final String CONFIG_FILE_NAME = "consolefilternext-common.toml";
+	public static final String PROFILE_DEFAULT = FilterProfiles.DEFAULT;
+	public static final String PROFILE_DEBUG = FilterProfiles.DEBUG;
+	public static final String PROFILE_PRODUCTION = FilterProfiles.PRODUCTION;
+	public static final String CONFIG_FILE_NAME = FilterProfiles.CONFIG_FILE_NAME;
 
 	private final FilterEngine engine = new FilterEngine();
 	private CommentedFileConfig fileConfig;
@@ -86,8 +86,8 @@ public final class NeoForgeConsoleFilterConfig implements FilterConfigView {
 	private FilterLists resolveActiveLists() {
 		String profile = getEffectiveProfile();
 		String prefix = switch (profile) {
-			case PROFILE_DEBUG -> "profiles.debug.";
-			case PROFILE_PRODUCTION -> "profiles.production.";
+			case FilterProfiles.DEBUG -> "profiles.debug.";
+			case FilterProfiles.PRODUCTION -> "profiles.production.";
 			default -> "general.";
 		};
 		return new FilterLists(

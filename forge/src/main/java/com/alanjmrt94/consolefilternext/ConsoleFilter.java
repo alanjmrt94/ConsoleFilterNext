@@ -26,7 +26,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.api.distmarker.Dist;
 
 @Mod(ConsoleFilter.MODID)
-public class ConsoleFilter implements FilterHost {
+public class ConsoleFilter implements FilterHost, ConfigScreenHost {
 
 	public static final String MODID = "consolefilternext";
 	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");

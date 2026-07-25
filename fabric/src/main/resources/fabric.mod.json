@@ -16,6 +16,9 @@
   "entrypoints": {
     "main": [
       "com.alanjmrt94.consolefilternext.ConsoleFilterFabric"
+    ],
+    "modmenu": [
+      "com.alanjmrt94.consolefilternext.ConsoleFilterModMenu"
     ]
   },
   "depends": {
@@ -23,5 +26,8 @@
     "minecraft": "~1.20.1",
     "java": ">=17",
     "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

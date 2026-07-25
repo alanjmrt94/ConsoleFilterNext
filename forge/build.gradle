@@ -95,6 +95,19 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+sourceSets {
+	main {
+		java {
+			srcDir '../client/src/main/java'
+		}
+	}
+	test {
+		java {
+			srcDir '../client/src/test/java'
+		}
+	}
+}
+
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
@@ -133,6 +146,7 @@ processResources {
 }
 
 jar {
+    archiveClassifier.set('forge')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from project(':common').sourceSets.main.output
     manifest {
@@ -158,7 +172,7 @@ publishing {
     }
     repositories {
         maven {
-            url "file://${rootProject.projectDir}/mcmodsrepo"
+            url = "file://${rootProject.projectDir}/mcmodsrepo"
         }
     }
 }

@@ -26,12 +26,17 @@ java {
 	withSourcesJar()
 }
 
-// NeoForge 1.20.1: adaptador propio + common (no reutiliza fuentes Forge:
-// FML 47.1.x no tiene registerConfig/registerExtensionPoint en FMLJavaModLoadingContext).
+// NeoForge 1.20.1: adaptador propio + common + UI cliente compartida.
 sourceSets {
 	main {
 		java {
 			srcDir '../common/src/main/java'
+			srcDir '../client/src/main/java'
+		}
+	}
+	test {
+		java {
+			srcDir '../client/src/test/java'
 		}
 	}
 }

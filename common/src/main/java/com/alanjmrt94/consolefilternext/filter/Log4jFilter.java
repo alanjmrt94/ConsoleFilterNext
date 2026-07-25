@@ -1,7 +1,6 @@
 package com.alanjmrt94.consolefilternext.filter;
 
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
