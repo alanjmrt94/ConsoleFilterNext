@@ -1123,6 +1123,11 @@ publish_curseforge_remind_social_links() {
 	log_info "CurseForge: configurá Social Links manualmente (Authors → Console Filter Next → Links):"
 	local project_id="${CURSEFORGE_PROJECT_ID:-1257873}"
 	log_info "  https://authors.curseforge.com/#/projects/${project_id}/settings/links"
+	local desc_file
+	desc_file="$(jq -r '.description_file // empty' "${cf_json}")"
+	if [[ -n "${desc_file}" && -f "${PROJECT_ROOT}/assets/${desc_file}" ]]; then
+		log_info "CurseForge: pegá la descripción desde assets/${desc_file} (Forge/Fabric/NeoForge + Discord)"
+	fi
 	while IFS=$'\t' read -r key template; do
 		[[ -n "${key}" && -n "${template}" ]] || continue
 		url="$(publish_curseforge_expand_social_url "${template}" "${username}")"

@@ -1,5 +1,6 @@
 {
-  "_comment": "CurseForge no expone API pública para social links ni screenshots. publish-release.sh muestra checklist tras publicar.",
+  "_comment": "CurseForge no expone API pública para social links ni screenshots. publish-release.sh muestra checklist tras publicar. Pegá curseforge-body.md en la descripción del proyecto en Authors.",
+  "description_file": "curseforge-body.md",
   "version_changelog_file": "curseforge-version-changelog.md",
   "client_side": "optional",
   "server_side": "optional",

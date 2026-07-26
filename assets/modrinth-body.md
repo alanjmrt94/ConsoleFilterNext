@@ -2,6 +2,9 @@
 
 An improved fork of [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) for Minecraft **Forge, Fabric, and NeoForge**. Filter console output by **text**, **regex**, **log level**, **thread**, **logger/source**, and **mod id** — not just plain text. Reduce noise on the client or dedicated server while debugging modpacks and development environments.
 
+**Loaders:** Forge · Fabric · NeoForge (separate JAR per loader)  
+**Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD) · **Issues:** [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
+
 Install on **either or both sides** (optional on client and server): use it only where you read logs.
 
 ## Features
@@ -77,7 +80,7 @@ If **any** filter matches, the message is **filtered out** (unless whitelist mod
 | | |
 |---|---|
 | **Minecraft** | 1.20.1 |
-| **Mod loader** | Forge 47+ |
+| **Mod loaders** | **Forge** 47+ · **Fabric** · **NeoForge** (one JAR each) |
 | **Java** | 17 or 21 (launcher; mod bytecode targets Java 17) |
 | **Side** | Client and dedicated server (optional on each) |
 
@@ -87,8 +90,8 @@ Migrating from the original ConsoleFilter? See [MIGRATION.md](https://github.com
 
 | | |
 |---|---|
-| **Issues** | [GitHub Issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues) |
 | **Discord** | [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD) |
+| **Issues** | [GitHub Issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues) |
 | **Source** | [alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
 ## Credits

@@ -12,6 +12,7 @@ Archivos usados al publicar en Modrinth (y referencia para otras plataformas).
 | `modrinth.template.json` | Plantilla documentada; copiar a `modrinth.json` si empezás de cero. |
 | `gallery/sample-1.png` | Captura para galería Modrinth (destacada) y CurseForge (panel web) |
 | `curseforge.json` | Social links, project links, changelog de versión y galería CurseForge |
+| `curseforge-body.md` | Descripción del proyecto CurseForge (pegar manual en Authors; API no lo sincroniza) |
 | `curseforge.template.json` | Plantilla documentada; copiar a `curseforge.json` si empezás de cero. |
 | `curseforge-version-changelog.md` | Changelog de la versión para CurseForge (solo código; usado al publicar el JAR). |
 | `curseforge-version-changelog.template.md` | Plantilla del changelog de versión para CurseForge. |
@@ -34,11 +35,12 @@ El script `publish_modrinth_sync_metadata` completa por API:
 
 Tras la primera sincronización, podés dejar `"gallery": []` en `modrinth.json` para no reintentar imágenes ya subidas.
 
-## CurseForge — social links y galería (manual)
+## CurseForge — descripción, social links y galería (manual)
 
-La API de CurseForge **no permite** actualizar social links ni screenshots por REST. Tras `publish`, el script lista los valores de `assets/curseforge.json`.
+La API de CurseForge **no permite** actualizar descripción, social links ni screenshots por REST. Tras `publish`, el script lista los valores de `assets/curseforge.json`.
 
-Editá `social_username` y `social_links` en `curseforge.json`. Las URLs con `{username}` se expanden con tu usuario (por defecto `alanjmrt94`):
+1. **Descripción del proyecto:** copiá el contenido de [`curseforge-body.md`](curseforge-body.md) en Authors → Description (menciona Forge/Fabric/NeoForge + Discord).
+2. **Social links:** editá `social_links` en `curseforge.json`. Las URLs con `{username}` se expanden (por defecto `alanjmrt94`):
 
 | Campo | URL resultante |
 |-------|----------------|
@@ -48,9 +50,11 @@ Editá `social_username` y `social_links` en `curseforge.json`. Las URLs con `{u
 | Instagram | `https://instagram.com/alanjmrt94` |
 | Facebook | `https://facebook.com/alanjmrt94` |
 
-En el panel: [Authors → proyecto → Links](https://authors.curseforge.com/#/projects/1257873/settings/links) → **Social Links**.
+Panel: [Authors → proyecto → Links](https://authors.curseforge.com/#/projects/1257873/settings/links) → **Social Links** → Discord = `https://discord.gg/CcUNTJjPD`.
 
 Galería: **Images** / **Gallery** → subir `assets/gallery/sample-1.png`.
+
+**Loaders:** al subir, publicá **tres archivos** (Forge / Fabric / NeoForge) con el game version del loader correcto — no un solo JAR “NeoForge” para todos.
 
 ## Sincronizar solo metadatos
 

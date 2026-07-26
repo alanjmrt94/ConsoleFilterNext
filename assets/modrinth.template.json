@@ -1,7 +1,7 @@
 {
   "_comment": "Plantilla Modrinth — copiar a modrinth.json o editar modrinth.json directamente. Usada por scripts/publish-release.sh.",
   "title": "Console Filter Next",
-  "description": "An improved ConsoleFilter mod that filters log messages by text, regex, log level, thread, source, and mod id. Reduce console noise and focus on what matters — ideal for debugging modpacks and dedicated servers.",
+  "description": "An improved ConsoleFilter mod for Forge, Fabric, and NeoForge that filters log messages by text, regex, log level, thread, source, and mod id. Reduce console noise and focus on what matters — ideal for debugging modpacks and dedicated servers.",
   "body_file": "modrinth-body.md",
   "version_changelog_file": "modrinth-version-changelog.md",
   "license_id": "CC-BY-NC-SA-4.0",

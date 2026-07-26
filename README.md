@@ -5,7 +5,8 @@
 
 An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
-**Current release:** `1.20.1-4.2.0` · Minecraft **1.20.1** · **Forge / Fabric / NeoForge** · Client & dedicated server
+**Current release:** `1.20.1-4.2.0` · Minecraft **1.20.1** · **Forge / Fabric / NeoForge** · Client & dedicated server  
+**Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
 ## Downloads
 
