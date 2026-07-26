@@ -42,7 +42,7 @@ Editá `social_username` y `social_links` en `curseforge.json`. Las URLs con `{u
 
 | Campo | URL resultante |
 |-------|----------------|
-| Discord | `https://discord.gg/qqF5UnHH4` (fija) |
+| Discord | `https://discord.gg/CcUNTJjPD` (permanente, usos ilimitados) |
 | GitHub | `https://github.com/alanjmrt94` |
 | X | `https://x.com/alanjmrt94` |
 | Instagram | `https://instagram.com/alanjmrt94` |

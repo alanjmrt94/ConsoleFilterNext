@@ -30,3 +30,9 @@ export MODRINTH_PROJECT_SLUG="consolefilternext"
 export MODRINTH_PROJECT_ID=""
 #
 export RELEASE_TYPE="release"     # release | beta | alpha
+
+# Discord — Incoming Webhook del canal solo-lectura del mod (un webhook = un canal).
+# Crear: canal → Edit → Integrations → Webhooks → Copy URL
+# GitHub: Settings → Environments → publish → Secret DISCORD_WEBHOOK_URL
+# Nunca versionar la URL real.
+export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/...."

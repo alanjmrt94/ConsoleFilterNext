@@ -83,6 +83,14 @@ If **any** filter matches, the message is **filtered out** (unless whitelist mod
 
 Migrating from the original ConsoleFilter? See [MIGRATION.md](https://github.com/alanjmrt94/ConsoleFilterNext/blob/master/MIGRATION.md).
 
+## Support
+
+| | |
+|---|---|
+| **Issues** | [GitHub Issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues) |
+| **Discord** | [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD) |
+| **Source** | [alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext) |
+
 ## Credits
 
 | | |

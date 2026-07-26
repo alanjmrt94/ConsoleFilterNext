@@ -1229,29 +1229,36 @@ USO RÁPIDO
   ./scripts/release.sh          # menú interactivo
   ./scripts/release.sh verify   # solo verificar entorno
   ./scripts/release.sh profile  # aplicar perfil recomendado
-  ./scripts/release.sh publish  # build + tag + GitHub + Modrinth + CurseForge
+  ./scripts/release.sh cut      # CI verde → tag push (Actions + Discord)
+  ./scripts/release.sh publish  # build + tag + GitHub + Modrinth + CurseForge + Discord
   ./scripts/release.sh commands # ver comandos de instalar/actualizar
 
-PUBLICACIÓN DE RELEASES (opción 9 / publish)
+PUBLICACIÓN DE RELEASES (opción 9 / publish + cut)
   Requiere: gh auth login, jq, curl
   Tokens en scripts/.release.local (ver .release.local.example):
     CURSEFORGE_API_TOKEN  — Profile API key (cfc_pat_…) en https://console.curseforge.com/#/profile
     CURSEFORGE_AUTHOR_TOKEN — Author API token en https://www.curseforge.com/account/api-tokens (obligatorio para subir JAR)
     MODRINTH_TOKEN
+    DISCORD_WEBHOOK_URL   — Incoming Webhook del canal del mod (secret; no versionar)
   IDs de proyecto:
     Modrinth  → MODRINTH_PROJECT_ID (Base62, ej. tFqJGW2q)
                 Obligatorio si el proyecto está en Draft (el slug no resuelve vía API pública).
                 No usar el nombre visible del proyecto.
     CurseForge → CURSEFORGE_PROJECT_ID (numérico, opcional; vacío = resolver por slug)
-  Flujo: clean build → tag (mod_version) → push → GitHub Release → Modrinth → CurseForge
+  Flujo recomendado:
+    1) Push a master → Build CI verde
+    2) ./scripts/release.sh cut   → tag (mod_version) + push
+    3) Actions: release.yml (GitHub) + publish-distribution.yml (Modrinth/CF + Discord)
+  Publish local completo: clean build → tag → GitHub → Modrinth → CurseForge → Discord
   Dry-run: ./scripts/release.sh publish --dry-run
+           ./scripts/release.sh cut --dry-run
   Reintentos parciales:
-    publish --skip-build --skip-github              # solo Modrinth + CurseForge
+    publish --skip-build --skip-github              # solo Modrinth + CurseForge (+ Discord)
     publish --skip-build --skip-github --skip-modrinth
   CI: tag push → .github/workflows/release.yml (GitHub Release)
-       tag push → .github/workflows/publish-distribution.yml (Modrinth + CurseForge)
-       Secrets/vars en GitHub → Environments → publish (MODRINTH_*, CURSEFORGE_API_TOKEN, CURSEFORGE_AUTHOR_TOKEN)
-
+       tag push → .github/workflows/publish-distribution.yml (Modrinth + CurseForge + Discord)
+       Secrets/vars en GitHub → Environments → publish
+         (MODRINTH_*, CURSEFORGE_*, DISCORD_WEBHOOK_URL)
 COMANDOS EXTERNOS FRECUENTES
   Java 17 (recomendado): sudo apt install openjdk-17-jdk
   Java 21 (alternativa): sudo apt install openjdk-21-jdk
@@ -1331,11 +1338,14 @@ case "${1:-}" in
   publish|release)
     publish_release_cli "${@:2}"
     ;;
+  cut)
+    publish_cut_cli "${@:2}"
+    ;;
   "")
     main_menu
     ;;
   *)
-    echo "Uso: $(basename "$0") [verify|profile|java|build|publish|commands|help]"
+    echo "Uso: $(basename "$0") [verify|profile|java|build|publish|cut|commands|help]"
     exit 1
     ;;
 esac

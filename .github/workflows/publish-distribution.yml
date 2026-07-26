@@ -34,7 +34,7 @@ jobs:
 
       - name: Grant execute permission
         run: |
-          chmod +x gradlew scripts/release.sh scripts/publish-release.sh
+          chmod +x gradlew scripts/release.sh scripts/publish-release.sh scripts/discord-notify.sh
           chmod +x fabric/gradlew neoforge/gradlew
 
       - name: Build Forge (root Gradle)
@@ -60,6 +60,7 @@ jobs:
           MODRINTH_PROJECT_SLUG: ${{ vars.MODRINTH_PROJECT_SLUG }}
           CURSEFORGE_PROJECT_SLUG: ${{ vars.CURSEFORGE_PROJECT_SLUG }}
           RELEASE_TYPE: ${{ vars.RELEASE_TYPE }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -z "${MODRINTH_TOKEN}" ] && [ -z "${CURSEFORGE_API_TOKEN}" ] && [ -z "${CURSEFORGE_AUTHOR_TOKEN}" ]; then
             echo "No distribution secrets configured; skipping Modrinth and CurseForge upload."

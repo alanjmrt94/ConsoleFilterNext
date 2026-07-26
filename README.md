@@ -49,7 +49,8 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **ConsoleFilter contributors** | **NgLoader**, **MarkKoz**, **ChaosTheDude** |
 | **License** | [CC BY-NC-SA 4.0](LICENSE.md) |
 
-Issues and pull requests: [github.com/alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
+Issues and pull requests: [github.com/alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)  
+Discord: [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
 ---
 
@@ -337,11 +338,25 @@ Find the Modrinth Base62 ID in [Modrinth → Projects](https://modrinth.com/dash
 
 #### Publish flow
 
-1. Clean build de **Forge + Fabric + NeoForge** → `*-forge.jar` / `*-fabric.jar` / `*-neoforge.jar`
+**Recommended (CI-gated tag):**
+
+1. Push to `master` and wait for **Build** to succeed
+2. `./scripts/release.sh cut` — creates/pushes `mod_version` tag only if Build is green
+3. Tag push runs Actions: GitHub Release + Modrinth/CurseForge + Discord notify
+
+**Local full publish** (build + tag + all platforms):
+
+1. Clean build of **Forge + Fabric + NeoForge** → `*-forge.jar` / `*-fabric.jar` / `*-neoforge.jar`
 2. Git annotated tag (`mod_version` from `gradle.properties`) → push to `origin`
 3. GitHub Release (`gh`) with **three** JAR assets and `changelog.txt` excerpt
 4. Modrinth: **one version per loader** (`version_number` = `TAG+forge` / `TAG+fabric` / `TAG+neoforge`)
 5. CurseForge: **one file upload per loader** (gameVersions include Forge / Fabric / NeoForge)
+6. Discord: webhook post to the mod’s read-only channel (`DISCORD_WEBHOOK_URL`)
+
+```bash
+./scripts/release.sh cut --dry-run
+./scripts/release.sh cut
+```
 
 #### Partial re-runs
 
@@ -394,7 +409,7 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 |----------|---------|---------|
 | [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`*`) | Build Forge+Fabric+NeoForge, create GitHub Release with the three JARs |
-| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload the three JARs to Modrinth and CurseForge (requires the `publish` environment) |
+| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload JARs to Modrinth/CurseForge and notify Discord (requires the `publish` environment) |
 
 #### GitHub environment `publish`
 
@@ -409,6 +424,7 @@ Create **Settings → Environments → publish** (or use an existing environment
 | `CURSEFORGE_API_TOKEN` | Resolve MC/Forge versions and project (Profile API key `cfc_pat_…`) | [console.curseforge.com/#/profile](https://console.curseforge.com/#/profile) |
 | `CURSEFORGE_AUTHOR_TOKEN` | **Upload** mod files to CurseForge | [curseforge.com/account/api-tokens](https://www.curseforge.com/account/api-tokens) |
 | `CURSEFORGE_PROJECT_ID` | Optional; numeric project ID if slug resolution fails | CurseForge project page sidebar |
+| `DISCORD_WEBHOOK_URL` | Release notify to the mod’s Discord channel | Channel → Edit → Integrations → Webhooks → Copy URL (**Secret**, never a public Variable) |
 
 **Environment variables** (same **publish** environment → Environment variables):
 
@@ -420,7 +436,7 @@ Create **Settings → Environments → publish** (or use an existing environment
 
 Local publishes use the same names in `scripts/.release.local` (see `scripts/.release.local.example`).
 
-If neither `MODRINTH_TOKEN` nor `CURSEFORGE_API_TOKEN` is set in the `publish` environment, the workflow skips upload steps with a notice (no failure).
+If neither `MODRINTH_TOKEN` nor `CURSEFORGE_API_TOKEN` is set in the `publish` environment, the workflow skips upload steps with a notice (no failure). If `DISCORD_WEBHOOK_URL` is missing, publish still succeeds and skips the Discord notify with a warning.
 
 ## ⚠️ Known limitations (v4.2.0)
 
@@ -441,5 +457,6 @@ Free to download on CurseForge and Modrinth; redistribution and derivatives must
 - [GitHub repository](https://github.com/alanjmrt94/ConsoleFilterNext)
 - [GitHub Release `1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0)
 - [Report issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
+- [Discord](https://discord.gg/CcUNTJjPD)
 - [ConsoleFilter by Matthew Czyr](https://github.com/MattCzyr/ConsoleFilter)
 - [Migration guide](MIGRATION.md)

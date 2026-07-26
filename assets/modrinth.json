@@ -4,7 +4,7 @@
   "body_file": "modrinth-body.md",
   "version_changelog_file": "modrinth-version-changelog.md",
   "license_id": "CC-BY-NC-SA-4.0",
-  "categories": ["utility", "optimization"],
+  "categories": ["utility"],
   "additional_categories": [],
   "client_side": "optional",
   "server_side": "optional",
@@ -13,7 +13,7 @@
   "issues_url": "https://github.com/alanjmrt94/ConsoleFilterNext/issues",
   "source_url": "https://github.com/alanjmrt94/ConsoleFilterNext",
   "wiki_url": "https://github.com/alanjmrt94/ConsoleFilterNext#readme",
-  "discord_url": "https://discord.gg/qqF5UnHH4",
+  "discord_url": "https://discord.gg/CcUNTJjPD",
   "donation_urls": [],
   "icon_file": "icon.png",
   "gallery": [

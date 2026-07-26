@@ -73,4 +73,6 @@ Use **Options → Mods → Console Filter Next → Config** (Forge Mod List). No
 
 [alanjmrt94/ConsoleFilterNext/issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 
+Discord: [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
+
 Downloads: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext)

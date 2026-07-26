@@ -41,6 +41,7 @@ publish_load_secrets() {
 	MODRINTH_PROJECT_SLUG="${MODRINTH_PROJECT_SLUG:-consolefilternext}"
 	GITHUB_REMOTE="${GITHUB_REMOTE:-origin}"
 	RELEASE_TYPE="${RELEASE_TYPE:-release}"
+	DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
 }
 
 publish_show_secrets_status() {
@@ -64,10 +65,15 @@ publish_show_secrets_status() {
 		log_warn "MODRINTH_TOKEN no definido"
 	fi
 	echo "  Modrinth proyecto   : ${MODRINTH_PROJECT_ID:-<auto slug: ${MODRINTH_PROJECT_SLUG}>}"
+	if [[ -n "${DISCORD_WEBHOOK_URL}" ]]; then
+		log_ok "DISCORD_WEBHOOK_URL configurado (no se muestra)"
+	else
+		log_warn "DISCORD_WEBHOOK_URL no definido — no habrá aviso en Discord"
+	fi
 	if command -v gh &>/dev/null && gh auth status &>/dev/null; then
 		log_ok "GitHub CLI autenticado (gh)"
 	else
-		log_warn "gh no autenticado — necesario para GitHub Release"
+		log_warn "gh no autenticado — necesario para GitHub Release / cut"
 	fi
 	echo
 }
@@ -454,6 +460,116 @@ publish_git_tag_and_push() {
 	git -C "${PROJECT_ROOT}" push "${GITHUB_REMOTE}" "${tag}"
 }
 
+# Exige que el workflow Build del commit HEAD haya terminado en success.
+publish_require_ci_green() {
+	local sha short runs conclusion status count
+	publish_require_command gh || return 1
+	gh auth status &>/dev/null || {
+		log_error "GitHub CLI no autenticado (gh auth login)"
+		return 1
+	}
+
+	sha="$(git -C "${PROJECT_ROOT}" rev-parse HEAD)"
+	short="${sha:0:7}"
+	log_info "Verificando CI Build para ${short}..."
+
+	runs="$(gh run list --workflow=build.yml --commit "${sha}" --limit 10 \
+		--json conclusion,status,databaseId,displayTitle 2>/dev/null || true)"
+	count="$(echo "${runs}" | jq 'length' 2>/dev/null || echo 0)"
+	if [[ -z "${runs}" || "${count}" == "0" ]]; then
+		log_error "No hay runs del workflow Build para el commit ${short}"
+		log_info "Hacé push a GitHub, esperá a que Build termine en verde, y reintentá cut"
+		return 1
+	fi
+
+	if echo "${runs}" | jq -e '[.[] | select(.status != "completed")] | length > 0' &>/dev/null; then
+		log_error "Build aún en curso para ${short} — esperá a que termine"
+		return 1
+	fi
+
+	conclusion="$(echo "${runs}" | jq -r '[.[] | select(.status == "completed")][0].conclusion // empty')"
+	status="$(echo "${runs}" | jq -r '[.[] | select(.status == "completed")][0].status // empty')"
+	if [[ "${status}" != "completed" || "${conclusion}" != "success" ]]; then
+		log_error "Build no está en success para ${short} (conclusion=${conclusion:-<none>})"
+		return 1
+	fi
+
+	log_ok "Build CI verde para ${short}"
+	return 0
+}
+
+# Crea y pushea el tag mod_version solo si CI Build está verde.
+publish_cut_release() {
+	local dry_run="${1:-false}"
+	local tag remote_ref
+
+	publish_load_secrets
+	publish_require_command git || return 1
+	publish_require_command jq || return 1
+
+	tag="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
+	[[ -n "${tag}" ]] || {
+		log_error "mod_version vacío en gradle.properties"
+		return 1
+	}
+
+	screen_clear
+	echo -e "${BOLD}${CYAN}═══ Cut release (tag) ═══${RESET}"
+	echo
+	echo "  Tag     : ${tag}"
+	echo "  Commit  : $(git -C "${PROJECT_ROOT}" rev-parse --short HEAD)"
+	echo "  Rama    : $(git -C "${PROJECT_ROOT}" rev-parse --abbrev-ref HEAD)"
+	[[ "${dry_run}" == "true" ]] && echo -e "  ${YELLOW}Modo dry-run${RESET}"
+	echo
+
+	if [[ -n "$(git -C "${PROJECT_ROOT}" status --porcelain)" ]]; then
+		log_warn "El árbol de git tiene cambios sin commitear"
+		if [[ "${INTERACTIVE}" == "true" && "${dry_run}" != "true" ]]; then
+			read -r -p "¿Continuar de todos modos? [s/N]: " cont
+			[[ "${cont,,}" == "s" || "${cont,,}" == "si" ]] || return 0
+		fi
+	fi
+
+	publish_require_ci_green || return 1
+
+	remote_ref="$(git -C "${PROJECT_ROOT}" ls-remote --tags "${GITHUB_REMOTE}" "refs/tags/${tag}" 2>/dev/null || true)"
+	if [[ -n "${remote_ref}" ]]; then
+		log_error "El tag ${tag} ya existe en ${GITHUB_REMOTE}"
+		return 1
+	fi
+
+	if [[ "${dry_run}" == "true" ]]; then
+		log_info "[dry-run] se crearía y pushearía el tag anotado ${tag}"
+		log_info "[dry-run] eso dispararía release.yml + publish-distribution.yml → Discord"
+		return 0
+	fi
+
+	if [[ "${INTERACTIVE}" == "true" ]]; then
+		read -r -p "¿Crear y pushear tag ${tag}? [s/N]: " confirm
+		[[ "${confirm,,}" == "s" || "${confirm,,}" == "si" ]] || return 0
+	fi
+
+	publish_git_tag_and_push "${tag}" false || return 1
+	echo
+	log_ok "Tag ${tag} en remoto. GitHub Actions debería publicar JARs y notificar Discord."
+	log_info "Seguí: Actions → Release + Publish distribution"
+}
+
+publish_discord_notify() {
+	local tag="$1"
+	local dry_run="${2:-false}"
+	local -a args=()
+
+	publish_load_secrets
+	[[ "${dry_run}" == "true" ]] && args+=(--dry-run)
+	args+=("${tag}")
+
+	if [[ ! -x "${SCRIPT_DIR}/discord-notify.sh" ]]; then
+		chmod +x "${SCRIPT_DIR}/discord-notify.sh" 2>/dev/null || true
+	fi
+	"${SCRIPT_DIR}/discord-notify.sh" "${args[@]}"
+}
+
 publish_github_release() {
 	local tag="$1"
 	local notes="$2"
@@ -759,12 +875,30 @@ publish_modrinth_upload_all() {
 	local changelog="$2"
 	local dry_run="${3:-false}"
 	local loader jar sync_metadata=true
+	local project_id
+	local found=0
 
 	while IFS='|' read -r loader jar; do
 		[[ -n "${loader}" && -n "${jar}" ]] || continue
+		found=1
 		publish_modrinth_upload "${tag}" "${jar}" "${changelog}" "${dry_run}" "${loader}" "${sync_metadata}" || return 1
 		sync_metadata=false
 	done < <(publish_list_artifacts)
+
+	# Solo metadatos (sin JARs): p. ej. --modrinth-sync-only
+	if [[ "${found}" -eq 0 ]]; then
+		if [[ "${SKIP_MODRINTH_VERSION_UPLOAD:-false}" != "true" ]]; then
+			log_error "Modrinth: no hay JARs para subir"
+			return 1
+		fi
+		[[ -n "${MODRINTH_TOKEN}" ]] || {
+			log_warn "MODRINTH_TOKEN no configurado; omitiendo Modrinth"
+			return 0
+		}
+		project_id="$(publish_resolve_modrinth_project_id)" || return 1
+		publish_modrinth_sync_metadata "${project_id}" "${dry_run}" || return 1
+		[[ "${dry_run}" != "true" ]] && log_ok "Modrinth: omitida subida de versión (--skip-modrinth-version-upload)"
+	fi
 }
 
 publish_curseforge_fallback_loader_id() {
@@ -1125,6 +1259,17 @@ publish_release_full() {
 		publish_build_release || { pause; return 1; }
 	fi
 
+	# Metadatos Modrinth sin re-subir JARs (p. ej. --modrinth-sync-only).
+	if [[ "${SKIP_MODRINTH_VERSION_UPLOAD:-false}" == "true" && "${SKIP_CURSEFORGE:-false}" == "true" && "${SKIP_GITHUB:-false}" == "true" ]]; then
+		if [[ "${SKIP_MODRINTH:-false}" != "true" ]]; then
+			publish_modrinth_upload_all "${tag}" "${modrinth_changelog}" "${dry_run}" || { pause; return 1; }
+		fi
+		echo
+		log_ok "Sincronización Modrinth completada para ${tag}"
+		pause
+		return 0
+	fi
+
 	publish_require_artifacts || {
 		log_error "JARs incompletos. Ejecuta la compilación multi-loader primero."
 		pause
@@ -1151,6 +1296,11 @@ publish_release_full() {
 		publish_curseforge_upload_all "${tag}" "${curseforge_changelog}" "${dry_run}" || { pause; return 1; }
 	fi
 
+	# Aviso Discord tras Modrinth/CurseForge (o publish local completo).
+	if [[ "${SKIP_DISCORD:-false}" != "true" ]]; then
+		publish_discord_notify "${tag}" "${dry_run}" || log_warn "Notificación Discord falló (release ya publicado)"
+	fi
+
 	echo
 	log_ok "Proceso de publicación completado para ${tag} (${#jars[@]} JAR(s))"
 	if [[ "${SKIP_CURSEFORGE:-false}" == "true" ]]; then
@@ -1173,6 +1323,7 @@ publish_release_menu() {
 		echo "  2) Publicar release completo (build + tag + subidas)"
 		echo "  3) Dry-run (simular sin subir)"
 		echo "  4) Solo compilar JARs de release (Forge+Fabric+NeoForge)"
+		echo "  5) Cut: verificar CI verde y pushear tag (dispara Actions + Discord)"
 		echo "  0) Volver"
 		echo
 		read -r -p "Opción: " choice
@@ -1185,6 +1336,7 @@ publish_release_menu() {
 			2) publish_release_full false false true ;;
 			3) publish_release_full true ;;
 			4) publish_build_release && publish_require_artifacts; pause ;;
+			5) publish_cut_release false; pause ;;
 			0) return ;;
 			*) log_error "Opción inválida"; pause ;;
 		esac
@@ -1200,6 +1352,7 @@ publish_release_cli() {
 	SKIP_CURSEFORGE=false
 	SKIP_MODRINTH_METADATA=false
 	SKIP_MODRINTH_VERSION_UPLOAD=false
+	SKIP_DISCORD=false
 
 	while [[ $# -gt 0 ]]; do
 		case "$1" in
@@ -1210,6 +1363,7 @@ publish_release_cli() {
 			--skip-github) SKIP_GITHUB=true ;;
 			--skip-modrinth) SKIP_MODRINTH=true ;;
 			--skip-curseforge) SKIP_CURSEFORGE=true ;;
+			--skip-discord) SKIP_DISCORD=true ;;
 			--skip-modrinth-metadata) SKIP_MODRINTH_METADATA=true ;;
 			--skip-modrinth-version-upload) SKIP_MODRINTH_VERSION_UPLOAD=true ;;
 			--modrinth-sync-only)
@@ -1217,6 +1371,7 @@ publish_release_cli() {
 				SKIP_CURSEFORGE=true
 				skip_build=true
 				SKIP_MODRINTH_VERSION_UPLOAD=true
+				SKIP_DISCORD=true
 				;;
 			-h|--help)
 				cat <<EOF
@@ -1229,15 +1384,21 @@ Uso: $(basename "$0") publish [opciones]
   --skip-github       Omitir tag y GitHub Release
   --skip-modrinth     Omitir Modrinth
   --skip-curseforge   Omitir CurseForge
+  --skip-discord      Omitir notificación Discord
   --skip-modrinth-metadata         No actualizar descripción/licencia/icono/galería
   --skip-modrinth-version-upload   Solo metadatos Modrinth (sin subir JARs)
   --modrinth-sync-only             Igual que --skip-build --skip-github --skip-curseforge
                                    y solo sincronizar assets/modrinth.json
 
+También: $(basename "$0") cut [--dry-run]
+  Verifica que Build CI esté verde en HEAD, crea el tag mod_version y lo pushea.
+  El tag dispara release.yml + publish-distribution.yml (Modrinth/CF + Discord).
+
 Publica un tag (mod_version) con 3 JARs:
   • GitHub Release: forge + fabric + neoforge como assets
   • Modrinth: una versión por loader (version_number = TAG+loader)
   • CurseForge: un archivo por loader con gameVersions del loader correcto
+  • Discord: webhook del canal del mod (DISCORD_WEBHOOK_URL)
 
 Configura tokens en scripts/.release.local (ver .release.local.example)
 Metadatos Modrinth: assets/modrinth.json, assets/modrinth-body.md, assets/icon.png
@@ -1260,4 +1421,32 @@ EOF
 
 	INTERACTIVE=false
 	publish_release_full "${dry_run}" "${skip_build}" "${push_branch}"
+}
+
+publish_cut_cli() {
+	local dry_run=false
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			--dry-run) dry_run=true ;;
+			-h|--help)
+				cat <<EOF
+Uso: $(basename "$0") cut [--dry-run]
+
+  1) Comprueba que el workflow Build del commit HEAD terminó en success
+  2) Crea el tag anotado = mod_version (si no existe)
+  3) Pushea el tag → Actions publica JARs y notifica Discord
+
+Requiere: gh autenticado, push del commit a GitHub, Build verde.
+EOF
+				return 0
+				;;
+			*)
+				log_error "Opción desconocida: $1"
+				return 1
+				;;
+		esac
+		shift
+	done
+	INTERACTIVE=false
+	publish_cut_release "${dry_run}"
 }
