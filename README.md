@@ -5,22 +5,30 @@
 
 An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
 
-**Current release:** `1.20.1-4.2.0` · Minecraft **1.20.1** · **Forge / Fabric / NeoForge** · Client & dedicated server  
+**Current releases** (mismo `mod_semver` `4.2.0`, tags `{mc}-4.2.0`):
+
+| Minecraft | Loaders | Tag |
+|-----------|---------|-----|
+| **1.20.1** | Forge · Fabric · NeoForge | `1.20.1-4.2.0` |
+| **26.1** | Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
+| **26.2** | Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
+
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
 ## Downloads
 
 | Loader | CurseForge | Modrinth |
 |--------|------------|----------|
-| **Forge** | [1.20.1 · Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) | [`1.20.1-4.2.0+forge`](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) |
-| **Fabric** | [1.20.1 · Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) | [`1.20.1-4.2.0+fabric`](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) |
-| **NeoForge** | [1.20.1 · NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6) | [`1.20.1-4.2.0+neoforge`](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i) |
+| **Forge 1.20.1** | [1.20.1 · Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) | [`1.20.1-4.2.0+forge`](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) |
+| **Fabric 1.20.1** | [1.20.1 · Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) | [`1.20.1-4.2.0+fabric`](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) |
+| **NeoForge 1.20.1** | [1.20.1 · NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6) | [`1.20.1-4.2.0+neoforge`](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i) |
+| **Fabric / NeoForge 26.1–26.2** | Filtrar por versión de juego | Filtrar por game version |
 
 | Hub | Link |
 |-----|------|
 | **CurseForge** (proyecto) | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
 | **Modrinth** (proyecto) | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
-| **GitHub Release** | [`1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0) (3 JARs) |
+| **GitHub Releases** | tags `1.20.1-4.2.0`, `26.1-4.2.0`, `26.2-4.2.0` |
 | **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
 > **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).
@@ -264,21 +272,22 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 | | |
 |---|---|
-| **Minecraft** | 1.20.1 (única línea lista para release hoy) |
-| **Mod loaders** | Forge 47+ · Fabric · NeoForge 1.20.1 |
-| **Java (runtime)** | 17 (bundled with Minecraft) |
+| **Minecraft** | 1.20.1 (Forge/Fabric/NeoForge) · 26.1 / 26.2 (Fabric/NeoForge, Java 25) |
+| **Mod loaders** | Forge 47+ · Fabric · NeoForge |
+| **Java (runtime)** | 17 (MC 1.20.1) · 25 (MC 26.x) |
 | **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
-| **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) · [GitHub `1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0) |
+| **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) · tags `{mc}-4.2.0` en GitHub |
 
 ## 🛠️ Building from source
 
-**Requirements:** The mod targets **Java 17 bytecode** (MC 1.20.1). For running Gradle:
+**Requirements:**
 
-| Launcher JDK | Status |
-|--------------|--------|
-| **Java 17** | Recommended (official Forge guidance) |
-| **Java 21** | Supported alternative — builds successfully in this project |
-| **Java 25** | Requires Gradle 8.14.3+ as launcher |
+| Línea MC | Bytecode / toolchain | Build |
+|----------|----------------------|-------|
+| **1.20.1** | Java 17 | `./gradlew :forge:build` · `cd fabric && ./gradlew build` · `cd neoforge && ./gradlew build` |
+| **26.1 / 26.2** | Java 25 | `cd fabric-26.1 && ./gradlew build` (igual `neoforge-26.1`, `fabric-26.2`, `neoforge-26.2`) |
+
+Launcher JDK 17/21 OK para 1.20.1; para 26.x preferí JDK 25 (Gradle 9.5+). Si Mojang no es alcanzable: `USE_BMCL_MIRROR=1` (+ HTTP local de `versions/minecraft-meta` si hace falta).
 
 ```bash
 git clone https://github.com/alanjmrt94/ConsoleFilterNext.git
@@ -288,10 +297,10 @@ cd ConsoleFilterNext
 ./gradlew :forge:build
 cd fabric && ./gradlew build
 cd ../neoforge && ./gradlew build
-./scripts/server-smoke.sh forge   # also: fabric | neoforge
+./scripts/server-smoke.sh forge   # also: fabric | neoforge | fabric-26.1 | neoforge-26.1 | fabric-26.2 | neoforge-26.2
 ./scripts/lint.sh fix             # autofix imports no usados / whitespace
 ```
-The release JARs are produced in `forge/build/libs/` (`*-forge.jar`), `fabric/build/libs/` (`*-fabric.jar`), and `neoforge/build/libs/` (`*-neoforge.jar`). Use `./scripts/release.sh verify` if the Forge build fails due to Java/Gradle mismatch.
+JARs 1.20.1: `forge|fabric|neoforge/build/libs/*-{forge,fabric,neoforge}.jar`. JARs 26.x: `fabric-26.*/build/libs/` y `neoforge-26.*/build/libs/`.
 
 ### Local development runs (client and server)
 
@@ -409,7 +418,7 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
-| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`*`) | Build Forge+Fabric+NeoForge, create GitHub Release with the three JARs |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`{mc}-{semver}`) | Build celdas enabled de esa línea MC y crea GitHub Release (3 JARs en 1.20.1; 2 JARs en 26.x) |
 | [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload JARs to Modrinth/CurseForge and notify Discord (requires the `publish` environment) |
 
 #### GitHub environment `publish`

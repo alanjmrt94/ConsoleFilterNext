@@ -35,6 +35,34 @@ require_matrix() {
 	fi
 }
 
+# Fallar si matrix mod_semver ≠ sufijo de gradle.properties mod_version.
+verify_mod_semver() {
+	local gradle_props="${PROJECT_ROOT}/gradle.properties"
+	local mod_version matrix_semver gradle_semver
+	mod_version="$(grep -E '^mod_version=' "${gradle_props}" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\r')"
+	matrix_semver="$(grep -E '^mod_semver:' "${MATRIX_FILE}" 2>/dev/null | head -1 | sed 's/^mod_semver:[[:space:]]*//' | tr -d '"'"'" | tr -d '\r')"
+	[[ -n "${mod_version}" ]] || {
+		log_error "No se encontró mod_version en gradle.properties"
+		return 1
+	}
+	[[ -n "${matrix_semver}" ]] || {
+		log_error "No se encontró mod_semver en ${MATRIX_FILE}"
+		return 1
+	}
+	# Sufijo tras el primer '-': 1.20.1-4.2.0 → 4.2.0; 26.1-4.2.0 → 4.2.0
+	if [[ "${mod_version}" == *-* ]]; then
+		gradle_semver="${mod_version#*-}"
+	else
+		gradle_semver="${mod_version}"
+	fi
+	if [[ "${gradle_semver}" != "${matrix_semver}" ]]; then
+		log_error "mod_semver desincronizado: matrix=${matrix_semver} gradle mod_version=${mod_version} (esperado sufijo ${gradle_semver})"
+		log_error "Actualizá versions/matrix.yml mod_semver al publicar un nuevo semver."
+		return 1
+	fi
+	log_ok "mod_semver OK (${matrix_semver})"
+}
+
 # Parseo simple de matrix.yml sin depender de yq.
 # Emite líneas: id|minecraft|loader|java|enabled|project
 parse_matrix() {
@@ -130,24 +158,34 @@ neoforge_gradle() {
 }
 
 is_fabric_project() {
-	[[ "$1" == ":fabric" || "$1" == "fabric" ]]
+	local p="${1#:}"
+	[[ "$p" == "fabric" || "$p" == fabric-* ]]
 }
 
 is_neoforge_project() {
-	[[ "$1" == ":neoforge" || "$1" == "neoforge" ]]
+	local p="${1#:}"
+	[[ "$p" == "neoforge" || "$p" == neoforge-* ]]
 }
 
 is_isolated_project() {
 	is_fabric_project "$1" || is_neoforge_project "$1"
 }
 
+# Gradle wrapper del módulo aislado (fabric, fabric-26.1, neoforge-26.2, …).
+isolated_gradle() {
+	local project="$1"
+	shift
+	local dir="${project#:}"
+	(cd "${PROJECT_ROOT}/${dir}" && ./gradlew "$@")
+}
+
 cmd_verify() {
 	local filter="${1:-}"
 	require_matrix
+	verify_mod_semver || exit 1
 	local any=0
 	local need_common=0
-	local need_fabric=0
-	local need_neoforge=0
+	local -a isolated=()
 	while IFS='|' read -r id mc loader java enabled project; do
 		any=1
 		log_info "Verificando ${id} (MC ${mc}, ${loader}, Java ${java}, ${project})"
@@ -160,10 +198,8 @@ cmd_verify() {
 			log_error "No existe el módulo ${dir} para ${id}"
 			exit 1
 		fi
-		if is_fabric_project "${project}"; then
-			need_fabric=1
-		elif is_neoforge_project "${project}"; then
-			need_neoforge=1
+		if is_isolated_project "${project}"; then
+			isolated+=("${project}")
 		else
 			need_common=1
 		fi
@@ -176,27 +212,25 @@ cmd_verify() {
 	if [[ "$need_common" -eq 1 ]]; then
 		gradle_cmd :common:compileJava
 	fi
-	if [[ "$need_fabric" -eq 1 ]]; then
-		fabric_gradle compileJava
-	fi
-	if [[ "$need_neoforge" -eq 1 ]]; then
-		neoforge_gradle compileJava
-	fi
+	local proj seen=""
+	for proj in "${isolated[@]+"${isolated[@]}"}"; do
+		[[ " ${seen} " == *" ${proj} "* ]] && continue
+		seen+=" ${proj}"
+		isolated_gradle "${proj}" compileJava
+	done
 	log_ok "verify completado"
 }
 
 cmd_build() {
 	local filter="${1:-}"
 	require_matrix
+	verify_mod_semver || exit 1
 	local root_projects=()
-	local build_fabric=0
-	local build_neoforge=0
+	local -a isolated=()
 	while IFS='|' read -r id mc loader java enabled project; do
 		log_info "Build ${id} → ${project}"
-		if is_fabric_project "${project}"; then
-			build_fabric=1
-		elif is_neoforge_project "${project}"; then
-			build_neoforge=1
+		if is_isolated_project "${project}"; then
+			isolated+=("${project}")
 		else
 			root_projects+=("${project}:build")
 		fi
@@ -204,42 +238,40 @@ cmd_build() {
 	if [[ ${#root_projects[@]} -gt 0 ]]; then
 		gradle_cmd ":common:build" "${root_projects[@]}"
 	fi
-	if [[ "$build_fabric" -eq 1 ]]; then
-		fabric_gradle build
-	fi
-	if [[ "$build_neoforge" -eq 1 ]]; then
-		neoforge_gradle build
-	fi
+	local proj seen=""
+	for proj in "${isolated[@]+"${isolated[@]}"}"; do
+		[[ " ${seen} " == *" ${proj} "* ]] && continue
+		seen+=" ${proj}"
+		isolated_gradle "${proj}" build
+	done
 	log_ok "build completado"
 }
 
 cmd_test() {
 	local filter="${1:-}"
 	require_matrix
+	verify_mod_semver || exit 1
 	local root_projects=()
-	local test_fabric=0
-	local test_neoforge=0
+	local -a isolated=()
 	while IFS='|' read -r id mc loader java enabled project; do
 		log_info "Test ${id} → ${project}"
-		if is_fabric_project "${project}"; then
-			test_fabric=1
-		elif is_neoforge_project "${project}"; then
-			test_neoforge=1
+		if is_isolated_project "${project}"; then
+			isolated+=("${project}")
 		else
 			root_projects+=("${project}:test")
 		fi
 	done < <(select_targets "$filter")
 	if [[ ${#root_projects[@]} -gt 0 ]]; then
 		gradle_cmd ":common:test" "${root_projects[@]}"
-	elif [[ "$test_fabric" -eq 0 && "$test_neoforge" -eq 0 ]]; then
+	elif [[ ${#isolated[@]} -eq 0 ]]; then
 		gradle_cmd :common:test
 	fi
-	if [[ "$test_fabric" -eq 1 ]]; then
-		fabric_gradle test
-	fi
-	if [[ "$test_neoforge" -eq 1 ]]; then
-		neoforge_gradle test
-	fi
+	local proj seen=""
+	for proj in "${isolated[@]+"${isolated[@]}"}"; do
+		[[ " ${seen} " == *" ${proj} "* ]] && continue
+		seen+=" ${proj}"
+		isolated_gradle "${proj}" test
+	done
 	log_ok "test completado"
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke test de servidor dedicado — Forge / Fabric / NeoForge.
+# Smoke test de servidor dedicado — Forge / Fabric / NeoForge (1.20.1 y 26.x).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,30 +9,53 @@ LOADER="${1:-forge}"
 SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-300}"
 
 usage() {
-	echo "Uso: $0 [forge|fabric|neoforge]"
+	echo "Uso: $0 [forge|fabric|neoforge|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2]"
 	exit 1
 }
 
 case "${LOADER}" in
-	forge|fabric|neoforge) ;;
+	forge|fabric|neoforge|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2) ;;
 	-h|--help) usage ;;
 	*) echo "Loader desconocido: ${LOADER}"; usage ;;
 esac
 
 RUN_DIR="run"
-GRADLE_CMD=(./gradlew :forge:runServer --no-daemon)
+PROJECT_DIR=""
 LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
 
 case "${LOADER}" in
 	fabric)
 		RUN_DIR="run-fabric"
-		GRADLE_CMD=(./gradlew runServer --no-daemon)
+		PROJECT_DIR="fabric"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
 		;;
 	neoforge)
 		RUN_DIR="run-neoforge"
-		GRADLE_CMD=(./gradlew runServer --no-daemon)
+		PROJECT_DIR="neoforge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
+		;;
+	fabric-26.1)
+		RUN_DIR="run-fabric-26.1"
+		PROJECT_DIR="fabric-26.1"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
+		;;
+	neoforge-26.1)
+		RUN_DIR="run-neoforge-26.1"
+		PROJECT_DIR="neoforge-26.1"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
+		;;
+	fabric-26.2)
+		RUN_DIR="run-fabric-26.2"
+		PROJECT_DIR="fabric-26.2"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
+		;;
+	neoforge-26.2)
+		RUN_DIR="run-neoforge-26.2"
+		PROJECT_DIR="neoforge-26.2"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
+		;;
+	forge)
+		PROJECT_DIR=""
 		;;
 esac
 
@@ -49,13 +72,10 @@ echo "Smoke timeout: ${SMOKE_TIMEOUT_SECONDS}s"
 
 set +e
 if [[ "${LOADER}" == "forge" ]]; then
-	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" "${GRADLE_CMD[@]}" >"${LOG_FILE}" 2>&1
-	EXIT_CODE=$?
-elif [[ "${LOADER}" == "fabric" ]]; then
-	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" bash -lc "cd '${ROOT}/fabric' && ./gradlew runServer --no-daemon" >"${LOG_FILE}" 2>&1
+	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" ./gradlew :forge:runServer --no-daemon >"${LOG_FILE}" 2>&1
 	EXIT_CODE=$?
 else
-	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" bash -lc "cd '${ROOT}/neoforge' && ./gradlew runServer --no-daemon" >"${LOG_FILE}" 2>&1
+	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" bash -lc "cd '${ROOT}/${PROJECT_DIR}' && ./gradlew runServer --no-daemon" >"${LOG_FILE}" 2>&1
 	EXIT_CODE=$?
 fi
 set -e

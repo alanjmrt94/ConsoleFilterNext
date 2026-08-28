@@ -4,7 +4,7 @@
   "version_changelog_file": "curseforge-version-changelog.md",
   "client_side": "optional",
   "server_side": "optional",
-  "java_versions": ["Java 17", "Java 21"],
+  "java_versions": ["Java 17", "Java 21", "Java 25"],
   "social_username": "alanjmrt94",
   "social_links": {
     "discord": "https://discord.gg/CcUNTJjPD",

@@ -1,8 +1,8 @@
 # Console Filter Next
 
-An improved console log filter for Minecraft **Forge, Fabric, and NeoForge**. Filter by text, regex, log level, thread, logger/source, and mod id. Works on the **client and dedicated server** (optional on each side).
+An improved ConsoleFilter mod for **Forge, Fabric, and NeoForge** that filters log messages by text, regex, log level, thread, source, and mod id. Reduce console noise and focus on what matters — ideal for debugging modpacks and dedicated servers.
 
-**Download the JAR for your loader** (`*-forge`, `*-fabric`, or `*-neoforge`). Do not mix loaders.
+Works on the **client and dedicated server** (optional on each side). Download the JAR for your loader (`*-forge`, `*-fabric`, or `*-neoforge`). Do not mix loaders.
 
 ## Links
 
@@ -21,8 +21,12 @@ An improved console log filter for Minecraft **Forge, Fabric, and NeoForge**. Fi
 
 ## Compatibility
 
-- Minecraft **1.20.1**
-- **Forge** 47+ · **Fabric** · **NeoForge**
-- Java 17 bytecode (Java 17 or 21 launcher)
+- Minecraft **1.20.1** — Forge · Fabric · NeoForge (Java 17)
+- Minecraft **26.1** / **26.2** — Fabric · NeoForge (Java 25)
+- Un solo proyecto; cada archivo/versión indica MC + loader. Mismo `mod_semver` en tags `{mc}-{semver}`.
 
-Originally based on ConsoleFilter by Matthew Czyr. Maintained by alanjmrt94. License: CC BY-NC-SA 4.0.
+## Credits
+
+- **Console Filter Next:** alanjmrt94
+- Originally based on ConsoleFilter by Matthew Czyr
+- License: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)

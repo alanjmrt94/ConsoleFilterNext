@@ -29,7 +29,8 @@ El script `publish_modrinth_sync_metadata` completa por API:
 - Tags / categorías (`categories`)
 - Entorno: `client_side` y `server_side` → `optional` (cliente y servidor opcionales)
 - Versión: `version_environment` → `client_or_server` (al publicar el JAR)
-- Java: `java_versions` → `["Java 17", "Java 21"]` (referencia; CurseForge los aplica en `gameVersions`)
+- Java: `java_versions` → `["Java 17", "Java 21", "Java 25"]` (proyecto). En upload CurseForge, 26.x usa solo `Java 25` vía `publish_curseforge_java_versions`.
+- JARs por tag: `1.20.1-*` → 3 loaders; `26.1-*` / `26.2-*` → Fabric + NeoForge (2 JARs).
 
 **Submit for review:** con `"submit_for_review": true` en `modrinth.json`, el próximo sync envía el proyecto a moderación de Modrinth (ya activado en este repo). Para no reenviar en cada publish, dejalo en `false` una vez aprobado.
 

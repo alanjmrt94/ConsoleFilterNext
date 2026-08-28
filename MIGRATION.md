@@ -67,7 +67,11 @@ Console Filter Next adds `/consolefilter` (OP 2): `reload`, `list`, `status`, `e
 
 ## In-game config
 
-Use **Options → Mods → Console Filter Next → Config** (Forge Mod List). No Mod Menu required on Forge.
+- **Forge / NeoForge 1.20.1:** Options → Mods → Console Filter Next → Config
+- **Fabric (todas las líneas):** Mod Menu → Console Filter Next → Config (opcional)
+- **NeoForge 26.x:** mismo botón Config en la lista de mods (API moderna)
+
+Sourcesets de UI: `client/` (1.20.1), `client-26/` (26.1), `client-26.2/` (26.2).
 
 ## Reporting issues
 

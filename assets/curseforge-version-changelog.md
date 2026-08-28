@@ -2,7 +2,7 @@
 
 ## 4.2.0 · Minecraft 1.20.1
 
-- Editor in-game compartido (`client/`): Mod Menu (Fabric) / Mods → Config (Forge y NeoForge)
+- Editor in-game compartido (`client/` en 1.20.1; `client-26` / `client-26.2` en Minecraft 26.x): Mod Menu (Fabric) / Mods → Config (Forge y NeoForge)
 - Mismos filtros y TOML `consolefilternext-common.toml` en los tres loaders
 - JARs con classifier por loader (`*-forge` / `*-fabric` / `*-neoforge`)
 

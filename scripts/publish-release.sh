@@ -78,9 +78,87 @@ publish_show_secrets_status() {
 	echo
 }
 
-# Loaders publicados para la línea moderna actual (orden estable).
+# Loaders publicados para una línea MC (default: gradle.properties minecraft_version).
+# Override: PUBLISH_MC=26.1  o argumento.
+publish_release_mc() {
+	echo "${PUBLISH_MC:-$(get_prop minecraft_version "${GRADLE_PROPERTIES}")}"
+}
+
+publish_matrix_file() {
+	echo "${PROJECT_ROOT}/versions/matrix.yml"
+}
+
+# Emite: id|minecraft|loader|java|project (solo enabled=true; opcional filtro MC).
+publish_matrix_enabled_cells() {
+	local filter_mc="${1:-}"
+	python3 - <<'PY' "$(publish_matrix_file)" "${filter_mc}"
+import sys
+path, filter_mc = sys.argv[1], sys.argv[2]
+id = mc = loader = java = enabled = project = None
+
+def flush():
+    if id is None:
+        return
+    if enabled != "true":
+        return
+    if filter_mc and mc != filter_mc:
+        return
+    print(f"{id}|{mc}|{loader}|{java}|{project}")
+
+with open(path, encoding="utf-8") as fh:
+    for raw in fh:
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("- id:"):
+            flush()
+            id = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+            mc = loader = java = enabled = project = ""
+            continue
+        if id is None:
+            continue
+        if stripped.startswith("minecraft:"):
+            mc = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+        elif stripped.startswith("loader:"):
+            loader = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+        elif stripped.startswith("java:"):
+            java = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+        elif stripped.startswith("enabled:"):
+            enabled = stripped.split(":", 1)[1].strip().lower()
+        elif stripped.startswith("project:"):
+            project = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+    flush()
+PY
+}
+
 publish_release_loaders() {
-	printf '%s\n' forge fabric neoforge
+	local mc loader
+	mc="$(publish_release_mc)"
+	while IFS='|' read -r _ _ loader _ _; do
+		[[ -n "${loader}" ]] && echo "${loader}"
+	done < <(publish_matrix_enabled_cells "${mc}")
+}
+
+# Tag {mc}-{semver} → mc / semver (semver = segmento tras el último '-').
+publish_parse_tag() {
+	local tag="$1"
+	local semver mc
+	[[ "${tag}" == *-* ]] || return 1
+	semver="${tag##*-}"
+	mc="${tag%-"${semver}"}"
+	[[ -n "${mc}" && -n "${semver}" ]] || return 1
+	printf '%s|%s\n' "${mc}" "${semver}"
+}
+
+publish_mod_version_for_mc() {
+	local mc="$1"
+	local props="${PROJECT_ROOT}/versions/${mc}.properties"
+	if [[ -f "${props}" ]]; then
+		get_prop mod_version "${props}"
+	else
+		# 1.20.1 y legacy: gradle.properties raíz
+		get_prop mod_version "${GRADLE_PROPERTIES}"
+	fi
 }
 
 publish_loader_display_name() {
@@ -92,50 +170,45 @@ publish_loader_display_name() {
 	esac
 }
 
-# Emite: loader|ruta-absoluta-jar (solo artefactos existentes).
+# Emite: loader|ruta-absoluta-jar (solo artefactos existentes) para PUBLISH_MC.
 publish_list_artifacts() {
-	local mod_id version loader jar
+	local mc mod_id version loader jar project
+	mc="$(publish_release_mc)"
 	mod_id="$(get_prop mod_id "${GRADLE_PROPERTIES}")"
-	version="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
+	version="$(publish_mod_version_for_mc "${mc}")"
 
-	while IFS= read -r loader; do
-		jar="$(publish_find_jar_for_loader "${loader}" "${mod_id}" "${version}" || true)"
+	while IFS='|' read -r _ cell_mc loader _ project; do
+		jar="$(publish_find_jar_for_cell "${loader}" "${project}" "${mod_id}" "${version}" || true)"
 		if [[ -n "${jar}" && -f "${jar}" ]]; then
 			printf '%s|%s\n' "${loader}" "${jar}"
 		fi
-	done < <(publish_release_loaders)
+	done < <(publish_matrix_enabled_cells "${mc}")
 }
 
-publish_find_jar_for_loader() {
+publish_find_jar_for_cell() {
 	local loader="$1"
-	local mod_id="${2:-$(get_prop mod_id "${GRADLE_PROPERTIES}")}"
-	local version="${3:-$(get_prop mod_version "${GRADLE_PROPERTIES}")}"
+	local project="${2#:}"
+	local mod_id="$3"
+	local version="$4"
 	local jar=""
+	local dir="${PROJECT_ROOT}/${project}"
 
 	case "${loader}" in
 		forge)
 			for jar in \
-				"${PROJECT_ROOT}/forge/build/libs/${mod_id}-${version}-forge.jar" \
-				"${PROJECT_ROOT}/forge/build/libs/${mod_id}-${version}.jar" \
-				"${PROJECT_ROOT}/build/libs/${mod_id}-${version}-forge.jar" \
-				"${PROJECT_ROOT}/build/libs/${mod_id}-${version}.jar"; do
+				"${dir}/build/libs/${mod_id}-${version}-forge.jar" \
+				"${dir}/build/libs/${mod_id}-${version}.jar" \
+				"${PROJECT_ROOT}/build/libs/${mod_id}-${version}-forge.jar"; do
 				if [[ -f "${jar}" ]]; then
 					echo "${jar}"
 					return 0
 				fi
 			done
 			;;
-		fabric)
-			jar="${PROJECT_ROOT}/fabric/build/libs/${mod_id}-${version}-fabric.jar"
+		fabric|neoforge)
+			jar="${dir}/build/libs/${mod_id}-${version}-${loader}.jar"
 			[[ -f "${jar}" ]] && { echo "${jar}"; return 0; }
-			jar="$(find "${PROJECT_ROOT}/fabric/build/libs" -maxdepth 1 -name "${mod_id}-*-fabric.jar" \
-				! -name "*-sources.jar" 2>/dev/null | head -1)"
-			[[ -n "${jar}" && -f "${jar}" ]] && { echo "${jar}"; return 0; }
-			;;
-		neoforge)
-			jar="${PROJECT_ROOT}/neoforge/build/libs/${mod_id}-${version}-neoforge.jar"
-			[[ -f "${jar}" ]] && { echo "${jar}"; return 0; }
-			jar="$(find "${PROJECT_ROOT}/neoforge/build/libs" -maxdepth 1 -name "${mod_id}-*-neoforge.jar" \
+			jar="$(find "${dir}/build/libs" -maxdepth 1 -name "${mod_id}-*-${loader}.jar" \
 				! -name "*-sources.jar" 2>/dev/null | head -1)"
 			[[ -n "${jar}" && -f "${jar}" ]] && { echo "${jar}"; return 0; }
 			;;
@@ -143,6 +216,21 @@ publish_find_jar_for_loader() {
 			return 1
 			;;
 	esac
+	return 1
+}
+
+publish_find_jar_for_loader() {
+	local loader="$1"
+	local mod_id="${2:-$(get_prop mod_id "${GRADLE_PROPERTIES}")}"
+	local version="${3:-$(publish_mod_version_for_mc "$(publish_release_mc)")}"
+	local project jar
+
+	while IFS='|' read -r _ _ cell_loader _ project; do
+		if [[ "${cell_loader}" == "${loader}" ]]; then
+			publish_find_jar_for_cell "${loader}" "${project}" "${mod_id}" "${version}"
+			return $?
+		fi
+	done < <(publish_matrix_enabled_cells "$(publish_release_mc)")
 	return 1
 }
 
@@ -232,23 +320,37 @@ publish_extract_curseforge_changelog() {
 }
 
 publish_build_release() {
-	log_info "Compilando loaders de release (Forge + Fabric + NeoForge)..."
+	local mc project dir
+	mc="$(publish_release_mc)"
+	log_info "Compilando celdas enabled de la matriz para MC ${mc}..."
 	load_local_config
 
-	if ! gradle_cmd clean :common:build :forge:build; then
-		log_error "Falló la compilación common/forge"
-		return 1
-	fi
-	if ! (cd "${PROJECT_ROOT}/fabric" && ./gradlew clean build); then
-		log_error "Falló la compilación Fabric"
-		return 1
-	fi
-	if ! (cd "${PROJECT_ROOT}/neoforge" && ./gradlew clean build); then
-		log_error "Falló la compilación NeoForge"
-		return 1
-	fi
+	local built_common=false
+	while IFS='|' read -r id cell_mc loader java project; do
+		dir="${project#:}"
+		log_info "  build ${id} → ${dir}"
+		case "${dir}" in
+			forge)
+				if [[ "${built_common}" != "true" ]]; then
+					gradle_cmd clean :common:build || return 1
+					built_common=true
+				fi
+				gradle_cmd :forge:build || return 1
+				;;
+			fabric|neoforge)
+				(cd "${PROJECT_ROOT}/${dir}" && ./gradlew clean build) || return 1
+				;;
+			fabric-*|neoforge-*)
+				(cd "${PROJECT_ROOT}/${dir}" && ./gradlew clean build) || return 1
+				;;
+			*)
+				log_error "Proyecto desconocido en matriz: ${project}"
+				return 1
+				;;
+		esac
+	done < <(publish_matrix_enabled_cells "${mc}")
 
-	log_ok "Compilación multi-loader exitosa"
+	log_ok "Compilación multi-loader exitosa (MC ${mc})"
 	publish_require_artifacts || return 1
 	return 0
 }
@@ -344,6 +446,22 @@ publish_curseforge_java_versions() {
 	local cf_json="${PROJECT_ROOT}/assets/curseforge.json"
 	local from_config
 
+	# Tags de archivo CurseForge por línea MC (no mezclar Java 25 en 1.20.1).
+	case "${mc_version}" in
+		26|26.*)
+			echo "Java 25"
+			return 0
+			;;
+		1.21.*)
+			echo "Java 21"
+			return 0
+			;;
+		1.20.*)
+			printf '%s\n' "Java 17" "Java 21"
+			return 0
+			;;
+	esac
+
 	if [[ -f "${cf_json}" ]]; then
 		from_config="$(jq -r '.java_versions[]? // empty' "${cf_json}" 2>/dev/null)"
 		if [[ -n "${from_config}" ]]; then
@@ -352,10 +470,7 @@ publish_curseforge_java_versions() {
 		fi
 	fi
 
-	case "${mc_version}" in
-		1.21.*) echo "Java 21" ;;
-		*) printf '%s\n' "Java 17" "Java 21" ;;
-	esac
+	printf '%s\n' "Java 17" "Java 21"
 }
 
 publish_curseforge_java_version_name() {
@@ -507,9 +622,9 @@ publish_cut_release() {
 	publish_require_command git || return 1
 	publish_require_command jq || return 1
 
-	tag="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
+	tag="$(publish_mod_version_for_mc "$(publish_release_mc)")"
 	[[ -n "${tag}" ]] || {
-		log_error "mod_version vacío en gradle.properties"
+		log_error "mod_version vacío para MC $(publish_release_mc)"
 		return 1
 	}
 
@@ -818,7 +933,7 @@ publish_modrinth_upload() {
 		return 0
 	fi
 
-	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
+	mc_version="$(publish_release_mc)"
 	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
 	modrinth_env="$(publish_modrinth_version_environment)"
 	version_number="${tag}+${loader}"
@@ -1032,7 +1147,7 @@ publish_curseforge_upload() {
 
 	project_id="$(publish_resolve_curseforge_project_id)" || return 1
 
-	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
+	mc_version="$(publish_release_mc)"
 	game_version_ids="$(publish_curseforge_upload_game_version_ids "${mc_version}" "${author_token}" "${loader}")" || {
 		log_error "No se pudieron resolver gameVersions de CurseForge para ${mc_version} + $(publish_loader_display_name "${loader}") + Java"
 		return 1
@@ -1197,6 +1312,21 @@ publish_check_prerequisites() {
 	publish_load_secrets
 	publish_show_secrets_status
 
+	local mod_version matrix_semver gradle_semver
+	mod_version="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
+	matrix_semver="$(grep -E '^mod_semver:' "${PROJECT_ROOT}/versions/matrix.yml" 2>/dev/null | head -1 | sed 's/^mod_semver:[[:space:]]*//' | tr -d '"'"'" | tr -d '\r')"
+	if [[ "${mod_version}" == *-* ]]; then
+		gradle_semver="${mod_version#*-}"
+	else
+		gradle_semver="${mod_version}"
+	fi
+	if [[ -n "${matrix_semver}" && "${gradle_semver}" != "${matrix_semver}" ]]; then
+		log_error "mod_semver desincronizado: matrix=${matrix_semver} gradle=${mod_version} (esperado ${gradle_semver})"
+		ok=false
+	else
+		log_ok "mod_semver OK (${matrix_semver:-${gradle_semver}})"
+	fi
+
 	if [[ "${SKIP_CURSEFORGE:-false}" != "true" && -z "${CURSEFORGE_API_TOKEN}" && -z "${CURSEFORGE_PROJECT_ID}" ]]; then
 		log_warn "Sin CURSEFORGE_API_TOKEN ni CURSEFORGE_PROJECT_ID — CurseForge se omitirá"
 	fi
@@ -1221,9 +1351,9 @@ publish_release_full() {
 	local tag changelog modrinth_changelog curseforge_changelog mc_version mod_name
 	local -a jars=()
 	local loader jar
-	tag="$(get_prop mod_version "${GRADLE_PROPERTIES}")"
+	mc_version="$(publish_release_mc)"
+	tag="$(publish_mod_version_for_mc "${mc_version}")"
 	mod_name="$(get_prop mod_name "${GRADLE_PROPERTIES}")"
-	mc_version="$(get_prop minecraft_version "${GRADLE_PROPERTIES}")"
 	changelog="$(publish_extract_changelog "${tag}")"
 	modrinth_changelog="$(publish_extract_modrinth_changelog 2>/dev/null || true)"
 	curseforge_changelog="$(publish_extract_curseforge_changelog 2>/dev/null || true)"
@@ -1256,7 +1386,7 @@ publish_release_full() {
 	fi
 
 	if [[ "${INTERACTIVE}" == "true" && "${dry_run}" != "true" ]]; then
-		read -r -p "¿Publicar ${tag} (Forge+Fabric+NeoForge) en GitHub + Modrinth + CurseForge? [s/N]: " confirm
+		read -r -p "¿Publicar ${tag} (MC ${mc_version}) en GitHub + Modrinth + CurseForge? [s/N]: " confirm
 		[[ "${confirm,,}" == "s" || "${confirm,,}" == "si" ]] || return 0
 	fi
 
@@ -1327,7 +1457,7 @@ publish_release_menu() {
 		echo "  1) Verificar prerequisitos y credenciales"
 		echo "  2) Publicar release completo (build + tag + subidas)"
 		echo "  3) Dry-run (simular sin subir)"
-		echo "  4) Solo compilar JARs de release (Forge+Fabric+NeoForge)"
+		echo "  4) Solo compilar JARs de release (línea MC vía PUBLISH_MC; default gradle.properties)"
 		echo "  5) Cut: verificar CI verde y pushear tag (dispara Actions + Discord)"
 		echo "  0) Volver"
 		echo
@@ -1399,7 +1529,7 @@ También: $(basename "$0") cut [--dry-run]
   Verifica que Build CI esté verde en HEAD, crea el tag mod_version y lo pushea.
   El tag dispara release.yml + publish-distribution.yml (Modrinth/CF + Discord).
 
-Publica un tag (mod_version) con 3 JARs:
+Publica un tag `{mc}-{semver}` con los JARs de esa línea (3 en 1.20.1; 2 en 26.x Fabric+NeoForge):
   • GitHub Release: forge + fabric + neoforge como assets
   • Modrinth: una versión por loader (version_number = TAG+loader)
   • CurseForge: un archivo por loader con gameVersions del loader correcto

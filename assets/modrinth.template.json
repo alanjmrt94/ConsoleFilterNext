@@ -10,7 +10,7 @@
   "client_side": "optional",
   "server_side": "optional",
   "version_environment": "client_or_server",
-  "java_versions": ["Java 17", "Java 21"],
+  "java_versions": ["Java 17", "Java 21", "Java 25"],
   "issues_url": "https://github.com/alanjmrt94/ConsoleFilterNext/issues",
   "source_url": "https://github.com/alanjmrt94/ConsoleFilterNext",
   "wiki_url": "https://github.com/alanjmrt94/ConsoleFilterNext#readme",

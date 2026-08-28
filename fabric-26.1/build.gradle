@@ -1,0 +1,134 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+def rootProps = new Properties()
+file('../gradle.properties').withInputStream { rootProps.load(it) }
+def verProps = new Properties()
+file('../versions/26.1.properties').withInputStream { verProps.load(it) }
+def props = new Properties()
+props.putAll(rootProps)
+props.putAll(verProps)
+props.each { key, value ->
+	if (!project.hasProperty(key)) {
+		project.ext.set(key as String, value)
+	}
+}
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName = props['mod_id'] as String
+}
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://maven.fabricmc.net/' }
+	maven { url = 'https://maven.terraformersmc.com/releases/' }
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir '../common/src/main/java'
+			srcDir '../client-26/src/main/java'
+		}
+	}
+	test {
+		java {
+			srcDir '../client-26/src/test/java'
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${props['minecraft_version']}"
+	implementation "net.fabricmc:fabric-loader:${props['fabric_loader_version']}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${props['fabric_api_version']}"
+	compileOnly "com.terraformersmc:modmenu:${props['modmenu_version']}"
+
+	implementation 'org.apache.logging.log4j:log4j-api:2.24.3'
+	implementation 'org.apache.logging.log4j:log4j-core:2.24.3'
+	implementation 'com.electronwill.night-config:core:3.8.1'
+	implementation 'com.electronwill.night-config:toml:3.8.1'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+}
+
+// Espejo BMCL cuando Mojang (piston-meta / libraries.minecraft.net) no es alcanzable.
+def useBmclMirror = (findProperty('useBmclMirror') ?: System.getenv('USE_BMCL_MIRROR') ?: '0') == '1'
+if (useBmclMirror) {
+	ext.loom_libraries_base = 'https://bmclapi2.bangbang93.com/maven/'
+	ext.loom_resources_base = 'https://bmclapi2.bangbang93.com/assets/'
+	ext.loom_version_manifests = 'https://bmclapi2.bangbang93.com/mc/game/version_manifest_v2.json'
+}
+
+loom {
+	if (useBmclMirror) {
+		// Metadata reescrita con URLs BMCL; servir con: python3 -m http.server 8765 -d versions/minecraft-meta
+		def metaBase = findProperty('minecraftMetaBase') ?: System.getenv('MINECRAFT_META_BASE') ?: 'http://127.0.0.1:8765'
+		customMinecraftMetadata = "${metaBase}/26.1.json"
+	}
+
+	runs {
+		client {
+			client()
+			setConfigName('Fabric 26.1 Client')
+			ideConfigGenerated true
+			runDir '../run-fabric-26.1'
+		}
+		server {
+			server()
+			setConfigName('Fabric 26.1 Server')
+			ideConfigGenerated true
+			runDir '../run-fabric-26.1'
+		}
+	}
+}
+
+processResources {
+	def ver = project.version
+	def modId = props['mod_id']
+	def modName = props['mod_name']
+	def modDescription = props['mod_description']
+	def modAuthors = props['mod_authors']
+	def modLicense = props['mod_license']
+
+	inputs.property 'version', ver
+	filesMatching('fabric.mod.json') {
+		expand([
+				version        : ver,
+				mod_id         : modId,
+				mod_name       : modName,
+				mod_description: modDescription,
+				mod_authors    : modAuthors,
+				mod_license    : modLicense
+		])
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 25
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+	withSourcesJar()
+}
+
+jar {
+	archiveClassifier.set('fabric')
+	from(file('../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}
+
+test {
+	useJUnitPlatform()
+}

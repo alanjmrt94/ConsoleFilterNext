@@ -1,5 +1,7 @@
+# Matriz MC × loader. mod_semver debe coincidir con el sufijo de mod_version
+# en gradle.properties (ej. mod_version=1.20.1-4.2.0 → mod_semver=4.2.0).
 mod_id: consolefilternext
-mod_semver: "4.1.0"
+mod_semver: "4.2.0"
 
 targets:
   - id: mc1.20.1-forge
@@ -44,19 +46,34 @@ targets:
     enabled: false
     project: ":neoforge"
 
+  # 26.x: solo Fabric + NeoForge (sin Forge). Java 25. Proyectos dedicados.
   - id: mc26.1-fabric
     minecraft: "26.1"
     loader: fabric
-    java: 21
-    enabled: false
-    project: ":fabric"
+    java: 25
+    enabled: true
+    project: ":fabric-26.1"
 
   - id: mc26.1-neoforge
     minecraft: "26.1"
     loader: neoforge
-    java: 21
-    enabled: false
-    project: ":neoforge"
+    java: 25
+    enabled: true
+    project: ":neoforge-26.1"
+
+  - id: mc26.2-fabric
+    minecraft: "26.2"
+    loader: fabric
+    java: 25
+    enabled: true
+    project: ":fabric-26.2"
+
+  - id: mc26.2-neoforge
+    minecraft: "26.2"
+    loader: neoforge
+    java: 25
+    enabled: true
+    project: ":neoforge-26.2"
 
   - id: mc1.16.1-forge
     minecraft: "1.16.1"

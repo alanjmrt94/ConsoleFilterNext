@@ -16,37 +16,84 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Loom 1.14+ requiere JVM 21; JDK 17 cubre el toolchain de Forge/Fabric/NeoForge (MC 1.20.1).
-      - name: Set up JDK 17 and 21
+      - name: Parse tag ({mc}-{semver})
+        id: tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          SEMVER="${TAG##*-}"
+          MC="${TAG%-${SEMVER}}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "mc=${MC}" >> "$GITHUB_OUTPUT"
+          echo "semver=${SEMVER}" >> "$GITHUB_OUTPUT"
+          echo "Parsed tag=${TAG} mc=${MC} semver=${SEMVER}"
+
+      - name: Set up JDK 17, 21 and 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: |
             17
             21
+            25
+          cache: gradle
 
       - name: Grant execute permission
         run: |
-          chmod +x gradlew fabric/gradlew neoforge/gradlew
+          chmod +x gradlew scripts/*.sh
+          chmod +x fabric/gradlew neoforge/gradlew 2>/dev/null || true
+          chmod +x fabric-26.1/gradlew neoforge-26.1/gradlew fabric-26.2/gradlew neoforge-26.2/gradlew 2>/dev/null || true
 
-      - name: Build Forge
-        run: ./gradlew clean :common:build :forge:build --no-daemon
-
-      - name: Build Fabric
-        run: cd fabric && ./gradlew clean build --no-daemon
-
-      - name: Build NeoForge
-        run: cd neoforge && ./gradlew clean build --no-daemon
-
-      - name: Stage release JARs
+      - name: Build matrix cell JARs for tag MC
+        env:
+          PUBLISH_MC: ${{ steps.tag.outputs.mc }}
         run: |
+          set -euo pipefail
+          MC="${PUBLISH_MC}"
           mkdir -p dist
-          cp forge/build/libs/consolefilternext-*-forge.jar dist/ || true
-          cp fabric/build/libs/consolefilternext-*-fabric.jar dist/ || true
-          cp neoforge/build/libs/consolefilternext-*-neoforge.jar dist/ || true
-          # Excluir sources/javadoc del staging
+          stage_one() {
+            local pattern="$1"
+            local matches
+            matches=( ${pattern} )
+            if [[ ! -e "${matches[0]}" ]]; then
+              echo "Missing expected JAR(s): ${pattern}"
+              exit 1
+            fi
+            cp "${matches[@]}" dist/
+          }
+          case "${MC}" in
+            1.20.1)
+              ./gradlew clean :common:build :forge:build --no-daemon
+              (cd fabric && ./gradlew clean build --no-daemon)
+              (cd neoforge && ./gradlew clean build --no-daemon)
+              stage_one 'forge/build/libs/consolefilternext-*-forge.jar'
+              stage_one 'fabric/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'neoforge/build/libs/consolefilternext-*-neoforge.jar'
+              EXPECTED=3
+              ;;
+            26.1)
+              (cd fabric-26.1 && ./gradlew clean build --no-daemon)
+              (cd neoforge-26.1 && ./gradlew clean build --no-daemon)
+              stage_one 'fabric-26.1/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'neoforge-26.1/build/libs/consolefilternext-*-neoforge.jar'
+              EXPECTED=2
+              ;;
+            26.2)
+              (cd fabric-26.2 && ./gradlew clean build --no-daemon)
+              (cd neoforge-26.2 && ./gradlew clean build --no-daemon)
+              stage_one 'fabric-26.2/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'neoforge-26.2/build/libs/consolefilternext-*-neoforge.jar'
+              EXPECTED=2
+              ;;
+            *)
+              echo "Unsupported MC line in tag: ${MC}"
+              exit 1
+              ;;
+          esac
           rm -f dist/*-sources.jar dist/*-javadoc.jar
           ls -la dist/
+          COUNT="$(ls -1 dist/*.jar 2>/dev/null | wc -l)"
+          echo "Staged ${COUNT} JAR(s); expected ${EXPECTED}"
+          test "${COUNT}" -eq "${EXPECTED}"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

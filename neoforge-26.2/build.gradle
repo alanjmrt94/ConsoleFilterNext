@@ -1,0 +1,148 @@
+plugins {
+	id 'java-library'
+	id 'maven-publish'
+	id 'net.neoforged.moddev' version '2.0.144'
+}
+
+def rootProps = new Properties()
+file('../gradle.properties').withInputStream { rootProps.load(it) }
+def verProps = new Properties()
+file('../versions/26.2.properties').withInputStream { verProps.load(it) }
+def props = new Properties()
+props.putAll(rootProps)
+props.putAll(verProps)
+props.each { key, value ->
+	if (!project.hasProperty(key)) {
+		project.ext.set(key as String, value)
+	}
+}
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName = props['mod_id'] as String
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+	withSourcesJar()
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir '../common/src/main/java'
+			srcDir '../client-26.2/src/main/java'
+		}
+	}
+	test {
+		java {
+			srcDir '../client-26.2/src/test/java'
+		}
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		name = 'NeoForged'
+		url = 'https://maven.neoforged.net/releases'
+	}
+}
+
+// Reemplazar libraries.minecraft.net solo con USE_BMCL_MIRROR=1 / -PuseBmclMirror=1.
+def useBmclMirror = (findProperty('useBmclMirror') ?: System.getenv('USE_BMCL_MIRROR') ?: '0') == '1'
+if (useBmclMirror) {
+	repositories.all { repo ->
+		if (repo instanceof MavenArtifactRepository) {
+			def url = repo.url?.toString() ?: ''
+			if (url.startsWith('https://libraries.minecraft.net')) {
+				logger.lifecycle("Reemplazando repositorio Mojang por BMCL: ${repo.name}")
+				repo.setUrl('https://bmclapi2.bangbang93.com/maven/')
+			}
+		}
+	}
+}
+
+neoForge {
+	version = props['neoforge_version'] as String
+
+	// Manifest local (BMCL) cuando launchermeta.mojang.com no es alcanzable.
+	if (useBmclMirror) {
+		def metaBase = findProperty('minecraftMetaBase') ?: System.getenv('MINECRAFT_META_BASE') ?: 'http://127.0.0.1:8765'
+		neoFormRuntime {
+			launcherManifestUrl = "${metaBase}/launcher_manifest_local.json"
+		}
+	}
+
+	runs {
+		client {
+			client()
+			gameDirectory = project.file('../run-neoforge-26.2')
+			systemProperty 'neoforge.logging.markers', 'REGISTRIES'
+			logLevel = org.slf4j.event.Level.DEBUG
+		}
+		server {
+			server()
+			gameDirectory = project.file('../run-neoforge-26.2')
+			programArgument '--nogui'
+			systemProperty 'neoforge.logging.markers', 'REGISTRIES'
+			logLevel = org.slf4j.event.Level.DEBUG
+		}
+		configureEach {
+			systemProperty 'neoforge.enabledGameTestNamespaces', props['mod_id']
+		}
+	}
+
+	mods {
+		"${props['mod_id']}" {
+			sourceSet(sourceSets.main)
+		}
+	}
+}
+
+dependencies {
+	implementation 'com.electronwill.night-config:core:3.8.1'
+	implementation 'com.electronwill.night-config:toml:3.8.1'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+}
+
+def replaceProperties = [
+		minecraft_version   : props['minecraft_version'],
+		neoforge_version    : props['neoforge_version'],
+		mod_id              : props['mod_id'],
+		mod_name            : props['mod_name'],
+		mod_license         : props['mod_license'],
+		mod_version         : props['mod_version'],
+		mod_authors         : props['mod_authors'],
+		mod_description     : props['mod_description']
+]
+
+processResources {
+	inputs.properties replaceProperties
+	filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+		expand replaceProperties
+	}
+}
+
+tasks.named('jar', Jar).configure {
+	archiveClassifier.set('neoforge')
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(file('../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 25
+}
+
+test {
+	useJUnitPlatform()
+}

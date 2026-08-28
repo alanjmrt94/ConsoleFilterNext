@@ -16,9 +16,15 @@ mcmodsrepo/
 # ─── Forge / Minecraft dev runs ─────────────────────────────────────────────
 run/
 
-# Fabric Loom / NeoForge MDG run directories
-run-fabric/
-run-neoforge/
+# Fabric Loom / NeoForge MDG run directories (incl. versioned: run-fabric-26.1, …)
+run-fabric*/
+run-neoforge*/
+
+# Compiled leftovers / NeoForm tooling artifacts
+**/*.class
+
+# Manifest local de launcher (apunta a 127.0.0.1)
+versions/minecraft-meta/launcher_manifest_local.json
 
 # ─── IDE ────────────────────────────────────────────────────────────────────
 # Eclipse

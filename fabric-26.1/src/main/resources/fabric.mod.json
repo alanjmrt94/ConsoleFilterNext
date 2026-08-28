@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": ["${mod_authors}"],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/consolefilternext",
+    "sources": "https://github.com/alanjmrt94/ConsoleFilterNext",
+    "issues": "https://github.com/alanjmrt94/ConsoleFilterNext/issues"
+  },
+  "license": "${mod_license}",
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.alanjmrt94.consolefilternext.ConsoleFilterFabric"
+    ],
+    "modmenu": [
+      "com.alanjmrt94.consolefilternext.ConsoleFilterModMenu"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.1",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
