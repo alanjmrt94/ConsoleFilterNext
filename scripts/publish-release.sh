@@ -1076,9 +1076,20 @@ publish_curseforge_upload_game_version_ids() {
 		rm -f "${tmp}"
 		return 1
 	fi
-	types_id="$(jq -r --arg series "Minecraft ${mc_series}" '.[] | select(.name == $series) | .id' "${tmp}" | head -1)"
+	# 1.20.x → "Minecraft 1.20"; 26.1 → "Minecraft 26.1"; 26.2 → tipo "26.2" (sin prefijo).
+	types_id="$(jq -r \
+		--arg full "Minecraft ${mc_version}" \
+		--arg bare "${mc_version}" \
+		--arg series "Minecraft ${mc_series}" '
+			([.[] | select(.name == $full) | .id]
+			+ [.[] | select(.name == $bare) | .id]
+			+ [.[] | select(.name == $series) | .id])[0] // empty
+		' "${tmp}")"
 	rm -f "${tmp}"
-	[[ -n "${types_id}" && "${types_id}" != "null" ]] || return 1
+	[[ -n "${types_id}" && "${types_id}" != "null" ]] || {
+		log_error "CurseForge: no hay version-type para MC ${mc_version} (probó Minecraft ${mc_version}, ${mc_version}, Minecraft ${mc_series})"
+		return 1
+	}
 
 	tmp="$(mktemp)"
 	if ! curl -fsS -o "${tmp}" -H "X-Api-Token: ${author_token}" \
