@@ -116,3 +116,18 @@ targets:
     java: 8
     enabled: false
     project: ":forge"
+
+  - id: mc26.3-fabric
+    minecraft: "26.3"
+    loader: fabric
+    java: 25
+    enabled: true
+    project: ":fabric-26.3"
+
+
+  - id: mc26.3-neoforge
+    minecraft: "26.3"
+    loader: neoforge
+    java: 25
+    enabled: true
+    project: ":neoforge-26.3"

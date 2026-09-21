@@ -15,6 +15,23 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
+## Minecraft 26.3 port
+
+Dedicated Fabric and NeoForge projects are available in `fabric-26.3` and
+`neoforge-26.3`, with shared screens in `client-26.3`. Requires Java 25.
+Dependency versions are pinned in `versions/26.3.properties`.
+
+On Windows, build and run the shared, configuration, and editor tests with:
+
+```powershell
+.\fabric-26.3\gradlew.bat -p fabric-26.3 build
+.\neoforge-26.3\gradlew.bat -p neoforge-26.3 build
+```
+
+Install the matching loader JAR from its `build/libs` directory. Fabric requires
+Fabric API; Mod Menu is optional for the configuration screen. The Fabric JAR
+includes Night Config. The NeoForge build targets `26.3.0.8-beta` and uses ModDevGradle's supported binary-patching pipeline to avoid an upstream Minecraft source recompilation error.
+
 ## Downloads
 
 | Loader | CurseForge | Modrinth |
