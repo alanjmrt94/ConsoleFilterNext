@@ -8,14 +8,15 @@
 | `release.sh` | no | no | sí (`publish`) | **sí** |
 | `publish-release.sh` | no | no | sí (incluido por `release.sh`) | **sí** |
 | `discord-notify.sh` | no | no | sí (vía `publish`) | **sí** |
-| `lint.sh` | **sí** (job `lint`) | no | no | **sí** |
-| `matrix.sh` | no | no | no | **sí** (local/dev) |
+| `lint.sh` | **sí** (`lint`) | no | no | **sí** |
+| `check-client-drift.sh` | sí (vía `lint.sh ci`) | no | no | **sí** |
+| `matrix.sh` | no | no | no | **sí** (local/dev; lanza cada wrapper con el JDK de launcher) |
 | `.release.local.example` | no | no | no | **sí** (plantilla) |
 | `.release.local` | no | no | no | **nunca** (secretos; ya está en `.gitignore`) |
 
 `release.yml` no usa `scripts/`: construye con `gradlew` / `fabric/gradlew` / `neoforge/gradlew` y publica el GitHub Release con la Action. Los assets esperados son `*-forge.jar`, `*-fabric.jar` y `*-neoforge.jar`.
 
-El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warnings de Java ni errores** (Spotless + `-Xlint`/`-Werror`). No se usa `--warning-mode fail` porque ForgeGradle/Loom emiten deprecaciones de Gradle ajenas al proyecto. Los builds de Forge/Fabric/NeoForge dependen de ese job.
+El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warnings de Java ni errores** (Spotless en todo `platforms/*`, drift de `client/`, `-Xlint`/`-Werror` en common+Forge 1.20.1). No se usa `--warning-mode fail` porque ForgeGradle/Loom emiten deprecaciones de Gradle ajenas al proyecto. Los `-Werror` del resto de loaders viven en cada job de build.
 
 ## Flujo de release + Discord
 
@@ -55,11 +56,11 @@ Webhook: Edit channel del mod → Integrations → Webhooks → Copy URL → sec
 ## Comandos útiles
 
 ```bash
-./scripts/lint.sh ci           # igual que CI (Spotless + -Werror)
+./scripts/lint.sh ci           # igual que CI (Spotless + drift client + -Werror 1.20.1)
 ./scripts/lint.sh fix          # quita imports no usados, trim, newlines
 ./scripts/lint.sh check
 ./scripts/matrix.sh test
-./scripts/server-smoke.sh forge   # fabric | neoforge | forge-26.1 | fabric-1.12.2 | fabric-1.8.9 | forge-1.20.4 | …
+./scripts/server-smoke.sh forge   # fabric | neoforge | forge-1.20.4 | neoforge-1.20.6 | forge-26.1 | …
 ./scripts/release.sh cut --dry-run
 ./scripts/release.sh publish --dry-run --skip-build
 ./scripts/discord-notify.sh --dry-run 1.20.1-4.2.0
