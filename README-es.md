@@ -38,7 +38,7 @@ Un filtro de consola mejorado para Minecraft **Forge / Fabric / NeoForge** — p
 | **26.2** | Forge · Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
 | **26.3** | Fabric · NeoForge (Java 25; NeoForge `26.3.0.8-beta`; sin Forge) | `26.3-4.2.0` |
 
-Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz. GitHub Release, Modrinth y CurseForge se disparan con el push del tag; si un archivo no aparece en las tiendas hay que **republicar** ese tag.
+Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz. GitHub Release, Modrinth y CurseForge se disparan con el push del tag. Si un archivo quedó mal o faltó en las tiendas, **no retaguees**: en Actions usá **Run workflow** en `release.yml` / `publish-distribution.yml` con input `mc` (publica desde la rama actual; ver [scripts/README.md](scripts/README.md)).
 
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
@@ -423,6 +423,8 @@ If one step already succeeded, skip the rest:
 ./scripts/release.sh publish --skip-build --skip-github --skip-modrinth   # CurseForge only
 ```
 
+Para republicar desde CI **sin mover tags**: Actions → **Release** / **Publish distribution** → Run workflow → input `mc` (detalle en [scripts/README.md](scripts/README.md)).
+
 #### Modrinth draft projects
 
 While status is **Draft**, the project page may exist at `modrinth.com/project/<slug>` but `GET /v2/project/<slug>` returns **404** without a known ID. Set `MODRINTH_PROJECT_ID` in `.release.local`, then publish. After moderation approves the project, you can clear `MODRINTH_PROJECT_ID` and rely on slug resolution if you prefer.
@@ -456,6 +458,8 @@ Set `"submit_for_review": true` in `modrinth.json` to send the project to Modrin
 | `EOF while parsing a string` (HTTP 400) | JSON metadata embedded in `curl -F` was truncated by the shell | Fixed in `publish-release.sh` (payload written to a temp file) |
 | CI skips Modrinth/CurseForge on tag push | Secrets stored only at repository level, or wrong environment name | Use environment **`publish`** with the secrets below; workflow must set `environment: publish` |
 | `404` resolving CurseForge game versions | Outdated API path (`/minecraft/game/version`) | Fixed in `publish-release.sh` — uses `/v1/minecraft/version/{mc}` and `/v1/minecraft/modloader/forge-{version}` |
+| Modrinth rejects Fabric for 1.8.9 / 1.12.2 | Loader `fabric` no vale antes de 18w43b | En `master`, `publish-release.sh` mapea a `legacy-fabric`; republicá con **Publish distribution** `workflow_dispatch` (`mc=1.8.9` / `1.12.2`) |
+| Tag publicado con paths Forge viejos | Workflow del commit del tag apuntaba mal | **Release** + **Publish distribution** con `workflow_dispatch` desde `master` (sin mover el tag) |
 
 See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, `MODRINTH_TOKEN`, `RELEASE_TYPE`, etc.).
 
@@ -463,9 +467,9 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request (omite markdown, imágenes, `assets/**`, `.cursor/**`) | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
-| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`{mc}-{semver}`) | Build celdas enabled de esa línea MC y crea GitHub Release (JARs por loader presente en `platforms/{mc}/`) |
-| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload JARs to Modrinth/CurseForge and notify Discord (requires the `publish` environment) |
+| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request (omite markdown, imágenes, `assets/**`, `.cursor/**`) | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader; reintento Maven 502 vía `ci-retry-gradle.sh`; smoke 1.21 con warm userdev y timeout 480s |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`{mc}-{semver}`) **o** `workflow_dispatch` (input `mc`) | Build celdas enabled de esa línea MC y crea/actualiza GitHub Release (JARs por loader en `platforms/{mc}/`) |
+| [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) **o** `workflow_dispatch` (input `mc`) | Upload JARs a Modrinth/CurseForge y Discord (environment `publish`); el dispatch usa el workflow de la rama, no el commit del tag |
 
 #### GitHub environment `publish`
 

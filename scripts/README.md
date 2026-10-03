@@ -9,14 +9,19 @@
 | `publish-release.sh` | no | no | sí (incluido por `release.sh`) | **sí** |
 | `discord-notify.sh` | no | no | sí (vía `publish`) | **sí** |
 | `lint.sh` | **sí** (`lint`) | no | no | **sí** |
+| `ci-retry-gradle.sh` | sí (NeoForge, matrices 1.19/1.20/1.21, warm smoke) | sí (vía `cf_gradle` / celdas) | sí (vía `cf_gradle` / celdas) | **sí** |
 | `check-client-drift.sh` | sí (vía `lint.sh ci`) | no | no | **sí** |
 | `matrix.sh` | no | no | no | **sí** (local/dev; lanza cada wrapper con el JDK de launcher) |
 | `.release.local.example` | no | no | no | **sí** (plantilla) |
 | `.release.local` | no | no | no | **nunca** (secretos; ya está en `.gitignore`) |
 
-`release.yml` no usa `scripts/`: construye con `gradlew` / `fabric/gradlew` / `neoforge/gradlew` y publica el GitHub Release con la Action. Los assets esperados son `*-forge.jar`, `*-fabric.jar` y `*-neoforge.jar`.
+`release.yml` y `publish-distribution.yml` construyen con `gradlew` / wrappers bajo `platforms/` y reintentan fallos transitorios con `ci-retry-gradle.sh`. Los assets esperados son `*-forge.jar`, `*-fabric.jar` y `*-neoforge.jar` según la línea MC.
 
 El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warnings de Java ni errores** (Spotless en todo `platforms/*`, drift de `client/`, `-Xlint`/`-Werror` en common+Forge 1.20.1). No se usa `--warning-mode fail` porque ForgeGradle/Loom emiten deprecaciones de Gradle ajenas al proyecto. Los `-Werror` del resto de loaders viven en cada job de build.
+
+### `ci-retry-gradle.sh`
+
+Reintenta `./gradlew` en una celda `platforms/{mc}/{loader}` (por defecto 3 intentos, sleep 20s; override con `CI_GRADLE_RETRIES` / `CI_GRADLE_RETRY_SLEEP`). Cubre HTTP 502 de Maven NeoForge y otros fallos transitorios de resolución. En smoke 1.21 también calienta userdev antes del `runServer` (timeout smoke 480s).
 
 ## Flujo de release + Discord
 
@@ -30,6 +35,16 @@ El job **`lint`** corre primero (`./scripts/lint.sh ci`) y debe pasar **sin warn
 #   release.yml              → GitHub Release + JARs
 #   publish-distribution.yml → Modrinth + CurseForge + Discord webhook
 ```
+
+### Republicar sin mover tags (`workflow_dispatch`)
+
+Si un tag ya se publicó con un workflow viejo (paths Forge incorrectos, loader Fabric en vez de `legacy-fabric`, etc.), **no hace falta retaguear**:
+
+1. Merge/push a `master` con el workflow y el código correctos; esperá **Build** verde.
+2. Actions → **Release** → Run workflow → input `mc` (p. ej. `1.20.1`) — reconstruye JARs desde la rama actual y actualiza el GitHub Release del tag `{mc}-{semver}` (`allowUpdates` + `replacesArtifacts`).
+3. Actions → **Publish distribution** → Run workflow → mismo `mc` — publica Modrinth/CurseForge/Discord desde la rama actual (lee `mod_version` de `versions/{mc}.properties` o `gradle.properties` para 1.20.1).
+
+Líneas que suelen necesitar republicar tras el arreglo 4.2.0: `1.20.1`, `1.21.1`, `1.16.5`, `1.16.1`, `1.12.2`, `1.8.9`.
 
 Secret **`DISCORD_WEBHOOK_URL`**: GitHub → Settings → Environments → **`publish`** → Environment secrets (no Variable). Local: `scripts/.release.local`.
 
@@ -51,6 +66,7 @@ Webhook: Edit channel del mod → Integrations → Webhooks → Copy URL → sec
 - **`discord-notify.sh`**: aviso al canal del mod tras publicar.
 - **`server-smoke.sh`**: necesario para el job de smoke en `build.yml`.
 - **`lint.sh`**: gate de CI + autofix local.
+- **`ci-retry-gradle.sh`**: reintentos Gradle ante 502/Maven transitorio en Build, Release y Publish.
 - **`matrix.sh`**: orquestación local de la matriz MC×loader.
 
 ## Comandos útiles

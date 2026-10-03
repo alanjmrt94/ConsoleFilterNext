@@ -90,20 +90,9 @@ jobs:
           java-version: 17
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/1.20.1/neoforge/gradlew
+        run: chmod +x platforms/1.20.1/neoforge/gradlew scripts/ci-retry-gradle.sh
       - name: Build NeoForge
-        run: |
-          set +e
-          for attempt in 1 2 3; do
-            (cd platforms/1.20.1/neoforge && ./gradlew clean build --no-daemon)
-            status=$?
-            if [ "${status}" -eq 0 ]; then
-              exit 0
-            fi
-            echo "NeoForge 1.20.1 build attempt ${attempt} failed (exit ${status}); retrying after maven 502/transient errors."
-            sleep 20
-          done
-          exit 1
+        run: ./scripts/ci-retry-gradle.sh platforms/1.20.1/neoforge clean build --no-daemon
       - name: Upload NeoForge JAR
         uses: actions/upload-artifact@v4
         with:
@@ -332,20 +321,9 @@ jobs:
           java-version: 25
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/26.3/neoforge/gradlew
+        run: chmod +x platforms/26.3/neoforge/gradlew scripts/ci-retry-gradle.sh
       - name: Build NeoForge 26.3
-        run: |
-          set +e
-          for attempt in 1 2 3; do
-            (cd platforms/26.3/neoforge && ./gradlew clean build --no-daemon)
-            status=$?
-            if [ "${status}" -eq 0 ]; then
-              exit 0
-            fi
-            echo "NeoForge 26.3 build attempt ${attempt} failed (exit ${status}); retrying after maven 502/transient errors."
-            sleep 20
-          done
-          exit 1
+        run: ./scripts/ci-retry-gradle.sh platforms/26.3/neoforge clean build --no-daemon
       - name: Upload NeoForge 26.3 JAR
         uses: actions/upload-artifact@v4
         with:
@@ -550,20 +528,9 @@ jobs:
           java-version: 21
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/1.21.1/neoforge/gradlew
+        run: chmod +x platforms/1.21.1/neoforge/gradlew scripts/ci-retry-gradle.sh
       - name: Build NeoForge 1.21.1
-        run: |
-          set +e
-          for attempt in 1 2 3; do
-            (cd platforms/1.21.1/neoforge && ./gradlew clean build --no-daemon)
-            status=$?
-            if [ "${status}" -eq 0 ]; then
-              exit 0
-            fi
-            echo "NeoForge 1.21.1 build attempt ${attempt} failed (exit ${status}); retrying after maven 502/transient errors."
-            sleep 20
-          done
-          exit 1
+        run: ./scripts/ci-retry-gradle.sh platforms/1.21.1/neoforge clean build --no-daemon
       - name: Upload NeoForge 1.21.1 JAR
         uses: actions/upload-artifact@v4
         with:
@@ -651,9 +618,9 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew
+        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew scripts/ci-retry-gradle.sh
       - name: Build ${{ matrix.loader }} ${{ matrix.mc }}
-        run: cd platforms/${{ matrix.mc }}/${{ matrix.loader }} && ./gradlew clean build --no-daemon
+        run: ./scripts/ci-retry-gradle.sh platforms/${{ matrix.mc }}/${{ matrix.loader }} clean build --no-daemon
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
@@ -680,9 +647,9 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew
+        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew scripts/ci-retry-gradle.sh
       - name: Build ${{ matrix.loader }} ${{ matrix.mc }}
-        run: cd platforms/${{ matrix.mc }}/${{ matrix.loader }} && ./gradlew clean build --no-daemon
+        run: ./scripts/ci-retry-gradle.sh platforms/${{ matrix.mc }}/${{ matrix.loader }} clean build --no-daemon
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
@@ -730,9 +697,9 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew
+        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew scripts/ci-retry-gradle.sh
       - name: Build ${{ matrix.loader }} ${{ matrix.mc }}
-        run: cd platforms/${{ matrix.mc }}/${{ matrix.loader }} && ./gradlew clean build --no-daemon
+        run: ./scripts/ci-retry-gradle.sh platforms/${{ matrix.mc }}/${{ matrix.loader }} clean build --no-daemon
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
@@ -815,11 +782,13 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: gradle
       - name: Grant execute permission
-        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew scripts/server-smoke.sh
+        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew scripts/server-smoke.sh scripts/ci-retry-gradle.sh
+      - name: Warm Gradle userdev
+        run: ./scripts/ci-retry-gradle.sh platforms/${{ matrix.mc }}/${{ matrix.loader }} build --no-daemon
       - name: Dedicated server smoke (${{ matrix.loader }} ${{ matrix.mc }})
-        timeout-minutes: 20
+        timeout-minutes: 25
         env:
-          SMOKE_TIMEOUT_SECONDS: 300
+          SMOKE_TIMEOUT_SECONDS: 480
         run: ./scripts/server-smoke.sh ${{ matrix.loader }}-${{ matrix.mc }}
 
   build-forge-1-16-5:

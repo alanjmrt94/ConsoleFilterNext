@@ -7,6 +7,12 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    inputs:
+      mc:
+        description: 'Línea Minecraft a publicar desde esta rama (ej. 1.8.9, 1.20.1). Usa el workflow actual, no el commit del tag.'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,10 +28,29 @@ jobs:
 
       - name: Parse tag ({mc}-{semver})
         id: tag
+        env:
+          DISPATCH_MC: ${{ github.event.inputs.mc }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          SEMVER="${TAG##*-}"
-          MC="${TAG%-${SEMVER}}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            MC="${DISPATCH_MC}"
+            if [ -z "${MC}" ]; then
+              echo "workflow_dispatch requiere input mc (p. ej. 1.8.9)"
+              exit 1
+            fi
+            if [ -f "versions/${MC}.properties" ]; then
+              TAG="$(sed -n 's/^mod_version=//p' "versions/${MC}.properties" | head -1 | tr -d '\r')"
+            else
+              TAG="$(sed -n 's/^mod_version=//p' gradle.properties | head -1 | tr -d '\r')"
+            fi
+            if [ -z "${TAG}" ]; then
+              echo "No se resolvió mod_version para ${MC}"
+              exit 1
+            fi
+          else
+            TAG="${GITHUB_REF_NAME}"
+            SEMVER="${TAG##*-}"
+            MC="${TAG%-${SEMVER}}"
+          fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "mc=${MC}" >> "$GITHUB_OUTPUT"
           echo "Parsed tag=${TAG} mc=${MC}"
@@ -46,7 +71,7 @@ jobs:
 
       - name: Grant execute permission
         run: |
-          chmod +x gradlew scripts/release.sh scripts/publish-release.sh scripts/discord-notify.sh
+          chmod +x gradlew scripts/release.sh scripts/publish-release.sh scripts/discord-notify.sh scripts/ci-retry-gradle.sh
           chmod +x platforms/1.20.1/fabric/gradlew platforms/1.20.1/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/26.1/fabric/gradlew platforms/26.1/neoforge/gradlew platforms/26.1/forge/gradlew platforms/26.2/fabric/gradlew platforms/26.2/neoforge/gradlew platforms/26.2/forge/gradlew platforms/26.3/fabric/gradlew platforms/26.3/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/1.21.*/forge/gradlew platforms/1.21.*/fabric/gradlew platforms/1.21.*/neoforge/gradlew 2>/dev/null || true
@@ -73,28 +98,27 @@ jobs:
               echo "Missing JAVA_HOME for ${dir}"
               exit 1
             fi
-            chmod +x "${dir}/gradlew"
-            (cd "${dir}" && JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./gradlew "$@")
+            JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./scripts/ci-retry-gradle.sh "${dir}" "$@"
           }
           case "${MC}" in
             1.20.1)
               ./gradlew clean :common:build :forge:build --no-daemon
-              (cd platforms/1.20.1/fabric && ./gradlew clean build --no-daemon)
-              (cd platforms/1.20.1/neoforge && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/1.20.1/fabric clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/1.20.1/neoforge clean build --no-daemon
               ;;
             26.1)
-              (cd platforms/26.1/fabric && ./gradlew clean build --no-daemon)
-              (cd platforms/26.1/neoforge && ./gradlew clean build --no-daemon)
-              (cd platforms/26.1/forge && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/26.1/fabric clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/26.1/neoforge clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/26.1/forge clean build --no-daemon
               ;;
             26.2)
-              (cd platforms/26.2/fabric && ./gradlew clean build --no-daemon)
-              (cd platforms/26.2/neoforge && ./gradlew clean build --no-daemon)
-              (cd platforms/26.2/forge && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/26.2/fabric clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/26.2/neoforge clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/26.2/forge clean build --no-daemon
               ;;
             26.3)
-              (cd platforms/26.3/fabric && ./gradlew clean build --no-daemon)
-              (cd platforms/26.3/neoforge && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/26.3/fabric clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/26.3/neoforge clean build --no-daemon
               ;;
             1.20.2)
               cf_gradle platforms/1.20.2/forge "${j17}" clean build --no-daemon
@@ -110,17 +134,17 @@ jobs:
               cf_gradle platforms/1.20.4/neoforge "${j21}" clean build --no-daemon
               ;;
             1.20.5)
-              (cd platforms/1.20.5/fabric && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/1.20.5/fabric clean build --no-daemon
               ;;
             1.20.6)
-              (cd platforms/1.20.6/forge && ./gradlew clean build --no-daemon)
-              (cd platforms/1.20.6/fabric && ./gradlew clean build --no-daemon)
-              (cd platforms/1.20.6/neoforge && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/1.20.6/forge clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/1.20.6/fabric clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/1.20.6/neoforge clean build --no-daemon
               ;;
             1.21.1)
-              (cd platforms/1.21.1/forge && ./gradlew clean build --no-daemon)
-              (cd platforms/1.21.1/fabric && ./gradlew clean build --no-daemon)
-              (cd platforms/1.21.1/neoforge && ./gradlew clean build --no-daemon)
+              ./scripts/ci-retry-gradle.sh platforms/1.21.1/forge clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/1.21.1/fabric clean build --no-daemon
+              ./scripts/ci-retry-gradle.sh platforms/1.21.1/neoforge clean build --no-daemon
               ;;
             1.16.5)
               cf_gradle platforms/1.16.5/forge "${j17}" clean build --no-daemon
