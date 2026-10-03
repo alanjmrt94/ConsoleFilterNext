@@ -1,0 +1,103 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'legacy-looming' version "${loom_version}"
+	id 'java'
+}
+
+def props = new Properties()
+file('../../../gradle.properties').withInputStream { props.load(it) }
+file('../../../versions/1.12.2.properties').withInputStream { props.load(it) }
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName = props['mod_id'] as String
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(8)
+	}
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+sourceSets.main.java {
+	srcDir '../../../common-java8/src/main/java'
+	srcDir '../../../legacy-common/src/main/java'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${props['minecraft_version']}"
+	mappings(legacy.yarn(props['minecraft_version'] as String, props['yarn_build'] as String))
+	modImplementation "net.fabricmc:fabric-loader:${props['fabric_loader_version']}"
+	modImplementation "net.legacyfabric.legacy-fabric-api:legacy-fabric-api:${props['legacy_fabric_api_version']}"
+
+	implementation 'com.electronwill.night-config:core:3.6.7'
+	include 'com.electronwill.night-config:core:3.6.7'
+	implementation 'com.electronwill.night-config:toml:3.6.7'
+	include 'com.electronwill.night-config:toml:3.6.7'
+}
+
+processResources {
+	inputs.property 'version', version
+	inputs.property 'mod_id', props['mod_id']
+	inputs.property 'mod_name', props['mod_name']
+	inputs.property 'mod_description', props['mod_description']
+	inputs.property 'mod_authors', props['mod_authors']
+	inputs.property 'mod_license', props['mod_license']
+	filesMatching('fabric.mod.json') {
+		expand([
+			version        : version,
+			mod_id         : props['mod_id'],
+			mod_name       : props['mod_name'],
+			mod_description: props['mod_description'],
+			mod_authors    : props['mod_authors'],
+			mod_license    : props['mod_license']
+		])
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
+
+tasks.named('jar', Jar).configure {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(file('../../../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}
+
+tasks.named('remapJar').configure {
+	archiveClassifier.set('fabric')
+}
+
+loom {
+	runs {
+		configureEach {
+			runDir = '../../runs/1.12.2/fabric'
+		}
+		server {
+			programArgs '--nogui'
+		}
+	}
+}
+
+def ensureRunEula = tasks.register('ensureRunEula') {
+	doLast {
+		def runDir = project.file('../../runs/1.12.2/fabric')
+		runDir.mkdirs()
+		new File(runDir, 'eula.txt').text = "eula=true\n"
+	}
+}
+
+tasks.matching { it.name == 'runServer' }.configureEach {
+	dependsOn ensureRunEula
+}
