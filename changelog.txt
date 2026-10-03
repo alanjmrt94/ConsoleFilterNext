@@ -19,6 +19,7 @@
  - Minors 1.20.2–1.20.6: Forge salvo 1.20.5; Fabric en todas; NeoForge en 1.20.4 y 1.20.6 (20.2/20.3/20.5 sin MDG bundle)
  - 1.19.2 / 1.19.4: Forge + Fabric (Java 17; filtro + TOML + comandos, sin editor: Screen API previa a GuiGraphics)
  - 1.21.2–1.21.11: Fabric en todas; Forge si hay promoción; NeoForge solo con release estable (sin *-beta). 1.21.2 solo Fabric
+ - Forge 1.21.6–1.21.11: EventBus 7 (`getModBusGroup`); comandos `Commands.hasPermission` desde 1.21.9
 
 -----------------------------------------------------
  VERSION 4.1.0 - 1.20.1

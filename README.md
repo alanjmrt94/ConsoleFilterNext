@@ -35,7 +35,7 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **26.1** | Forge · Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
 | **26.2** | Forge · Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
 
-Los tags `{mc}-4.2.0` existen para **todas** las líneas de la matriz (incluye `1.19.2`/`1.19.4` y `1.21.2`–`1.21.11`). GitHub Release, Modrinth y CurseForge se disparan al **pushear** cada tag. **Forge 26.x** y **Fabric 1.12.2 / 1.8.9** ya tienen tag; si no aparecen en las tiendas hay que **republicarlos**.
+Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz. GitHub Release, Modrinth y CurseForge se disparan con el push del tag; si un archivo no aparece en las tiendas hay que **republicar** ese tag.
 
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
@@ -46,13 +46,13 @@ Los tags `{mc}-4.2.0` existen para **todas** las líneas de la matriz (incluye `
 | **Forge 1.20.1** | [1.20.1 · Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) | [`1.20.1-4.2.0+forge`](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) |
 | **Fabric 1.20.1** | [1.20.1 · Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) | [`1.20.1-4.2.0+fabric`](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) |
 | **NeoForge 1.20.1** | [1.20.1 · NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6) | [`1.20.1-4.2.0+neoforge`](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i) |
-| **Forge / Fabric 1.20.2–1.20.3** | Tras push del tag; filtrar por versión | Tras push del tag |
-| **Forge / Fabric / NeoForge 1.20.4 y 1.20.6** | Tras push del tag; filtrar por versión | Tras push del tag |
-| **Fabric 1.20.5** | Tras push del tag; filtrar por versión | Tras push del tag |
-| **Forge / Fabric 1.19.2 / 1.19.4** | Tras push del tag; filtrar por versión | Tras push del tag |
-| **Fabric 1.21.2** | Tras push del tag; filtrar por versión | Tras push del tag |
-| **Forge / Fabric / NeoForge 1.21.3–1.21.5, 1.21.8, 1.21.10, 1.21.11** | Tras push del tag; filtrar por versión | Tras push del tag |
-| **Forge / Fabric 1.21.6 / 1.21.7 / 1.21.9** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Forge / Fabric 1.19.2 / 1.19.4** | Filtrar por versión de juego | Filtrar por game version |
+| **Forge / Fabric 1.20.2–1.20.3** | Filtrar por versión de juego | Filtrar por game version |
+| **Forge / Fabric / NeoForge 1.20.4 y 1.20.6** | Filtrar por versión de juego | Filtrar por game version |
+| **Fabric 1.20.5** | Filtrar por versión de juego | Filtrar por game version |
+| **Fabric 1.21.2** | Filtrar por versión de juego | Filtrar por game version |
+| **Forge / Fabric / NeoForge 1.21.3–1.21.5, 1.21.8, 1.21.10, 1.21.11** | Filtrar por versión de juego | Filtrar por game version |
+| **Forge / Fabric 1.21.6 / 1.21.7 / 1.21.9** | Filtrar por versión de juego | Filtrar por game version |
 | **Forge / Fabric / NeoForge 26.1–26.2** | Filtrar por versión de juego | Filtrar por game version |
 
 | Hub | Link |
@@ -321,14 +321,14 @@ If **any** of the conditions match, the message will be **filtered out**.
 | **1.20.5** | Java 21 | `cd platforms/1.20.5/fabric && ./gradlew build` |
 | **1.20.6** | Java 21 | `cd platforms/1.20.6/{forge,fabric,neoforge} && ./gradlew build` |
 | **1.21.1–1.21.11** | Java 21 | `cd platforms/1.21.4/{forge,fabric,neoforge} && ./gradlew build` (celdas según matriz; 1.21.2 solo Fabric) |
-| **1.19.2 / 1.19.4** | Java 17 | `cd platforms/1.19.2/{forge,fabric} && ./gradlew build` (igual `1.19.4`) |
+| **1.19.2 / 1.19.4** | Java 17 (Gradle launcher JDK 21) | `cd platforms/1.19.2/{forge,fabric} && ./gradlew build` (igual `1.19.4`) |
 | **1.16.5** | Java 8 (Gradle con JDK 17) | `cd platforms/1.16.5/forge && ./gradlew build` · `cd platforms/1.16.5/fabric && ./gradlew build` |
 | **1.16.1** | Java 8 (el servidor Forge 32 necesita JDK 8; Gradle puede ir en 17) | `JAVA8_HOME=… cd platforms/1.16.1/forge && ./gradlew build` · `cd platforms/1.16.1/fabric && ./gradlew build` |
 | **1.12.2** | Java 8 (Forge: Gradle/RFG con JDK 25; Fabric: Gradle 9 + JDK 21, bytecode 8) | `cd platforms/1.12.2/forge && ./gradlew build` · `cd platforms/1.12.2/fabric && ./gradlew build` |
 | **1.8.9** | Java 8 (ForgeGradle 2.1 exige JDK 8; Fabric Loom con Gradle 9 + JDK 21) | `cd platforms/1.8.9/forge && ./gradlew setupCiWorkspace build` · `cd platforms/1.8.9/fabric && ./gradlew build` |
 | **26.1 / 26.2** | Java 25 | `cd platforms/26.1/{forge,fabric,neoforge} && ./gradlew build` (igual `platforms/26.2/*`) |
 
-Launcher JDK 17/21 OK para 1.20.1; para 26.x preferí JDK 25 (Gradle 9.5+). Si Mojang no es alcanzable: `USE_BMCL_MIRROR=1` (+ HTTP local de `versions/minecraft-meta` si hace falta).
+Launcher JDK 17/21 OK para 1.20.1; Forge **1.19.x** usa launcher JDK 21 (`matrix.sh`). Para 26.x preferí JDK 25 (Gradle 9.5+). Si Mojang no es alcanzable: `USE_BMCL_MIRROR=1` (+ HTTP local de `versions/minecraft-meta` si hace falta).
 
 ```bash
 git clone https://github.com/alanjmrt94/ConsoleFilterNext.git
@@ -506,7 +506,7 @@ Free to download on CurseForge and Modrinth; redistribution and derivatives must
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) — [Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) · [Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) · [NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6)
 - [Modrinth](https://modrinth.com/mod/consolefilternext) — [Forge](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) · [Fabric](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) · [NeoForge](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i)
 - [GitHub repository](https://github.com/alanjmrt94/ConsoleFilterNext)
-- [GitHub Release `1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0)
+- [GitHub Releases](https://github.com/alanjmrt94/ConsoleFilterNext/releases) — tags `{mc}-4.2.0` (p. ej. [`1.20.1-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.20.1-4.2.0), [`1.19.2-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.19.2-4.2.0), [`1.21.4-4.2.0`](https://github.com/alanjmrt94/ConsoleFilterNext/releases/tag/1.21.4-4.2.0))
 - [Report issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 - [Discord](https://discord.gg/CcUNTJjPD)
 - [ConsoleFilter by Matthew Czyr](https://github.com/MattCzyr/ConsoleFilter)
