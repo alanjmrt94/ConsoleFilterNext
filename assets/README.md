@@ -10,7 +10,7 @@ Archivos usados al publicar en Modrinth (y referencia para otras plataformas).
 | `modrinth-version-changelog.md` | Changelog de la versión para Modrinth (solo código; usado al publicar el JAR). |
 | `modrinth-version-changelog.template.md` | Plantilla del changelog de versión; copiar/actualizar antes de cada release. |
 | `modrinth.template.json` | Plantilla documentada; copiar a `modrinth.json` si empezás de cero. |
-| `gallery/sample-1.png` | Captura para galería Modrinth (destacada) y CurseForge (panel web) |
+| `gallery/in-game-config-editor.png` | Captura para galería Modrinth (destacada) y CurseForge (panel web) |
 | `curseforge.json` | Social links, project links, changelog de versión y galería CurseForge |
 | `curseforge-body.md` | Descripción del proyecto CurseForge (pegar manual en Authors; API no lo sincroniza) |
 | `curseforge.template.json` | Plantilla documentada; copiar a `curseforge.json` si empezás de cero. |
@@ -29,10 +29,10 @@ El script `publish_modrinth_sync_metadata` completa por API:
 - Tags / categorías (`categories`)
 - Entorno: `client_side` y `server_side` → `optional` (cliente y servidor opcionales)
 - Versión: `version_environment` → `client_or_server` (al publicar el JAR)
-- Java: `java_versions` → `["Java 17", "Java 21", "Java 25"]` (proyecto). En upload CurseForge, 26.x usa solo `Java 25` vía `publish_curseforge_java_versions`.
-- JARs por tag: `1.20.1-*` / `1.21.x-*` / `26.x-*` → loaders presentes; `1.19.x` / `1.16.x` / `1.12.2` / `1.8.9` → Forge + Fabric (2 JARs); `1.21.2` → solo Fabric.
+- Java: `java_versions` → `["Java 17", "Java 21", "Java 25"]` (proyecto). En upload CurseForge, `publish_curseforge_java_versions` etiqueta por línea MC (`Java 8` en 1.8.9/1.12.2/1.16.x, `Java 17` en 1.19.x, `Java 25` en 26.x).
+- JARs por tag: `1.20.1-*` / `1.21.x-*` / `26.x-*` → loaders presentes; `1.19.x` / `1.16.x` / `1.12.2` / `1.8.9` → Forge + Fabric (2 JARs); `1.21.2` → solo Fabric. En Modrinth, Fabric 1.8.9/1.12.2 se publica con loader `legacy-fabric`.
 
-**Submit for review:** con `"submit_for_review": true` en `modrinth.json`, el próximo sync envía el proyecto a moderación de Modrinth (ya activado en este repo). Para no reenviar en cada publish, dejalo en `false` una vez aprobado.
+**Submit for review:** con `"submit_for_review": true` en `modrinth.json`, el próximo sync pide revisión. El proyecto ya está aprobado: dejalo en `false`.
 
 Tras la primera sincronización, podés dejar `"gallery": []` en `modrinth.json` para no reintentar imágenes ya subidas.
 
@@ -53,7 +53,7 @@ La API de CurseForge **no permite** actualizar descripción, social links ni scr
 
 Panel: [Authors → proyecto → Links](https://authors.curseforge.com/#/projects/1257873/settings/links) → **Social Links** → Discord = `https://discord.gg/CcUNTJjPD`.
 
-Galería: **Images** / **Gallery** → subir `assets/gallery/sample-1.png`.
+Galería: **Images** / **Gallery** → subir `assets/gallery/in-game-config-editor.png`.
 
 **Loaders:** al subir, publicá **tres archivos** (Forge / Fabric / NeoForge) con el game version del loader correcto — no un solo JAR “NeoForge” para todos.
 

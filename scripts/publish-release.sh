@@ -166,8 +166,20 @@ publish_loader_display_name() {
 		forge) echo "Forge" ;;
 		fabric) echo "Fabric" ;;
 		neoforge) echo "NeoForge" ;;
+		legacy-fabric) echo "Legacy Fabric" ;;
 		*) echo "$1" ;;
 	esac
+}
+
+# Modrinth no acepta loader `fabric` antes de 1.14; 1.8.9/1.12.2 van como `legacy-fabric`.
+publish_modrinth_api_loader() {
+	local loader="$1"
+	local mc_version="$2"
+	if [[ "${loader}" == "fabric" && ( "${mc_version}" == "1.8.9" || "${mc_version}" == "1.12.2" ) ]]; then
+		echo "legacy-fabric"
+		return 0
+	fi
+	echo "${loader}"
 }
 
 # Emite: loader|ruta-absoluta-jar (solo artefactos existentes) para PUBLISH_MC.
@@ -465,6 +477,14 @@ publish_curseforge_java_versions() {
 			;;
 		1.20.*)
 			printf '%s\n' "Java 17" "Java 21"
+			return 0
+			;;
+		1.19.*)
+			echo "Java 17"
+			return 0
+			;;
+		1.16.*|1.12.*|1.8.*)
+			echo "Java 8"
 			return 0
 			;;
 	esac
@@ -907,7 +927,7 @@ publish_modrinth_sync_metadata() {
 	if [[ "${submit}" == "true" ]]; then
 		log_info "Modrinth: solicitada revisión (requested_status=approved)"
 	else
-		log_info "Modrinth: proyecto aún en draft — activá submit_for_review en assets/modrinth.json o enviá desde el panel"
+		log_info "Modrinth: submit_for_review=false (no se pide revisión en este sync)"
 	fi
 	return 0
 }
@@ -919,7 +939,7 @@ publish_modrinth_upload() {
 	local dry_run="${4:-false}"
 	local loader="${5:-forge}"
 	local sync_metadata="${6:-true}"
-	local mc_version project_id json http_code modrinth_env version_number version_name
+	local mc_version project_id json http_code modrinth_env version_number version_name api_loader
 
 	[[ -n "${MODRINTH_TOKEN}" ]] || {
 		log_warn "MODRINTH_TOKEN no configurado; omitiendo Modrinth"
@@ -943,15 +963,16 @@ publish_modrinth_upload() {
 	mc_version="$(publish_release_mc)"
 	PUBLISH_TMP_DIR="${PUBLISH_TMP_DIR:-$(mktemp -d)}"
 	modrinth_env="$(publish_modrinth_version_environment)"
-	version_number="${tag}+${loader}"
-	version_name="${tag} ($(publish_loader_display_name "${loader}"))"
+	api_loader="$(publish_modrinth_api_loader "${loader}" "${mc_version}")"
+	version_number="${tag}+${api_loader}"
+	version_name="${tag} ($(publish_loader_display_name "${api_loader}"))"
 	json="$(jq -n \
 		--arg project_id "${project_id}" \
 		--arg version_number "${version_number}" \
 		--arg name "${version_name}" \
 		--arg changelog "${changelog}" \
 		--arg mc "${mc_version}" \
-		--arg loader "${loader}" \
+		--arg loader "${api_loader}" \
 		--arg vtype "${RELEASE_TYPE}" \
 		--arg environment "${modrinth_env}" \
 		'{

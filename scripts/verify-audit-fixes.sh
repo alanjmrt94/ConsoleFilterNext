@@ -22,16 +22,25 @@ source <(sed -n '/^publish_curseforge_java_versions()/,/^}/p' "${ROOT}/scripts/p
 j120="$(publish_curseforge_java_versions '1.20.1' | paste -sd, -)"
 j261="$(publish_curseforge_java_versions '26.1' | paste -sd, -)"
 j262="$(publish_curseforge_java_versions '26.2' | paste -sd, -)"
+j189="$(publish_curseforge_java_versions '1.8.9' | paste -sd, -)"
+j1122="$(publish_curseforge_java_versions '1.12.2' | paste -sd, -)"
+j192="$(publish_curseforge_java_versions '1.19.2' | paste -sd, -)"
 dbg H1 scripts/publish-release.sh:publish_curseforge_java_versions "java versions by MC" \
-	"{\"mc120\":\"${j120}\",\"mc261\":\"${j261}\",\"mc262\":\"${j262}\"}"
+	"{\"mc120\":\"${j120}\",\"mc261\":\"${j261}\",\"mc262\":\"${j262}\",\"mc189\":\"${j189}\",\"mc1122\":\"${j1122}\",\"mc192\":\"${j192}\"}"
 if [[ "${j261}" != "Java 25" || "${j262}" != "Java 25" ]]; then
 	echo "FAIL H1: expected Java 25 for 26.x, got 26.1=${j261} 26.2=${j262}"
 	fail=1
 elif [[ "${j120}" != "Java 17,Java 21" ]]; then
 	echo "FAIL H1: 1.20.1 debe ser Java 17,Java 21 (got ${j120})"
 	fail=1
+elif [[ "${j189}" != "Java 8" || "${j1122}" != "Java 8" ]]; then
+	echo "FAIL H1: 1.8.9/1.12.2 deben ser Java 8 (got 1.8.9=${j189} 1.12.2=${j1122})"
+	fail=1
+elif [[ "${j192}" != "Java 17" ]]; then
+	echo "FAIL H1: 1.19.2 debe ser Java 17 (got ${j192})"
+	fail=1
 else
-	echo "OK H1: 26.x → Java 25; 1.20.1 → ${j120}"
+	echo "OK H1: 26.x → Java 25; 1.20.1 → ${j120}; Java 8/17 en líneas legacy"
 fi
 
 # --- H2: release.yml exige COUNT==EXPECTED ---

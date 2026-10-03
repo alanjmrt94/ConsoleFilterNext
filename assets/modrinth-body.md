@@ -3,7 +3,7 @@
 An improved fork of [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) for Minecraft **Forge, Fabric, and NeoForge**. Filter console output by **text**, **regex**, **log level**, **thread**, **logger/source**, and **mod id** — not just plain text. Reduce noise on the client or dedicated server while debugging modpacks and development environments.
 
 **Loaders:** Forge · Fabric · NeoForge (separate JAR per loader)  
-**Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD) · **Issues:** [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
+**Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD) · **Issues:** [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext/issues) · **Releases:** [GitHub Releases](https://github.com/alanjmrt94/ConsoleFilterNext/releases)
 
 Install on **either or both sides** (optional on client and server): use it only where you read logs.
 
@@ -77,11 +77,23 @@ If **any** filter matches, the message is **filtered out** (unless whitelist mod
 
 ## Compatibility
 
+Not every loader exists on every Minecraft version. Pick the file that matches your game + loader. Tags are `{mc}-4.2.0`.
+
+- **1.8.9 / 1.12.2** — Forge · Legacy Fabric (Java 8; no in-game editor). On Modrinth the Fabric JARs are tagged **Legacy Fabric**.
+- **1.16.1 / 1.16.5** — Forge · Fabric (Java 8)
+- **1.19.2 / 1.19.4** — Forge · Fabric (Java 17; no in-game editor)
+- **1.20.1 / 1.20.4 / 1.20.6** — Forge · Fabric · NeoForge
+- **1.20.2 / 1.20.3** — Forge · Fabric
+- **1.20.5** — Fabric
+- **1.21.1 / 1.21.3–1.21.5 / 1.21.8 / 1.21.10 / 1.21.11** — Forge · Fabric · NeoForge
+- **1.21.2** — Fabric
+- **1.21.6 / 1.21.7 / 1.21.9** — Forge · Fabric
+- **26.1 / 26.2** — Forge · Fabric · NeoForge (Java 25)
+- **26.3** — Fabric · NeoForge (Java 25)
+
 | | |
 |---|---|
-| **Minecraft** | 1.19.x · 1.20.1–1.20.6 · 1.21.1–1.21.11 · 26.1 · 26.2 · 1.16.x · 1.12.2 · 1.8.9 |
-| **Mod loaders** | **Forge** · **Fabric** (incl. Legacy Fabric) · **NeoForge** (un JAR por loader; no todos los loaders en todas las MC) |
-| **Java** | 8 (1.16 / legacy) · 17 (1.19 / 1.20.1–1.20.4) · 21 (1.20.5+ / 1.21.x) · 25 (26.x) |
+| **Java** | 8 (1.16 / 1.12.2 / 1.8.9) · 17 (1.19 / 1.20.1–1.20.4) · 21 (1.20.5+ / 1.21.x) · 25 (26.x) |
 | **Side** | Client and dedicated server (optional on each) |
 
 Migrating from the original ConsoleFilter? See [MIGRATION.md](https://github.com/alanjmrt94/ConsoleFilterNext/blob/master/MIGRATION.md).
@@ -93,6 +105,7 @@ Migrating from the original ConsoleFilter? See [MIGRATION.md](https://github.com
 | **Discord** | [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD) |
 | **Issues** | [GitHub Issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues) |
 | **Source** | [alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext) |
+| **Releases** | [GitHub Releases](https://github.com/alanjmrt94/ConsoleFilterNext/releases) |
 
 ## Credits
 

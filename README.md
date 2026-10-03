@@ -32,11 +32,11 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **1.19.4** | Forge · Fabric (Java 17, sin editor in-game) | `1.19.4-4.2.0` |
 | **1.16.5** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.5-4.2.0` |
 | **1.16.1** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.1-4.2.0` |
-| **1.12.2** | Forge · Fabric (Java 8, feature set reducido, sin editor) | `1.12.2-4.2.0` |
-| **1.8.9** | Forge · Fabric (Java 8, feature set reducido, sin editor) | `1.8.9-4.2.0` |
+| **1.12.2** | Forge · Fabric / Legacy Fabric en Modrinth (Java 8, feature set reducido, sin editor) | `1.12.2-4.2.0` |
+| **1.8.9** | Forge · Fabric / Legacy Fabric en Modrinth (Java 8, feature set reducido, sin editor) | `1.8.9-4.2.0` |
 | **26.1** | Forge · Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
 | **26.2** | Forge · Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
-| **26.3** | Fabric · NeoForge (Java 25; NeoForge `26.3.0.8-beta`; sin Forge) | `26.3-4.2.0` (sin tag aún) |
+| **26.3** | Fabric · NeoForge (Java 25; NeoForge `26.3.0.8-beta`; sin Forge) | `26.3-4.2.0` |
 
 Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz. GitHub Release, Modrinth y CurseForge se disparan con el push del tag; si un archivo no aparece en las tiendas hay que **republicar** ese tag.
 
@@ -57,12 +57,13 @@ Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz
 | **Forge / Fabric / NeoForge 1.21.3–1.21.5, 1.21.8, 1.21.10, 1.21.11** | Filtrar por versión de juego | Filtrar por game version |
 | **Forge / Fabric 1.21.6 / 1.21.7 / 1.21.9** | Filtrar por versión de juego | Filtrar por game version |
 | **Forge / Fabric / NeoForge 26.1–26.2** | Filtrar por versión de juego | Filtrar por game version |
+| **Fabric / NeoForge 26.3** | Filtrar por versión de juego | Filtrar por game version |
 
 | Hub | Link |
 |-----|------|
 | **CurseForge** (proyecto) | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
 | **Modrinth** (proyecto) | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
-| **GitHub Releases** | tags `{mc}-4.2.0` (`1.19.x`, `1.20.1`–`1.20.6`, `1.21.1`–`1.21.11`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`) |
+| **GitHub Releases** | tags `{mc}-4.2.0` (`1.19.x`, `1.20.1`–`1.20.6`, `1.21.1`–`1.21.11`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`, `26.3`) |
 | **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
 > **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).

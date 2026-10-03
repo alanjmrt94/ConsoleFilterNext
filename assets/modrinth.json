@@ -18,12 +18,12 @@
   "icon_file": "icon.png",
   "gallery": [
     {
-      "file": "gallery/sample-1.png",
+      "file": "gallery/in-game-config-editor.png",
       "featured": true,
       "title": "Console Filter Next",
       "description": "In-game configuration editor (Options → Mods → Config)",
       "ordering": 0
     }
   ],
-  "submit_for_review": true
+  "submit_for_review": false
 }
