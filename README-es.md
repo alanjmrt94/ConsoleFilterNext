@@ -1,13 +1,13 @@
 # Console Filter Next
 
-<small>by [alanjmrt94](https://github.com/alanjmrt94) · <a href="README-es.md"><img src="https://flagcdn.com/w20/ar.png" width="20" alt="Leer versión en Español" /> Leer en Español</a></small>
+<small>por [alanjmrt94](https://github.com/alanjmrt94) · <a href="README.md"><img src="https://flagcdn.com/w20/us.png" width="20" alt="Read in English" /> Read in English</a></small>
 
 [![CurseForge](https://img.shields.io/badge/CurseForge-consolefilternext-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/consolefilternext)
 [![Modrinth](https://img.shields.io/modrinth/dt/consolefilternext?logo=modrinth&label=Modrinth&color=00af5c)](https://modrinth.com/mod/consolefilternext)
 
-An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — by text, regex, log level, thread, source, and mod id. Reduce console noise on the client or dedicated server while debugging modpacks and development environments.
+Un filtro de consola mejorado para Minecraft **Forge / Fabric / NeoForge** — por texto, regex, nivel de log, hilo, origen e id de mod. Reduce el ruido en cliente o servidor dedicado al debuggear modpacks y entornos de desarrollo.
 
-**Current releases** (mismo `mod_semver` `4.2.0`, tags `{mc}-4.2.0`):
+**Releases actuales** (mismo `mod_semver` `4.2.0`, tags `{mc}-4.2.0`):
 
 | Minecraft | Loaders | Tag |
 |-----------|---------|-----|
@@ -42,7 +42,7 @@ Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz
 
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
-## Downloads
+## Descargas
 
 | Loader | CurseForge | Modrinth |
 |--------|------------|----------|
@@ -65,61 +65,61 @@ Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz
 | **GitHub Releases** | tags `{mc}-4.2.0` (`1.19.x`, `1.20.1`–`1.20.6`, `1.21.1`–`1.21.11`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`) |
 | **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
-> **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).
+> **Desarrolladores:** `./scripts/release.sh` para entorno, builds y publicación (GitHub + CurseForge + Modrinth).
 
 ---
 
-## Features
+## Características
 
-- **Filter types:** basic text, regex, log level, thread, logger/source, **mod id**
-- **Profiles:** `default`, `debug`, `production` — switch in-game, via TOML, or `/consolefilter profile` (persisted)
-- **Modes:** blacklist (hide matches) or **whitelist** (show only matches); optional `ignoreCase`
-- **`filterLatestLog`:** apply filters to `latest.log` and other Log4j file appenders
-- **`skipMessagesWithStackTrace`:** never hide lines with exceptions or stack traces
-- **In-game editor** (Forge/NeoForge Mods → Config; Fabric Mod Menu): paginated lists, regex validation, presets, import/export
-- **Commands** (OP 2): `reload`, `list`, `status`, `export`, `import`, `profile`
-- **Statistics:** per-filter-type hit counts in `/consolefilter status`
-- **Hot reload** from file, commands, or **Save & Apply** in the config UI
+- **Tipos de filtro:** texto, regex, nivel de log, hilo, logger/origen, **mod id**
+- **Perfiles:** `default`, `debug`, `production` — se cambian in-game, por TOML o `/consolefilter profile` (persistido)
+- **Modos:** blacklist (ocultar coincidencias) o **whitelist** (mostrar solo coincidencias); `ignoreCase` opcional
+- **`filterLatestLog`:** aplica los filtros a `latest.log` y otros appenders de archivo de Log4j
+- **`skipMessagesWithStackTrace`:** nunca oculta líneas con excepciones o stack traces
+- **Editor in-game** (Forge/NeoForge Mods → Config; Fabric Mod Menu): listas paginadas, validación de regex, presets, import/export
+- **Comandos** (OP 2): `reload`, `list`, `status`, `export`, `import`, `profile`
+- **Estadísticas:** hits por tipo de filtro en `/consolefilter status`
+- **Hot reload** desde archivo, comandos o **Save & Apply** en la UI
 
 ---
 
-## 🙌 Credits
+## 🙌 Créditos
 
 | | |
 |---|---|
 | **Console Filter Next** | **alanjmrt94** |
-| **Originally based on** | [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) by **Matthew Czyr** ([MattCzyr](https://github.com/MattCzyr)) |
-| **ConsoleFilter contributors** | **NgLoader**, **MarkKoz**, **ChaosTheDude** |
-| **License** | [CC BY-NC-SA 4.0](LICENSE.md) |
+| **Basado originalmente en** | [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) de **Matthew Czyr** ([MattCzyr](https://github.com/MattCzyr)) |
+| **Contribuidores de ConsoleFilter** | **NgLoader**, **MarkKoz**, **ChaosTheDude** |
+| **Licencia** | [CC BY-NC-SA 4.0](LICENSE.md) |
 
-Issues and pull requests: [github.com/alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)  
+Issues y pull requests: [github.com/alanjmrt94/ConsoleFilterNext](https://github.com/alanjmrt94/ConsoleFilterNext/issues)  
 Discord: [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
 ---
 
-Crafted with ❤️ for modders who want a cleaner console.
+Hecho con ❤️ para modders que quieren una consola más limpia.
 
 ## ⚙️ Config
 
-The actual configuration of the mod is done in a separate file generated at runtime.  
-To configure the mod, you have two options:
+La configuración del mod está en un archivo generado en runtime.  
+Hay dos formas de configurarlo:
 
 ### 🕹️ In-Game
 
-1. Go to **Options → Mods** (Forge / NeoForge) or open **Mod Menu** (Fabric)
-2. Find **Console Filter Next**
-3. Open **Config**
-4. Edit booleans, profiles, and filter lists; use **Save & Apply** to write `consolefilternext-common.toml` and reload filters
+1. Andá a **Opciones → Mods** (Forge / NeoForge) o abrí **Mod Menu** (Fabric)
+2. Buscá **Console Filter Next**
+3. Abrí **Config**
+4. Editá booleanos, perfiles y listas; **Save & Apply** escribe `consolefilternext-common.toml` y recarga los filtros
 
-Forge and NeoForge use the built-in Mods config button. Fabric uses [Mod Menu](https://modrinth.com/mod/modmenu) when installed (optional).
+Forge y NeoForge usan el botón Config de Mods. Fabric usa [Mod Menu](https://modrinth.com/mod/modmenu) si está instalado (opcional).
 
-### 🛠️ Editing the Configuration File
+### 🛠️ Editar el archivo de configuración
 
-1. Go to the `config` folder in your Minecraft installation  
-2. Open `consolefilternext-common.toml`  
-3. Edit the values according to your needs
+1. Entrá a la carpeta `config` de tu instalación de Minecraft  
+2. Abrí `consolefilternext-common.toml`  
+3. Editá los valores según lo que necesites
 
-For example, to filter all `INFO` messages from the `Server thread`, your `consolefilternext-common.toml` should look like this:
+Por ejemplo, para filtrar todos los mensajes `INFO` del `Server thread`, el `consolefilternext-common.toml` puede verse así:
 
 ````toml
 [general]
@@ -149,13 +149,13 @@ modIdFilters = []
 regexFilters = []
 ````
 
-> Migrating from [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) (original)? See [MIGRATION.md](MIGRATION.md).
+> ¿Migrás desde [ConsoleFilter](https://github.com/MattCzyr/ConsoleFilter) (original)? Ver [MIGRATION.md](MIGRATION.md).
 
 ## 💡 Tips
 
-Here are some useful examples to help you get started with advanced filtering:
+Algunos ejemplos para empezar con filtros avanzados:
 
-### ✅ Filter all DEBUG messages
+### ✅ Filtrar todos los mensajes DEBUG
 
 ```toml
 levelFilters = ["DEBUG"]
@@ -302,17 +302,17 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 ---
 
-## 🧩 Compatibility
+## 🧩 Compatibilidad
 
 | | |
 |---|---|
 | **Minecraft** | 1.19.2 / 1.19.4 (Forge/Fabric) · 1.20.1–1.20.4 (Forge/Fabric; NeoForge en 1.20.1 y 1.20.4) · 1.20.5 (Fabric) · 1.20.6 y 1.21.x (Forge/Fabric; NeoForge donde hay release estable) · 1.16.5 y 1.16.1 (Forge/Fabric, Java 8) · 1.12.2 y 1.8.9 (Forge + Fabric, Java 8) · 26.1 / 26.2 (Forge/Fabric/NeoForge, Java 25) |
 | **Mod loaders** | Forge 64+ (26.x) · Forge 47–61 (1.20.x / 1.21.x) · Forge 43–45 (1.19.x) · Forge 36 (1.16.5) · Forge 14 (1.12.2) · Forge 11 (1.8.9) · Fabric · Legacy Fabric (1.12.2 / 1.8.9) · NeoForge |
 | **Java (runtime)** | 8 (MC 1.16.x / 1.12.2 / 1.8.9) · 17 (MC 1.19.x / 1.20.1–1.20.4) · 21 (MC 1.20.5 / 1.20.6 / 1.21.x) · 25 (MC 26.x) |
-| **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
+| **Side** | **Cliente y servidor dedicado** — instalá en uno o ambos; los filtros aplican en los dos lados |
 | **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) · tags `{mc}-4.2.0` en GitHub |
 
-## 🛠️ Building from source
+## 🛠️ Build desde el source
 
 **Requirements:**
 
@@ -493,19 +493,19 @@ Local publishes use the same names in `scripts/.release.local` (see `scripts/.re
 
 If neither `MODRINTH_TOKEN` nor `CURSEFORGE_API_TOKEN` is set in the `publish` environment, the workflow skips upload steps with a notice (no failure). If `DISCORD_WEBHOOK_URL` is missing, publish still succeeds and skips the Discord notify with a warning.
 
-## ⚠️ Known limitations (v4.2.0)
+## ⚠️ Limitaciones conocidas (v4.2.0)
 
-- Config hot-reload via `/consolefilter reload` or **Save & Apply** re-parses rules; filters must already be registered at startup.
-- The in-game list editor paginates long lists (8 per page) but has no search yet.
-- `modIdFilters` resolution depends on the loader mod list and logger/source names; edge cases may need `sourceFilters` instead.
+- El hot-reload con `/consolefilter reload` o **Save & Apply** vuelve a parsear reglas; los filtros tienen que estar registrados al arrancar.
+- El editor de listas in-game pagina (8 por página) y todavía no tiene búsqueda.
+- La resolución de `modIdFilters` depende de la lista de mods del loader y de los nombres de logger/origen; casos raros pueden necesitar `sourceFilters`.
 
-## License
+## Licencia
 
 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode) (CC BY-NC-SA 4.0). See [LICENSE.md](LICENSE.md) for attribution and terms.
 
-Free to download on CurseForge and Modrinth; redistribution and derivatives must follow CC BY-NC-SA 4.0 (attribution, non-commercial, share-alike).
+Gratis para descargar en CurseForge y Modrinth; la redistribución y los derivados deben seguir CC BY-NC-SA 4.0 (atribución, no comercial, share-alike).
 
-## Links
+## Enlaces
 
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) — [Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) · [Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) · [NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6)
 - [Modrinth](https://modrinth.com/mod/consolefilternext) — [Forge](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) · [Fabric](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) · [NeoForge](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i)
@@ -514,6 +514,6 @@ Free to download on CurseForge and Modrinth; redistribution and derivatives must
 - [Report issues](https://github.com/alanjmrt94/ConsoleFilterNext/issues)
 - [Discord](https://discord.gg/CcUNTJjPD)
 - [ConsoleFilter by Matthew Czyr](https://github.com/MattCzyr/ConsoleFilter)
-- [Migration guide](MIGRATION.md)
+- [Guía de migración](MIGRATION.md)
 
-**Contributors:** [PoligamerYT](https://github.com/PoligamerYT) ([#1](https://github.com/alanjmrt94/ConsoleFilterNext/pull/1) — Minecraft 26.3).
+**Aportes:** [PoligamerYT](https://github.com/PoligamerYT) ([#1](https://github.com/alanjmrt94/ConsoleFilterNext/pull/1) — Minecraft 26.3).
