@@ -7,13 +7,15 @@
  - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
 -----------------------------------------------------
- VERSION 4.2.0 - 1.20.1 / 26.1 / 26.2
+ VERSION 4.2.0 - 1.20.1 / 26.1 / 26.2 / líneas extra
 -----------------------------------------------------
 1.20.1, 26.1, 26.2:
- - Shared in-game config editor (platforms/{mc}/client/ on each MC line) on Forge, Fabric (Mod Menu), and NeoForge. 26.x ships Fabric and NeoForge only.
+ - Shared in-game config editor (platforms/{mc}/client/ on each MC line) on Forge, Fabric (Mod Menu), and NeoForge
  - Multi-JAR publish: GitHub / Modrinth TAG+loader / CurseForge per loader
  - JAR classifiers *-forge / *-fabric / *-neoforge; isolated CI lint + per-loader build/smoke
  - Docs and scripts aligned with the three-loader release path
+ - Forge 26.1 / 26.2 (ForgeGradle 7, EventBus 7, Java 25)
+ - Fabric 1.12.2 / 1.8.9 (Legacy Fabric Loom; filtro + TOML + comandos, sin editor in-game)
 
 -----------------------------------------------------
  VERSION 4.1.0 - 1.20.1

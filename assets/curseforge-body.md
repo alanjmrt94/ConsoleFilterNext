@@ -21,8 +21,10 @@ Works on the **client and dedicated server** (optional on each side). Download t
 
 ## Compatibility
 
-- Minecraft **1.20.1** — Forge · Fabric · NeoForge (Java 17)
-- Minecraft **26.1** / **26.2** — Fabric · NeoForge (Java 25)
+- Minecraft **1.20.1** / **1.21.1** — Forge · Fabric · NeoForge
+- Minecraft **26.1** / **26.2** — Forge · Fabric · NeoForge (Java 25)
+- Minecraft **1.16.5** / **1.16.1** — Forge · Fabric (Java 8)
+- Minecraft **1.12.2** / **1.8.9** — Forge · Fabric (Java 8; sin editor in-game)
 - Un solo proyecto; cada archivo/versión indica MC + loader. Mismo `mod_semver` en tags `{mc}-{semver}`.
 
 ## Credits

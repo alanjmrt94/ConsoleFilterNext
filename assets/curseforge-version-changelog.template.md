@@ -21,6 +21,7 @@
 - Editor in-game compartido (`platforms/{mc}/client/` (1.20.1, 26.1, 26.2, …)): Mod Menu (Fabric) / Mods → Config (Forge y NeoForge)
 - Mismos filtros y TOML `consolefilternext-common.toml` en los tres loaders
 - JARs con classifier por loader (`*-forge` / `*-fabric` / `*-neoforge`)
+- Forge 26.1 / 26.2 (EventBus 7) y Fabric 1.12.2 / 1.8.9 (Legacy Fabric; sin editor in-game)
 
 ---
 

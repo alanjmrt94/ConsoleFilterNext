@@ -67,11 +67,11 @@ Console Filter Next adds `/consolefilter` (OP 2): `reload`, `list`, `status`, `e
 
 ## In-game config
 
-- **Forge / NeoForge 1.20.1:** Options → Mods → Console Filter Next → Config
-- **Fabric (todas las líneas):** Mod Menu → Console Filter Next → Config (opcional)
-- **NeoForge 26.x:** mismo botón Config en la lista de mods (API moderna)
+- **Forge / NeoForge (1.20.1, 1.21.1, 26.x):** Options → Mods → Console Filter Next → Config
+- **Fabric moderno (1.20.1, 1.21.1, 1.16.x, 26.x):** Mod Menu → Console Filter Next → Config (opcional)
+- **1.12.2 / 1.8.9 (Forge y Fabric):** sin editor in-game; TOML + `/consolefilter`
 
-Sourcesets de UI: `platforms/{mc}/client/` (p. ej. `platforms/1.20.1/client`, `platforms/26.1/client`, `platforms/26.2/client`).
+Sourcesets de UI: `platforms/{mc}/client/` (p. ej. `platforms/1.20.1/client`, `platforms/26.1/client`, `platforms/26.2/client`). Legacy no usa `client/`.
 
 ## Reporting issues
 
