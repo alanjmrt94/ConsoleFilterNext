@@ -1,0 +1,135 @@
+plugins {
+	id 'eclipse'
+	id 'idea'
+	id 'maven-publish'
+	id 'net.minecraftforge.gradle' version '6.0.47'
+}
+
+def props = new Properties()
+file('../../../gradle.properties').withInputStream { props.load(it) }
+file('../../../versions/1.19.2.properties').withInputStream { props.load(it) }
+props.each { key, value ->
+	if (!project.hasProperty(key)) {
+		project.ext.set(key as String, value)
+	}
+}
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName = props['mod_id'] as String
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+	mappings channel: 'official', version: props['minecraft_version']
+	copyIdeResources = true
+
+	runs {
+		client {
+			workingDirectory project.file('../../runs/1.19.2/forge')
+			property 'forge.logging.markers', 'REGISTRIES'
+			property 'forge.logging.console.level', 'debug'
+			property 'forge.enabledGameTestNamespaces', props['mod_id']
+			mods {
+				"${props['mod_id']}" {
+					source sourceSets.main
+				}
+			}
+		}
+
+		server {
+			workingDirectory project.file('../../runs/1.19.2/forge')
+			property 'forge.logging.markers', 'REGISTRIES'
+			property 'forge.logging.console.level', 'debug'
+			property 'forge.enabledGameTestNamespaces', props['mod_id']
+			args 'nogui'
+			mods {
+				"${props['mod_id']}" {
+					source sourceSets.main
+				}
+			}
+		}
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir '../../../common/src/main/java'
+		}
+	}
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+def ensureRunEula = tasks.register('ensureRunEula') {
+	doLast {
+		def runDir = project.file('../../runs/1.19.2/forge')
+		runDir.mkdirs()
+		new File(runDir, 'eula.txt').text = "eula=true\n"
+	}
+}
+
+tasks.whenTaskAdded { task ->
+	if (task.name == 'runServer' || task.name == 'runGameTestServer') {
+		task.dependsOn(ensureRunEula)
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		name = "Forge"
+		url = "https://maven.minecraftforge.net/"
+	}
+}
+
+dependencies {
+	minecraft "net.minecraftforge:forge:${props['minecraft_version']}-${props['forge_version']}"
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def replaceProperties = [
+		minecraft_version      : props['minecraft_version'],
+		minecraft_version_range: props['minecraft_version_range'],
+		forge_version          : props['forge_version'],
+		forge_version_range    : props['forge_version_range'],
+		loader_version_range   : props['loader_version_range'],
+		mod_id                 : props['mod_id'],
+		mod_name               : props['mod_name'],
+		mod_license            : props['mod_license'],
+		mod_version            : props['mod_version'],
+		mod_authors            : props['mod_authors'],
+		mod_description        : props['mod_description'],
+		mod_environment        : props['mod_environment']
+]
+
+processResources {
+	inputs.properties replaceProperties
+	filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+		expand replaceProperties
+	}
+}
+
+jar {
+	archiveClassifier.set('forge')
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(file('../../../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}
+
+jar.finalizedBy('reobfJar')
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 17
+}
+
+test {
+	useJUnitPlatform()
+}
