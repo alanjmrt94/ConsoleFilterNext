@@ -47,21 +47,21 @@ else
 fi
 
 # --- H3: Fabric gradle.properties sin BMCL hardcode ---
-if rg -q 'loom_libraries_base=https://bmclapi' "${ROOT}/fabric-26.1/gradle.properties" "${ROOT}/fabric-26.2/gradle.properties" 2>/dev/null; then
-	dbg H3 "fabric-26.*/gradle.properties" "BMCL hardcode" '{"hardcoded":true}'
+if rg -q 'loom_libraries_base=https://bmclapi' "${ROOT}/platforms/26.1/fabric/gradle.properties" "${ROOT}/platforms/26.2/fabric/gradle.properties" 2>/dev/null; then
+	dbg H3 "platforms/26.*/fabric/gradle.properties" "BMCL hardcode" '{"hardcoded":true}'
 	echo "FAIL H3: BMCL aún hardcodeado en fabric gradle.properties"
 	fail=1
 else
-	dbg H3 "fabric-26.*/gradle.properties" "BMCL hardcode" '{"hardcoded":false}'
+	dbg H3 "platforms/26.*/fabric/gradle.properties" "BMCL hardcode" '{"hardcoded":false}'
 	echo "OK H3: fabric gradle.properties sin BMCL fijo"
 fi
-if ! rg -q "useBmclMirror" "${ROOT}/fabric-26.1/build.gradle" || ! rg -q "useBmclMirror" "${ROOT}/fabric-26.2/build.gradle"; then
+if ! rg -q "useBmclMirror" "${ROOT}/platforms/26.1/fabric/build.gradle" || ! rg -q "useBmclMirror" "${ROOT}/platforms/26.2/fabric/build.gradle"; then
 	echo "FAIL H3: build.gradle Fabric sin gate useBmclMirror"
 	fail=1
 fi
 
 # --- H4: NeoForge BMCL rewrite gated ---
-for f in neoforge-26.1/build.gradle neoforge-26.2/build.gradle; do
+for f in platforms/26.1/neoforge/build.gradle platforms/26.2/neoforge/build.gradle; do
 	if rg -n 'libraries.minecraft.net' "${ROOT}/${f}" | rg -q 'useBmclMirror|bmclapi'; then
 		# Must be inside if (useBmclMirror)
 		if awk '/def useBmclMirror/{g=1} g && /libraries.minecraft.net/{found=1} END{exit !found}' "${ROOT}/${f}"; then
@@ -79,7 +79,7 @@ for f in neoforge-26.1/build.gradle neoforge-26.2/build.gradle; do
 done
 
 # --- H5: logoFile + pack_format ---
-for pair in 'neoforge-26.1:84' 'neoforge-26.2:88'; do
+for pair in 'platforms/26.1/neoforge:84' 'platforms/26.2/neoforge:88'; do
 	dir="${pair%%:*}"
 	fmt="${pair##*:}"
 	toml="${ROOT}/${dir}/src/main/resources/META-INF/neoforge.mods.toml"
@@ -96,9 +96,9 @@ for pair in 'neoforge-26.1:84' 'neoforge-26.2:88'; do
 	fi
 done
 
-# --- H6: docs mention client-26 / 26.x smoke ---
-if rg -q 'client-26' "${ROOT}/MIGRATION.md" "${ROOT}/assets/modrinth-version-changelog.md" \
-	&& rg -q 'fabric-26.1' "${ROOT}/README.md"; then
+# --- H6: docs mention platforms layout / 26.x smoke ---
+if rg -q 'platforms/' "${ROOT}/MIGRATION.md" "${ROOT}/README.md" \
+	&& rg -q 'platforms/26.1/fabric|fabric-26.1' "${ROOT}/README.md"; then
 	dbg H6 docs "multi-mc docs" '{"updated":true}'
 	echo "OK H6: docs actualizados"
 else

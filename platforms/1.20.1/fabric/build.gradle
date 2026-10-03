@@ -18,7 +18,7 @@ apply plugin: 'fabric-loom'
 apply plugin: 'maven-publish'
 
 def props = new Properties()
-file('../gradle.properties').withInputStream { props.load(it) }
+file('../../../gradle.properties').withInputStream { props.load(it) }
 props.each { key, value ->
     if (!project.hasProperty(key)) {
         project.ext.set(key as String, value)
@@ -48,7 +48,7 @@ repositories {
 sourceSets {
     main {
         java {
-            srcDir '../common/src/main/java'
+            srcDir '../../../common/src/main/java'
             srcDir '../client/src/main/java'
         }
     }
@@ -81,13 +81,13 @@ loom {
             client()
             setConfigName('Fabric Client')
             ideConfigGenerated true
-            runDir '../run-fabric'
+            runDir '../../runs/1.20.1/fabric'
         }
         server {
             server()
             setConfigName('Fabric Server')
             ideConfigGenerated true
-            runDir '../run-fabric'
+            runDir '../../runs/1.20.1/fabric'
         }
     }
 }
@@ -123,7 +123,7 @@ tasks.named('remapJar', net.fabricmc.loom.task.RemapJarTask).configure {
 }
 
 jar {
-    from(file('../LICENSE.md')) {
+    from(file('../../../LICENSE.md')) {
         rename { "${it}_${props['mod_id']}" }
     }
 }

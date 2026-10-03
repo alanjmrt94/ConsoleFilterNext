@@ -23,7 +23,7 @@ minecraft {
 
     runs {
         client {
-            workingDirectory rootProject.file('run')
+            workingDirectory rootProject.file('runs/1.20.1/forge')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', mod_id
@@ -36,7 +36,7 @@ minecraft {
         }
 
         server {
-            workingDirectory rootProject.file('run')
+            workingDirectory rootProject.file('runs/1.20.1/forge')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', mod_id
@@ -50,7 +50,7 @@ minecraft {
         }
 
         gameTestServer {
-            workingDirectory rootProject.file('run')
+            workingDirectory rootProject.file('runs/1.20.1/forge')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', mod_id
@@ -63,7 +63,7 @@ minecraft {
         }
 
         data {
-            workingDirectory rootProject.file('run')
+            workingDirectory rootProject.file('runs/1.20.1/forge')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
@@ -79,7 +79,7 @@ minecraft {
 
 def ensureRunEula = tasks.register('ensureRunEula') {
     doLast {
-        def runDir = rootProject.file('run')
+        def runDir = rootProject.file('runs/1.20.1/forge')
         runDir.mkdirs()
         def eulaFile = new File(runDir, 'eula.txt')
         eulaFile.text = """#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://aka.ms/MinecraftEULA).

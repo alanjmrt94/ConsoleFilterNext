@@ -40,10 +40,12 @@ spotless {
     java {
         target(
             'common/src/**/*.java',
-            'client/src/**/*.java',
-            'forge/src/**/*.java',
-            'fabric/src/**/*.java',
-            'neoforge/src/**/*.java'
+            'common-java8/src/**/*.java',
+            'legacy-common/src/**/*.java',
+            'platforms/*/client/src/**/*.java',
+            'platforms/*/forge/src/**/*.java',
+            'platforms/*/fabric/src/**/*.java',
+            'platforms/*/neoforge/src/**/*.java'
         )
         removeUnusedImports()
         trimTrailingWhitespace()
@@ -81,10 +83,10 @@ tasks.register('testAll') {
 
 tasks.register('buildFabric') {
     group = 'build'
-    description = 'Compila el adaptador Fabric (wrapper Gradle 9 + Loom aislado)'
+    description = 'Compila el adaptador Fabric 1.20.1 (wrapper Gradle + Loom aislado)'
     doLast {
         exec {
-            workingDir = file('fabric')
+            workingDir = file('platforms/1.20.1/fabric')
             commandLine './gradlew', 'build', '--no-daemon'
         }
     }
@@ -92,10 +94,10 @@ tasks.register('buildFabric') {
 
 tasks.register('testFabric') {
     group = 'verification'
-    description = 'Tests del adaptador Fabric'
+    description = 'Tests del adaptador Fabric 1.20.1'
     doLast {
         exec {
-            workingDir = file('fabric')
+            workingDir = file('platforms/1.20.1/fabric')
             commandLine './gradlew', 'test', '--no-daemon'
         }
     }

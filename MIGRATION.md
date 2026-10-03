@@ -71,7 +71,7 @@ Console Filter Next adds `/consolefilter` (OP 2): `reload`, `list`, `status`, `e
 - **Fabric (todas las líneas):** Mod Menu → Console Filter Next → Config (opcional)
 - **NeoForge 26.x:** mismo botón Config en la lista de mods (API moderna)
 
-Sourcesets de UI: `client/` (1.20.1), `client-26/` (26.1), `client-26.2/` (26.2).
+Sourcesets de UI: `platforms/{mc}/client/` (p. ej. `platforms/1.20.1/client`, `platforms/26.1/client`, `platforms/26.2/client`).
 
 ## Reporting issues
 

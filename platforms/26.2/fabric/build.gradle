@@ -4,9 +4,9 @@ plugins {
 }
 
 def rootProps = new Properties()
-file('../gradle.properties').withInputStream { rootProps.load(it) }
+file('../../../gradle.properties').withInputStream { rootProps.load(it) }
 def verProps = new Properties()
-file('../versions/26.2.properties').withInputStream { verProps.load(it) }
+file('../../../versions/26.2.properties').withInputStream { verProps.load(it) }
 def props = new Properties()
 props.putAll(rootProps)
 props.putAll(verProps)
@@ -32,13 +32,13 @@ repositories {
 sourceSets {
 	main {
 		java {
-			srcDir '../common/src/main/java'
-			srcDir '../client-26.2/src/main/java'
+			srcDir '../../../common/src/main/java'
+			srcDir '../client/src/main/java'
 		}
 	}
 	test {
 		java {
-			srcDir '../client-26.2/src/test/java'
+			srcDir '../client/src/test/java'
 		}
 	}
 }
@@ -78,13 +78,13 @@ loom {
 			client()
 			setConfigName('Fabric 26.2 Client')
 			ideConfigGenerated true
-			runDir '../run-fabric-26.2'
+			runDir '../../runs/26.2/fabric'
 		}
 		server {
 			server()
 			setConfigName('Fabric 26.2 Server')
 			ideConfigGenerated true
-			runDir '../run-fabric-26.2'
+			runDir '../../runs/26.2/fabric'
 		}
 	}
 }
@@ -124,7 +124,7 @@ java {
 
 jar {
 	archiveClassifier.set('fabric')
-	from(file('../LICENSE.md')) {
+	from(file('../../../LICENSE.md')) {
 		rename { "${it}_${props['mod_id']}" }
 	}
 }

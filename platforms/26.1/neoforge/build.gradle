@@ -5,9 +5,9 @@ plugins {
 }
 
 def rootProps = new Properties()
-file('../gradle.properties').withInputStream { rootProps.load(it) }
+file('../../../gradle.properties').withInputStream { rootProps.load(it) }
 def verProps = new Properties()
-file('../versions/26.1.properties').withInputStream { verProps.load(it) }
+file('../../../versions/26.1.properties').withInputStream { verProps.load(it) }
 def props = new Properties()
 props.putAll(rootProps)
 props.putAll(verProps)
@@ -34,13 +34,13 @@ java {
 sourceSets {
 	main {
 		java {
-			srcDir '../common/src/main/java'
-			srcDir '../client-26/src/main/java'
+			srcDir '../../../common/src/main/java'
+			srcDir '../client/src/main/java'
 		}
 	}
 	test {
 		java {
-			srcDir '../client-26/src/test/java'
+			srcDir '../client/src/test/java'
 		}
 	}
 }
@@ -81,13 +81,13 @@ neoForge {
 	runs {
 		client {
 			client()
-			gameDirectory = project.file('../run-neoforge-26.1')
+			gameDirectory = project.file('../../runs/26.1/neoforge')
 			systemProperty 'neoforge.logging.markers', 'REGISTRIES'
 			logLevel = org.slf4j.event.Level.DEBUG
 		}
 		server {
 			server()
-			gameDirectory = project.file('../run-neoforge-26.1')
+			gameDirectory = project.file('../../runs/26.1/neoforge')
 			programArgument '--nogui'
 			systemProperty 'neoforge.logging.markers', 'REGISTRIES'
 			logLevel = org.slf4j.event.Level.DEBUG
@@ -133,7 +133,7 @@ processResources {
 tasks.named('jar', Jar).configure {
 	archiveClassifier.set('neoforge')
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	from(file('../LICENSE.md')) {
+	from(file('../../../LICENSE.md')) {
 		rename { "${it}_${props['mod_id']}" }
 	}
 }

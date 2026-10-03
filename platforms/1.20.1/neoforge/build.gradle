@@ -5,7 +5,7 @@ plugins {
 }
 
 def props = new Properties()
-file('../gradle.properties').withInputStream { props.load(it) }
+file('../../../gradle.properties').withInputStream { props.load(it) }
 props.each { key, value ->
 	if (!project.hasProperty(key)) {
 		project.ext.set(key as String, value)
@@ -30,7 +30,7 @@ java {
 sourceSets {
 	main {
 		java {
-			srcDir '../common/src/main/java'
+			srcDir '../../../common/src/main/java'
 			srcDir '../client/src/main/java'
 		}
 	}
@@ -58,13 +58,13 @@ legacyForge {
 	runs {
 		client {
 			client()
-			gameDirectory = project.file('../run-neoforge')
+			gameDirectory = project.file('../../runs/1.20.1/neoforge')
 			systemProperty 'forge.logging.markers', 'REGISTRIES'
 			logLevel = org.slf4j.event.Level.DEBUG
 		}
 		server {
 			server()
-			gameDirectory = project.file('../run-neoforge')
+			gameDirectory = project.file('../../runs/1.20.1/neoforge')
 			programArgument '--nogui'
 			systemProperty 'forge.logging.markers', 'REGISTRIES'
 			logLevel = org.slf4j.event.Level.DEBUG
@@ -114,7 +114,7 @@ processResources {
 tasks.named('jar', Jar).configure {
 	archiveClassifier.set('neoforge')
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	from(file('../LICENSE.md')) {
+	from(file('../../../LICENSE.md')) {
 		rename { "${it}_${props['mod_id']}" }
 	}
 	manifest {

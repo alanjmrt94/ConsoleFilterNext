@@ -191,7 +191,13 @@ publish_find_jar_for_cell() {
 	local mod_id="$3"
 	local version="$4"
 	local jar=""
-	local dir="${PROJECT_ROOT}/${project}"
+	local dir
+	# :forge sigue siendo subproyecto del Gradle raíz, en platforms/1.20.1/forge.
+	if [[ "${project}" == "forge" ]]; then
+		dir="${PROJECT_ROOT}/platforms/1.20.1/forge"
+	else
+		dir="${PROJECT_ROOT}/${project}"
+	fi
 
 	case "${loader}" in
 		forge)
@@ -337,10 +343,11 @@ publish_build_release() {
 				fi
 				gradle_cmd :forge:build || return 1
 				;;
-			fabric|neoforge)
-				(cd "${PROJECT_ROOT}/${dir}" && ./gradlew clean build) || return 1
+			platforms/1.8.9/forge)
+				# FG2: setupCiWorkspace evita getAssets (HTTP 400) y deja el mínimo para compilar.
+				(cd "${PROJECT_ROOT}/${dir}" && ./gradlew setupCiWorkspace clean build) || return 1
 				;;
-			fabric-*|neoforge-*)
+			platforms/*)
 				(cd "${PROJECT_ROOT}/${dir}" && ./gradlew clean build) || return 1
 				;;
 			*)
@@ -1524,7 +1531,7 @@ publish_release_cli() {
 Uso: $(basename "$0") publish [opciones]
 
   --dry-run           Simular sin git push ni subidas
-  --skip-build        Usar JARs existentes (forge/fabric/neoforge build/libs)
+  --skip-build        Usar JARs existentes (platforms/{mc}/{loader}/build/libs)
   --push-branch       Subir la rama actual antes del tag (default en menú opción 2)
   --no-push-branch    No subir la rama
   --skip-github       Omitir tag y GitHub Release

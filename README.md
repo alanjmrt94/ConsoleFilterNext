@@ -10,6 +10,11 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | Minecraft | Loaders | Tag |
 |-----------|---------|-----|
 | **1.20.1** | Forge · Fabric · NeoForge | `1.20.1-4.2.0` |
+| **1.21.1** | Forge · Fabric · NeoForge (Java 21) | `1.21.1-4.2.0` (aún sin tag) |
+| **1.16.5** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.5-4.2.0` (aún sin tag) |
+| **1.16.1** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.1-4.2.0` (aún sin tag) |
+| **1.12.2** | Forge (Java 8, feature set reducido, sin editor) | `1.12.2-4.2.0` (aún sin tag) |
+| **1.8.9** | Forge (Java 8, feature set reducido, sin editor) | `1.8.9-4.2.0` (aún sin tag) |
 | **26.1** | Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
 | **26.2** | Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
 
@@ -272,9 +277,9 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 | | |
 |---|---|
-| **Minecraft** | 1.20.1 (Forge/Fabric/NeoForge) · 26.1 / 26.2 (Fabric/NeoForge, Java 25) |
-| **Mod loaders** | Forge 47+ · Fabric · NeoForge |
-| **Java (runtime)** | 17 (MC 1.20.1) · 25 (MC 26.x) |
+| **Minecraft** | 1.20.1 (Forge/Fabric/NeoForge) · 1.21.1 (Forge/Fabric/NeoForge, Java 21) · 1.16.5 y 1.16.1 (Forge/Fabric, Java 8) · 1.12.2 y 1.8.9 (Forge, Java 8) · 26.1 / 26.2 (Fabric/NeoForge, Java 25) |
+| **Mod loaders** | Forge 47+ · Forge 36 (1.16.5) · Forge 14 (1.12.2) · Forge 11 (1.8.9) · Fabric · NeoForge |
+| **Java (runtime)** | 8 (MC 1.16.x / 1.12.2 / 1.8.9) · 17 (MC 1.20.1) · 21 (MC 1.21.1) · 25 (MC 26.x) |
 | **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
 | **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) · tags `{mc}-4.2.0` en GitHub |
 
@@ -284,8 +289,13 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 | Línea MC | Bytecode / toolchain | Build |
 |----------|----------------------|-------|
-| **1.20.1** | Java 17 | `./gradlew :forge:build` · `cd fabric && ./gradlew build` · `cd neoforge && ./gradlew build` |
-| **26.1 / 26.2** | Java 25 | `cd fabric-26.1 && ./gradlew build` (igual `neoforge-26.1`, `fabric-26.2`, `neoforge-26.2`) |
+| **1.20.1** | Java 17 | `./gradlew :forge:build` · `cd platforms/1.20.1/fabric && ./gradlew build` · `cd platforms/1.20.1/neoforge && ./gradlew build` |
+| **1.21.1** | Java 21 | `cd platforms/1.21.1/forge && ./gradlew build` (igual `fabric`, `neoforge`) |
+| **1.16.5** | Java 8 (Gradle con JDK 17) | `cd platforms/1.16.5/forge && ./gradlew build` · `cd platforms/1.16.5/fabric && ./gradlew build` |
+| **1.16.1** | Java 8 (el servidor Forge 32 necesita JDK 8; Gradle puede ir en 17) | `JAVA8_HOME=… cd platforms/1.16.1/forge && ./gradlew build` · `cd platforms/1.16.1/fabric && ./gradlew build` |
+| **1.12.2** | Java 8 (Gradle/RFG con JDK 25) | `cd platforms/1.12.2/forge && ./gradlew build` |
+| **1.8.9** | Java 8 (ForgeGradle 2.1; Gradle 2.7 exige JDK 8) | `cd platforms/1.8.9/forge && ./gradlew setupCiWorkspace build` |
+| **26.1 / 26.2** | Java 25 | `cd platforms/26.1/fabric && ./gradlew build` (igual `platforms/26.1/neoforge`, `platforms/26.2/*`) |
 
 Launcher JDK 17/21 OK para 1.20.1; para 26.x preferí JDK 25 (Gradle 9.5+). Si Mojang no es alcanzable: `USE_BMCL_MIRROR=1` (+ HTTP local de `versions/minecraft-meta` si hace falta).
 
@@ -295,12 +305,12 @@ cd ConsoleFilterNext
 ./scripts/release.sh verify   # check your setup
 ./scripts/matrix.sh test      # common + enabled matrix cells
 ./gradlew :forge:build
-cd fabric && ./gradlew build
+cd platforms/1.20.1/fabric && ./gradlew build
 cd ../neoforge && ./gradlew build
-./scripts/server-smoke.sh forge   # also: fabric | neoforge | fabric-26.1 | neoforge-26.1 | fabric-26.2 | neoforge-26.2
+./scripts/server-smoke.sh forge   # también: fabric | neoforge | forge-1.21 | … | forge-1.12.2 | forge-1.8.9 | fabric-26.1 | …
 ./scripts/lint.sh fix             # autofix imports no usados / whitespace
 ```
-JARs 1.20.1: `forge|fabric|neoforge/build/libs/*-{forge,fabric,neoforge}.jar`. JARs 26.x: `fabric-26.*/build/libs/` y `neoforge-26.*/build/libs/`.
+JARs: `platforms/{mc}/{loader}/build/libs/*-{forge,fabric,neoforge}.jar` (Forge 1.20.1 también vía `./gradlew :forge:build`).
 
 ### Local development runs (client and server)
 
@@ -308,10 +318,10 @@ The mod is verified for **both** client and dedicated server. Use Gradle from th
 
 | Command | Purpose |
 |---------|---------|
-| `./gradlew :forge:runClient` | Launch the Minecraft **client** with the mod in `run/mods/` |
-| `./gradlew :forge:runServer` | Launch a local **dedicated server** (auto-accepts EULA via `run/eula.txt`) |
+| `./gradlew :forge:runClient` | Launch the Minecraft **client** with the mod in `runs/1.20.1/forge/mods/` |
+| `./gradlew :forge:runServer` | Launch a local **dedicated server** (auto-accepts EULA via `runs/1.20.1/forge/eula.txt`) |
 
-The `run/` directory holds local world data, configs, and logs and is **gitignored**.
+The `runs/` directory holds local world data, configs, and logs and is **gitignored**.
 
 **Tip:** use the interactive setup script:
 

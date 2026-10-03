@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke test de servidor dedicado — Forge / Fabric / NeoForge (1.20.1 y 26.x).
+# Smoke test de servidor dedicado — Forge / Fabric / NeoForge.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,49 +9,104 @@ LOADER="${1:-forge}"
 SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-300}"
 
 usage() {
-	echo "Uso: $0 [forge|fabric|neoforge|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2]"
+	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|forge-1.8.9|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2]"
 	exit 1
 }
 
 case "${LOADER}" in
-	forge|fabric|neoforge|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2) ;;
+	forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|forge-1.8.9|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2) ;;
 	-h|--help) usage ;;
 	*) echo "Loader desconocido: ${LOADER}"; usage ;;
 esac
 
-RUN_DIR="run"
+# Alias cortos → (RUN_DIR, PROJECT_DIR). forge 1.20.1 usa el Gradle raíz.
+RUN_DIR="runs/1.20.1/forge"
 PROJECT_DIR=""
 LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
+REQUIRE_ALL_HINTS=0
 
 case "${LOADER}" in
 	fabric)
-		RUN_DIR="run-fabric"
-		PROJECT_DIR="fabric"
+		RUN_DIR="runs/1.20.1/fabric"
+		PROJECT_DIR="platforms/1.20.1/fabric"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
 		;;
 	neoforge)
-		RUN_DIR="run-neoforge"
-		PROJECT_DIR="neoforge"
+		RUN_DIR="runs/1.20.1/neoforge"
+		PROJECT_DIR="platforms/1.20.1/neoforge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
 		;;
+	forge-1.21)
+		RUN_DIR="runs/1.21.1/forge"
+		PROJECT_DIR="platforms/1.21.1/forge"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	fabric-1.21)
+		RUN_DIR="runs/1.21.1/fabric"
+		PROJECT_DIR="platforms/1.21.1/fabric"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
+		;;
+	neoforge-1.21)
+		RUN_DIR="runs/1.21.1/neoforge"
+		PROJECT_DIR="platforms/1.21.1/neoforge"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	forge-1.16.5)
+		RUN_DIR="runs/1.16.5/forge"
+		PROJECT_DIR="platforms/1.16.5/forge"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	fabric-1.16.5)
+		RUN_DIR="runs/1.16.5/fabric"
+		PROJECT_DIR="platforms/1.16.5/fabric"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	forge-1.16.1)
+		RUN_DIR="runs/1.16.1/forge"
+		PROJECT_DIR="platforms/1.16.1/forge"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	fabric-1.16.1)
+		RUN_DIR="runs/1.16.1/fabric"
+		PROJECT_DIR="platforms/1.16.1/fabric"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	forge-1.12.2)
+		RUN_DIR="runs/1.12.2/forge"
+		PROJECT_DIR="platforms/1.12.2/forge"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	forge-1.8.9)
+		RUN_DIR="runs/1.8.9/forge"
+		PROJECT_DIR="platforms/1.8.9/forge"
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
 	fabric-26.1)
-		RUN_DIR="run-fabric-26.1"
-		PROJECT_DIR="fabric-26.1"
+		RUN_DIR="runs/26.1/fabric"
+		PROJECT_DIR="platforms/26.1/fabric"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
 		;;
 	neoforge-26.1)
-		RUN_DIR="run-neoforge-26.1"
-		PROJECT_DIR="neoforge-26.1"
+		RUN_DIR="runs/26.1/neoforge"
+		PROJECT_DIR="platforms/26.1/neoforge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
 		;;
 	fabric-26.2)
-		RUN_DIR="run-fabric-26.2"
-		PROJECT_DIR="fabric-26.2"
+		RUN_DIR="runs/26.2/fabric"
+		PROJECT_DIR="platforms/26.2/fabric"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
 		;;
 	neoforge-26.2)
-		RUN_DIR="run-neoforge-26.2"
-		PROJECT_DIR="neoforge-26.2"
+		RUN_DIR="runs/26.2/neoforge"
+		PROJECT_DIR="platforms/26.2/neoforge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
 		;;
 	forge)
@@ -75,13 +130,21 @@ if [[ "${LOADER}" == "forge" ]]; then
 	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" ./gradlew :forge:runServer --no-daemon >"${LOG_FILE}" 2>&1
 	EXIT_CODE=$?
 else
-	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" bash -lc "cd '${ROOT}/${PROJECT_DIR}' && ./gradlew runServer --no-daemon" >"${LOG_FILE}" 2>&1
+	timeout --signal=INT "${SMOKE_TIMEOUT_SECONDS}" bash -c "cd '${ROOT}/${PROJECT_DIR}' && ./gradlew runServer --no-daemon" >"${LOG_FILE}" 2>&1
 	EXIT_CODE=$?
 fi
 set -e
 
 smoke_passed() {
 	local hint
+	if [[ "${REQUIRE_ALL_HINTS}" -eq 1 ]]; then
+		for hint in "${LOG_HINTS[@]}"; do
+			if ! grep -qiF "${hint}" "${LOG_FILE}"; then
+				return 1
+			fi
+		done
+		return 0
+	fi
 	for hint in "${LOG_HINTS[@]}"; do
 		if grep -qiF "${hint}" "${LOG_FILE}"; then
 			return 0

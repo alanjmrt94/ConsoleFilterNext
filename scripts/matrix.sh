@@ -149,33 +149,29 @@ gradle_cmd() {
 	(cd "${PROJECT_ROOT}" && ./gradlew "$@")
 }
 
-fabric_gradle() {
-	(cd "${PROJECT_ROOT}/fabric" && ./gradlew "$@")
-}
-
-neoforge_gradle() {
-	(cd "${PROJECT_ROOT}/neoforge" && ./gradlew "$@")
-}
-
-is_fabric_project() {
-	local p="${1#:}"
-	[[ "$p" == "fabric" || "$p" == fabric-* ]]
-}
-
-is_neoforge_project() {
-	local p="${1#:}"
-	[[ "$p" == "neoforge" || "$p" == neoforge-* ]]
-}
-
+# Proyectos con wrapper propio bajo platforms/{mc}/{loader}.
+# El único subproyecto del Gradle raíz sigue siendo ":forge".
 is_isolated_project() {
-	is_fabric_project "$1" || is_neoforge_project "$1"
+	local p="${1#:}"
+	[[ "$p" == platforms/* ]]
 }
 
-# Gradle wrapper del módulo aislado (fabric, fabric-26.1, neoforge-26.2, …).
+# Ruta en disco del módulo (":forge" → platforms/1.20.1/forge).
+project_dir() {
+	local p="${1#:}"
+	if [[ "$p" == "forge" ]]; then
+		echo "platforms/1.20.1/forge"
+	else
+		echo "$p"
+	fi
+}
+
+# Gradle wrapper del módulo aislado (platforms/1.20.1/fabric, …).
 isolated_gradle() {
 	local project="$1"
 	shift
-	local dir="${project#:}"
+	local dir
+	dir="$(project_dir "${project}")"
 	(cd "${PROJECT_ROOT}/${dir}" && ./gradlew "$@")
 }
 
@@ -193,7 +189,8 @@ cmd_verify() {
 			log_info "  omitida (enabled=false)"
 			continue
 		fi
-		local dir="${project#:}"
+		local dir
+		dir="$(project_dir "${project}")"
 		if [[ ! -d "${PROJECT_ROOT}/${dir}" ]]; then
 			log_error "No existe el módulo ${dir} para ${id}"
 			exit 1

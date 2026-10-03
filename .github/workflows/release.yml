@@ -27,11 +27,12 @@ jobs:
           echo "semver=${SEMVER}" >> "$GITHUB_OUTPUT"
           echo "Parsed tag=${TAG} mc=${MC} semver=${SEMVER}"
 
-      - name: Set up JDK 17, 21 and 25
+      - name: Set up JDK 8, 17, 21 and 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: |
+            8
             17
             21
             25
@@ -40,8 +41,12 @@ jobs:
       - name: Grant execute permission
         run: |
           chmod +x gradlew scripts/*.sh
-          chmod +x fabric/gradlew neoforge/gradlew 2>/dev/null || true
-          chmod +x fabric-26.1/gradlew neoforge-26.1/gradlew fabric-26.2/gradlew neoforge-26.2/gradlew 2>/dev/null || true
+          chmod +x platforms/1.20.1/fabric/gradlew platforms/1.20.1/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/26.1/fabric/gradlew platforms/26.1/neoforge/gradlew platforms/26.2/fabric/gradlew platforms/26.2/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/1.21.1/forge/gradlew platforms/1.21.1/fabric/gradlew platforms/1.21.1/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/1.16.5/forge/gradlew platforms/1.16.5/fabric/gradlew 2>/dev/null || true
+          chmod +x platforms/1.16.1/forge/gradlew platforms/1.16.1/fabric/gradlew 2>/dev/null || true
+          chmod +x platforms/1.12.2/forge/gradlew platforms/1.8.9/forge/gradlew 2>/dev/null || true
 
       - name: Build matrix cell JARs for tag MC
         env:
@@ -63,26 +68,59 @@ jobs:
           case "${MC}" in
             1.20.1)
               ./gradlew clean :common:build :forge:build --no-daemon
-              (cd fabric && ./gradlew clean build --no-daemon)
-              (cd neoforge && ./gradlew clean build --no-daemon)
+              (cd platforms/1.20.1/fabric && ./gradlew clean build --no-daemon)
+              (cd platforms/1.20.1/neoforge && ./gradlew clean build --no-daemon)
               stage_one 'forge/build/libs/consolefilternext-*-forge.jar'
-              stage_one 'fabric/build/libs/consolefilternext-*-fabric.jar'
-              stage_one 'neoforge/build/libs/consolefilternext-*-neoforge.jar'
+              stage_one 'platforms/1.20.1/fabric/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'platforms/1.20.1/neoforge/build/libs/consolefilternext-*-neoforge.jar'
               EXPECTED=3
               ;;
             26.1)
-              (cd fabric-26.1 && ./gradlew clean build --no-daemon)
-              (cd neoforge-26.1 && ./gradlew clean build --no-daemon)
-              stage_one 'fabric-26.1/build/libs/consolefilternext-*-fabric.jar'
-              stage_one 'neoforge-26.1/build/libs/consolefilternext-*-neoforge.jar'
+              (cd platforms/26.1/fabric && ./gradlew clean build --no-daemon)
+              (cd platforms/26.1/neoforge && ./gradlew clean build --no-daemon)
+              stage_one 'platforms/26.1/fabric/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'platforms/26.1/neoforge/build/libs/consolefilternext-*-neoforge.jar'
               EXPECTED=2
               ;;
             26.2)
-              (cd fabric-26.2 && ./gradlew clean build --no-daemon)
-              (cd neoforge-26.2 && ./gradlew clean build --no-daemon)
-              stage_one 'fabric-26.2/build/libs/consolefilternext-*-fabric.jar'
-              stage_one 'neoforge-26.2/build/libs/consolefilternext-*-neoforge.jar'
+              (cd platforms/26.2/fabric && ./gradlew clean build --no-daemon)
+              (cd platforms/26.2/neoforge && ./gradlew clean build --no-daemon)
+              stage_one 'platforms/26.2/fabric/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'platforms/26.2/neoforge/build/libs/consolefilternext-*-neoforge.jar'
               EXPECTED=2
+              ;;
+            1.21.1)
+              (cd platforms/1.21.1/forge && ./gradlew clean build --no-daemon)
+              (cd platforms/1.21.1/fabric && ./gradlew clean build --no-daemon)
+              (cd platforms/1.21.1/neoforge && ./gradlew clean build --no-daemon)
+              stage_one 'platforms/1.21.1/forge/build/libs/consolefilternext-*-forge.jar'
+              stage_one 'platforms/1.21.1/fabric/build/libs/consolefilternext-*-fabric.jar'
+              stage_one 'platforms/1.21.1/neoforge/build/libs/consolefilternext-*-neoforge.jar'
+              EXPECTED=3
+              ;;
+            1.16.5)
+              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.16.5/forge && ./gradlew clean build --no-daemon)
+              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.16.5/fabric && ./gradlew clean build --no-daemon)
+              stage_one 'platforms/1.16.5/forge/build/libs/consolefilternext-*-forge.jar'
+              stage_one 'platforms/1.16.5/fabric/build/libs/consolefilternext-*-fabric.jar'
+              EXPECTED=2
+              ;;
+            1.16.1)
+              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.16.1/forge && ./gradlew clean build --no-daemon)
+              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.16.1/fabric && ./gradlew clean build --no-daemon)
+              stage_one 'platforms/1.16.1/forge/build/libs/consolefilternext-*-forge.jar'
+              stage_one 'platforms/1.16.1/fabric/build/libs/consolefilternext-*-fabric.jar'
+              EXPECTED=2
+              ;;
+            1.12.2)
+              JAVA_HOME="${JAVA_HOME_25_X64:-${JAVA_HOME_25}}" (cd platforms/1.12.2/forge && ./gradlew clean build --no-daemon)
+              stage_one 'platforms/1.12.2/forge/build/libs/consolefilternext-*-forge.jar'
+              EXPECTED=1
+              ;;
+            1.8.9)
+              JAVA_HOME="${JAVA_HOME_8_X64:-${JAVA_HOME_8}}" (cd platforms/1.8.9/forge && ./gradlew setupCiWorkspace clean build --no-daemon)
+              stage_one 'platforms/1.8.9/forge/build/libs/consolefilternext-*-forge.jar'
+              EXPECTED=1
               ;;
             *)
               echo "Unsupported MC line in tag: ${MC}"
