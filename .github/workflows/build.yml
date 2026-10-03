@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: consolefilternext-forge
-          path: forge/build/libs/consolefilternext-*-forge.jar
+          path: platforms/1.20.1/forge/build/libs/consolefilternext-*-forge.jar
           if-no-files-found: error
 
   build-fabric:
@@ -544,21 +544,18 @@ jobs:
           path: platforms/${{ matrix.mc }}/${{ matrix.loader }}/build/libs/consolefilternext-*-${{ matrix.loader }}.jar
           if-no-files-found: error
 
+  # Smoke representativo (banda Java 17 y Java 21). No depende del job
+  # matrix de build: un fallo en 1.20.2 no debe saltar 1.20.6.
   server-smoke-1-20-minors:
     runs-on: ubuntu-latest
-    needs: build-1-20-minors
+    needs: lint
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { mc: "1.20.2", loader: forge, java: 17 }
-          - { mc: "1.20.2", loader: fabric, java: 21 }
-          - { mc: "1.20.3", loader: forge, java: 17 }
-          - { mc: "1.20.3", loader: fabric, java: 21 }
           - { mc: "1.20.4", loader: forge, java: 17 }
           - { mc: "1.20.4", loader: fabric, java: 21 }
           - { mc: "1.20.4", loader: neoforge, java: 21 }
-          - { mc: "1.20.5", loader: fabric, java: 21 }
           - { mc: "1.20.6", loader: forge, java: 21 }
           - { mc: "1.20.6", loader: fabric, java: 21 }
           - { mc: "1.20.6", loader: neoforge, java: 21 }

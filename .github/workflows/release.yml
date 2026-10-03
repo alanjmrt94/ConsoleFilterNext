@@ -71,7 +71,7 @@ jobs:
               ./gradlew clean :common:build :forge:build --no-daemon
               (cd platforms/1.20.1/fabric && ./gradlew clean build --no-daemon)
               (cd platforms/1.20.1/neoforge && ./gradlew clean build --no-daemon)
-              stage_one 'forge/build/libs/consolefilternext-*-forge.jar'
+              stage_one 'platforms/1.20.1/forge/build/libs/consolefilternext-*-forge.jar'
               stage_one 'platforms/1.20.1/fabric/build/libs/consolefilternext-*-fabric.jar'
               stage_one 'platforms/1.20.1/neoforge/build/libs/consolefilternext-*-neoforge.jar'
               EXPECTED=3

@@ -130,7 +130,7 @@ jobs:
           PUBLISH_MC: ${{ steps.tag.outputs.mc }}
         run: |
           case "${PUBLISH_MC}" in
-            1.20.1) ls -la forge/build/libs/ platforms/1.20.1/fabric/build/libs/ platforms/1.20.1/neoforge/build/libs/ || true ;;
+            1.20.1) ls -la platforms/1.20.1/forge/build/libs/ platforms/1.20.1/fabric/build/libs/ platforms/1.20.1/neoforge/build/libs/ || true ;;
             26.1) ls -la platforms/26.1/fabric/build/libs/ platforms/26.1/neoforge/build/libs/ platforms/26.1/forge/build/libs/ || true ;;
             26.2) ls -la platforms/26.2/fabric/build/libs/ platforms/26.2/neoforge/build/libs/ platforms/26.2/forge/build/libs/ || true ;;
             1.20.2) ls -la platforms/1.20.2/forge/build/libs/ platforms/1.20.2/fabric/build/libs/ || true ;;
