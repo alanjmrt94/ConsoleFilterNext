@@ -9,7 +9,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 LOCAL_CONFIG="${SCRIPT_DIR}/.release.local"
 GRADLE_PROPERTIES="${PROJECT_ROOT}/gradle.properties"
 GRADLE_WRAPPER="${PROJECT_ROOT}/gradle/wrapper/gradle-wrapper.properties"
-BUILD_GRADLE="${PROJECT_ROOT}/forge/build.gradle"
+BUILD_GRADLE="${PROJECT_ROOT}/platforms/1.20.1/forge/build.gradle"
 
 # shellcheck source=scripts/publish-release.sh disable=SC1091
 source "${SCRIPT_DIR}/publish-release.sh"
@@ -1070,7 +1070,7 @@ run_build() {
   if gradle_cmd build; then
     log_ok "Build exitoso"
     echo
-    ls -la "${PROJECT_ROOT}/forge/build/libs/" 2>/dev/null | sed 's/^/  /' || true
+    ls -la "${PROJECT_ROOT}/platforms/1.20.1/forge/build/libs/" 2>/dev/null | sed 's/^/  /' || true
   else
     log_error "Build falló"
   fi
