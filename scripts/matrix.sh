@@ -16,10 +16,14 @@ Uso: matrix.sh <comando> [id-celda]
 
 Comandos:
   list              Lista todas las celdas de la matriz
-  verify [id]       Verifica celdas enabled (o una id)
+  verify [id]       Compila celdas enabled con el JDK launcher correcto
   build  [id]       Compila common + celdas enabled (o una id)
   test   [id]       Ejecuta tests (common + forge si aplica)
   help              Esta ayuda
+
+JAVA_HOME_8 / 17 / 21 / 25 (o JAVA_HOME_*_X64) lanzan cada wrapper.
+El campo java: de la matriz es bytecode; Fabric Loom y RFG 1.12.2 pueden
+pedir otro JDK de launcher.
 
 Ejemplos:
   ./scripts/matrix.sh list
@@ -146,7 +150,71 @@ select_targets() {
 }
 
 gradle_cmd() {
-	(cd "${PROJECT_ROOT}" && ./gradlew "$@")
+	local home=""
+	if home="$(resolve_java_home 17)"; then
+		log_info "Gradle raíz con JDK 17 (${home})"
+		(cd "${PROJECT_ROOT}" && JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./gradlew "$@")
+	else
+		log_info "JDK 17 no encontrado; Gradle raíz usa JAVA_HOME actual"
+		(cd "${PROJECT_ROOT}" && ./gradlew "$@")
+	fi
+}
+
+# JDK con el que se lanza el wrapper (no siempre = bytecode de la celda).
+gradle_launcher_java() {
+	local mc="$1"
+	local loader="$2"
+	local bytecode="${3:-}"
+	case "${mc}/${loader}" in
+		1.8.9/forge) echo 8 ;;
+		1.12.2/forge) echo 25 ;;
+		1.16.1/forge|1.16.5/forge) echo 17 ;;
+		26.*/*) echo 25 ;;
+		*/fabric)
+			if [[ "${bytecode}" == "25" ]]; then
+				echo 25
+			else
+				echo 21
+			fi
+			;;
+		1.20.1/neoforge) echo 17 ;;
+		*/neoforge)
+			if [[ "${bytecode}" == "25" ]]; then
+				echo 25
+			else
+				echo 21
+			fi
+			;;
+		*) echo "${bytecode:-21}" ;;
+	esac
+}
+
+resolve_java_home() {
+	local ver="$1"
+	local x64="JAVA_HOME_${ver}_X64"
+	local plain="JAVA_HOME_${ver}"
+	local candidate
+	if [[ -n "${!x64:-}" && -x "${!x64}/bin/java" ]]; then
+		echo "${!x64}"
+		return 0
+	fi
+	if [[ -n "${!plain:-}" && -x "${!plain}/bin/java" ]]; then
+		echo "${!plain}"
+		return 0
+	fi
+	for candidate in \
+		"/usr/lib/jvm/temurin-${ver}-jdk-amd64" \
+		"/usr/lib/jvm/temurin-${ver}-jdk" \
+		"/usr/lib/jvm/zulu${ver}-ca-amd64" \
+		"/usr/lib/jvm/java-${ver}-openjdk-amd64" \
+		"/usr/lib/jvm/java-${ver}-openjdk" \
+		"/usr/lib/jvm/jdk-${ver}"; do
+		if [[ -x "${candidate}/bin/java" ]]; then
+			echo "${candidate}"
+			return 0
+		fi
+	done
+	return 1
 }
 
 # Proyectos con wrapper propio bajo platforms/{mc}/{loader}.
@@ -166,13 +234,19 @@ project_dir() {
 	fi
 }
 
-# Gradle wrapper del módulo aislado (platforms/1.20.1/fabric, …).
+# Gradle wrapper del módulo aislado. $2 = JDK launcher (8/17/21/25).
 isolated_gradle() {
 	local project="$1"
-	shift
-	local dir
+	local launcher_java="$2"
+	shift 2
+	local dir home
 	dir="$(project_dir "${project}")"
-	(cd "${PROJECT_ROOT}/${dir}" && ./gradlew "$@")
+	if ! home="$(resolve_java_home "${launcher_java}")"; then
+		log_error "No se encontró JDK ${launcher_java} para ${project} (exportá JAVA_HOME_${launcher_java})."
+		exit 1
+	fi
+	log_info "  ${project} → JAVA_HOME=${home} (launcher JDK ${launcher_java})"
+	(cd "${PROJECT_ROOT}/${dir}" && JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./gradlew "$@")
 }
 
 cmd_verify() {
@@ -196,7 +270,7 @@ cmd_verify() {
 			exit 1
 		fi
 		if is_isolated_project "${project}"; then
-			isolated+=("${project}")
+			isolated+=("$(gradle_launcher_java "${mc}" "${loader}" "${java}")|${project}")
 		else
 			need_common=1
 		fi
@@ -209,11 +283,13 @@ cmd_verify() {
 	if [[ "$need_common" -eq 1 ]]; then
 		gradle_cmd :common:compileJava
 	fi
-	local proj seen=""
-	for proj in "${isolated[@]+"${isolated[@]}"}"; do
+	local entry proj launcher seen=""
+	for entry in "${isolated[@]+"${isolated[@]}"}"; do
+		launcher="${entry%%|*}"
+		proj="${entry#*|}"
 		[[ " ${seen} " == *" ${proj} "* ]] && continue
 		seen+=" ${proj}"
-		isolated_gradle "${proj}" compileJava
+		isolated_gradle "${proj}" "${launcher}" compileJava
 	done
 	log_ok "verify completado"
 }
@@ -227,7 +303,7 @@ cmd_build() {
 	while IFS='|' read -r id mc loader java enabled project; do
 		log_info "Build ${id} → ${project}"
 		if is_isolated_project "${project}"; then
-			isolated+=("${project}")
+			isolated+=("$(gradle_launcher_java "${mc}" "${loader}" "${java}")|${project}")
 		else
 			root_projects+=("${project}:build")
 		fi
@@ -235,11 +311,13 @@ cmd_build() {
 	if [[ ${#root_projects[@]} -gt 0 ]]; then
 		gradle_cmd ":common:build" "${root_projects[@]}"
 	fi
-	local proj seen=""
-	for proj in "${isolated[@]+"${isolated[@]}"}"; do
+	local entry proj launcher seen=""
+	for entry in "${isolated[@]+"${isolated[@]}"}"; do
+		launcher="${entry%%|*}"
+		proj="${entry#*|}"
 		[[ " ${seen} " == *" ${proj} "* ]] && continue
 		seen+=" ${proj}"
-		isolated_gradle "${proj}" build
+		isolated_gradle "${proj}" "${launcher}" build
 	done
 	log_ok "build completado"
 }
@@ -253,7 +331,7 @@ cmd_test() {
 	while IFS='|' read -r id mc loader java enabled project; do
 		log_info "Test ${id} → ${project}"
 		if is_isolated_project "${project}"; then
-			isolated+=("${project}")
+			isolated+=("$(gradle_launcher_java "${mc}" "${loader}" "${java}")|${project}")
 		else
 			root_projects+=("${project}:test")
 		fi
@@ -263,11 +341,13 @@ cmd_test() {
 	elif [[ ${#isolated[@]} -eq 0 ]]; then
 		gradle_cmd :common:test
 	fi
-	local proj seen=""
-	for proj in "${isolated[@]+"${isolated[@]}"}"; do
+	local entry proj launcher seen=""
+	for entry in "${isolated[@]+"${isolated[@]}"}"; do
+		launcher="${entry%%|*}"
+		proj="${entry#*|}"
 		[[ " ${seen} " == *" ${proj} "* ]] && continue
 		seen+=" ${proj}"
-		isolated_gradle "${proj}" test
+		isolated_gradle "${proj}" "${launcher}" test
 	done
 	log_ok "test completado"
 }

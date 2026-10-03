@@ -12,10 +12,10 @@ usage() {
 	cat <<'EOF'
 Uso: lint.sh [check|fix|compile|ci]
 
-  check    Spotless check (imports no usados, whitespace) — default
+  check    Spotless check (todo platforms/*/… + common) — default
   fix      Autofix Spotless
-  compile  Compila common+forge con -Xlint:all -Werror
-  ci       Igual que CI: Spotless + compile common/forge con -Werror
+  compile  Compila common+forge 1.20.1 con -Xlint:all -Werror
+  ci       Spotless + drift de client/ + compile common/forge con -Werror
 
 Ejemplos:
   ./scripts/lint.sh
@@ -28,12 +28,13 @@ run_ci_lint() {
 	# Limpia para no reusar class files compilados sin -Werror.
 	# No usamos --warning-mode fail: ForgeGradle emite deprecaciones propias
 	# (Project.javaexec) que no controlamos y tumbarían el job.
+	"${SCRIPT_DIR}/check-client-drift.sh"
 	./gradlew \
 		:common:clean :forge:clean \
 		lintCi \
 		-PfailOnWarnings=true \
 		--no-daemon
-	echo "[ok] Lint CI OK (Spotless + -Xlint/-Werror)"
+	echo "[ok] Lint CI OK (Spotless + drift client/ + -Xlint/-Werror)"
 }
 
 case "${MODE}" in
