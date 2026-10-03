@@ -62,6 +62,20 @@ jobs:
         run: |
           set -euo pipefail
           MC="${PUBLISH_MC}"
+          j8="${JAVA_HOME_8_X64:-${JAVA_HOME_8:-}}"
+          j17="${JAVA_HOME_17_X64:-${JAVA_HOME_17:-}}"
+          j21="${JAVA_HOME_21_X64:-${JAVA_HOME_21:-${JAVA_HOME}}}"
+          j25="${JAVA_HOME_25_X64:-${JAVA_HOME_25:-}}"
+          cf_gradle() {
+            local dir="$1" home="$2"
+            shift 2
+            if [[ -z "${home}" ]]; then
+              echo "Missing JAVA_HOME for ${dir}"
+              exit 1
+            fi
+            chmod +x "${dir}/gradlew"
+            (cd "${dir}" && JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./gradlew "$@")
+          }
           case "${MC}" in
             1.20.1)
               ./gradlew clean :common:build :forge:build --no-daemon
@@ -79,17 +93,17 @@ jobs:
               (cd platforms/26.2/forge && ./gradlew clean build --no-daemon)
               ;;
             1.20.2)
-              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.20.2/forge && ./gradlew clean build --no-daemon)
-              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.20.2/fabric && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.20.2/forge "${j17}" clean build --no-daemon
+              cf_gradle platforms/1.20.2/fabric "${j21}" clean build --no-daemon
               ;;
             1.20.3)
-              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.20.3/forge && ./gradlew clean build --no-daemon)
-              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.20.3/fabric && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.20.3/forge "${j17}" clean build --no-daemon
+              cf_gradle platforms/1.20.3/fabric "${j21}" clean build --no-daemon
               ;;
             1.20.4)
-              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.20.4/forge && ./gradlew clean build --no-daemon)
-              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.20.4/fabric && ./gradlew clean build --no-daemon)
-              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.20.4/neoforge && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.20.4/forge "${j17}" clean build --no-daemon
+              cf_gradle platforms/1.20.4/fabric "${j21}" clean build --no-daemon
+              cf_gradle platforms/1.20.4/neoforge "${j21}" clean build --no-daemon
               ;;
             1.20.5)
               (cd platforms/1.20.5/fabric && ./gradlew clean build --no-daemon)
@@ -105,32 +119,31 @@ jobs:
               (cd platforms/1.21.1/neoforge && ./gradlew clean build --no-daemon)
               ;;
             1.16.5)
-              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.16.5/forge && ./gradlew clean build --no-daemon)
-              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.16.5/fabric && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.16.5/forge "${j17}" clean build --no-daemon
+              cf_gradle platforms/1.16.5/fabric "${j21}" clean build --no-daemon
               ;;
             1.16.1)
-              JAVA_HOME="${JAVA_HOME_17}" (cd platforms/1.16.1/forge && ./gradlew clean build --no-daemon)
-              JAVA_HOME="${JAVA_HOME_21}" (cd platforms/1.16.1/fabric && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.16.1/forge "${j17}" clean build --no-daemon
+              cf_gradle platforms/1.16.1/fabric "${j21}" clean build --no-daemon
               ;;
             1.12.2)
-              JAVA_HOME="${JAVA_HOME_25_X64:-${JAVA_HOME_25}}" (cd platforms/1.12.2/forge && ./gradlew clean build --no-daemon)
-              (cd platforms/1.12.2/fabric && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.12.2/forge "${j25}" clean build --no-daemon
+              cf_gradle platforms/1.12.2/fabric "${j21}" clean build --no-daemon
               ;;
             1.8.9)
-              JAVA_HOME="${JAVA_HOME_8_X64:-${JAVA_HOME_8}}" (cd platforms/1.8.9/forge && ./gradlew setupCiWorkspace clean build --no-daemon)
-              (cd platforms/1.8.9/fabric && ./gradlew clean build --no-daemon)
+              cf_gradle platforms/1.8.9/forge "${j8}" setupCiWorkspace clean build --no-daemon
+              cf_gradle platforms/1.8.9/fabric "${j21}" clean build --no-daemon
               ;;
             *)
               FOUND=0
               for loader in forge fabric neoforge; do
                 if [[ -d "platforms/${MC}/${loader}" ]]; then
                   FOUND=1
-                  chmod +x "platforms/${MC}/${loader}/gradlew"
-                  home="${JAVA_HOME_21_X64:-${JAVA_HOME_21:-${JAVA_HOME}}}"
+                  home="${j21}"
                   if [[ "${MC}" == 1.19.* && "${loader}" == forge ]]; then
-                    home="${JAVA_HOME_17_X64:-${JAVA_HOME_17:-${home}}}"
+                    home="${j17}"
                   fi
-                  (cd "platforms/${MC}/${loader}" && JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./gradlew clean build --no-daemon)
+                  cf_gradle "platforms/${MC}/${loader}" "${home}" clean build --no-daemon
                 fi
               done
               if [[ "${FOUND}" -eq 0 ]]; then
