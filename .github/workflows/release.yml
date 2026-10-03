@@ -174,11 +174,11 @@ jobs:
               for loader in forge fabric neoforge; do
                 if [[ -d "platforms/${MC}/${loader}" ]]; then
                   chmod +x "platforms/${MC}/${loader}/gradlew"
+                  home="${JAVA_HOME_21_X64:-${JAVA_HOME_21:-${JAVA_HOME}}}"
                   if [[ "${MC}" == 1.19.* && "${loader}" == forge ]]; then
-                    JAVA_HOME="${JAVA_HOME_17}" (cd "platforms/${MC}/${loader}" && ./gradlew clean build --no-daemon)
-                  else
-                    JAVA_HOME="${JAVA_HOME_21:-${JAVA_HOME}}" (cd "platforms/${MC}/${loader}" && ./gradlew clean build --no-daemon)
+                    home="${JAVA_HOME_17_X64:-${JAVA_HOME_17:-${home}}}"
                   fi
+                  (cd "platforms/${MC}/${loader}" && JAVA_HOME="${home}" PATH="${home}/bin:${PATH}" ./gradlew clean build --no-daemon)
                   stage_one "platforms/${MC}/${loader}/build/libs/consolefilternext-*-${loader}.jar"
                   EXPECTED=$((EXPECTED + 1))
                 fi
