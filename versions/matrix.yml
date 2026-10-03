@@ -50,7 +50,7 @@ targets:
     enabled: true
     project: "platforms/1.21.1/neoforge"
 
-  # 26.x: solo Fabric + NeoForge (sin Forge). Java 25. Proyectos dedicados.
+  # 26.x: Fabric + NeoForge + Forge (FG7 / EventBus 7). Java 25.
   - id: mc26.1-fabric
     minecraft: "26.1"
     loader: fabric
@@ -65,6 +65,13 @@ targets:
     enabled: true
     project: "platforms/26.1/neoforge"
 
+  - id: mc26.1-forge
+    minecraft: "26.1"
+    loader: forge
+    java: 25
+    enabled: true
+    project: "platforms/26.1/forge"
+
   - id: mc26.2-fabric
     minecraft: "26.2"
     loader: fabric
@@ -78,6 +85,13 @@ targets:
     java: 25
     enabled: true
     project: "platforms/26.2/neoforge"
+
+  - id: mc26.2-forge
+    minecraft: "26.2"
+    loader: forge
+    java: 25
+    enabled: true
+    project: "platforms/26.2/forge"
 
   - id: mc1.16.1-forge
     minecraft: "1.16.1"
@@ -114,9 +128,23 @@ targets:
     enabled: true
     project: "platforms/1.12.2/forge"
 
+  - id: mc1.12.2-fabric
+    minecraft: "1.12.2"
+    loader: fabric
+    java: 8
+    enabled: true
+    project: "platforms/1.12.2/fabric"
+
   - id: mc1.8.9-forge
     minecraft: "1.8.9"
     loader: forge
     java: 8
     enabled: true
     project: "platforms/1.8.9/forge"
+
+  - id: mc1.8.9-fabric
+    minecraft: "1.8.9"
+    loader: fabric
+    java: 8
+    enabled: true
+    project: "platforms/1.8.9/fabric"

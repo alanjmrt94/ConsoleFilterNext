@@ -9,12 +9,12 @@ LOADER="${1:-forge}"
 SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-300}"
 
 usage() {
-	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|forge-1.8.9|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2]"
+	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2]"
 	exit 1
 }
 
 case "${LOADER}" in
-	forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|forge-1.8.9|fabric-26.1|neoforge-26.1|fabric-26.2|neoforge-26.2) ;;
+	forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2) ;;
 	-h|--help) usage ;;
 	*) echo "Loader desconocido: ${LOADER}"; usage ;;
 esac
@@ -83,10 +83,22 @@ case "${LOADER}" in
 		LOG_HINTS=('Done (' 'message(s) to be filtered')
 		REQUIRE_ALL_HINTS=1
 		;;
+	fabric-1.12.2)
+		RUN_DIR="runs/1.12.2/fabric"
+		PROJECT_DIR="platforms/1.12.2/fabric"
+		LOG_HINTS=('Done (' 'message(s) to be filtered' 'FabricLoader')
+		REQUIRE_ALL_HINTS=1
+		;;
 	forge-1.8.9)
 		RUN_DIR="runs/1.8.9/forge"
 		PROJECT_DIR="platforms/1.8.9/forge"
 		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+		;;
+	fabric-1.8.9)
+		RUN_DIR="runs/1.8.9/fabric"
+		PROJECT_DIR="platforms/1.8.9/fabric"
+		LOG_HINTS=('Done (' 'message(s) to be filtered' 'FabricLoader')
 		REQUIRE_ALL_HINTS=1
 		;;
 	fabric-26.1)
@@ -99,6 +111,11 @@ case "${LOADER}" in
 		PROJECT_DIR="platforms/26.1/neoforge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
 		;;
+	forge-26.1)
+		RUN_DIR="runs/26.1/forge"
+		PROJECT_DIR="platforms/26.1/forge"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
+		;;
 	fabric-26.2)
 		RUN_DIR="runs/26.2/fabric"
 		PROJECT_DIR="platforms/26.2/fabric"
@@ -108,6 +125,11 @@ case "${LOADER}" in
 		RUN_DIR="runs/26.2/neoforge"
 		PROJECT_DIR="platforms/26.2/neoforge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
+		;;
+	forge-26.2)
+		RUN_DIR="runs/26.2/forge"
+		PROJECT_DIR="platforms/26.2/forge"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
 		;;
 	forge)
 		PROJECT_DIR=""
