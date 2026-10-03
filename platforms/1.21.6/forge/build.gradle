@@ -1,0 +1,120 @@
+plugins {
+	id 'java'
+	id 'idea'
+	id 'eclipse'
+	id 'net.minecraftforge.gradle' version '[7.0.3,8)'
+}
+
+def props = new Properties()
+file('../../../gradle.properties').withInputStream { props.load(it) }
+file('../../../versions/1.21.6.properties').withInputStream { props.load(it) }
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName = props['mod_id'] as String
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+sourceSets.main.java {
+	srcDir '../../../common/src/main/java'
+	srcDir '../client/src/main/java'
+}
+sourceSets.test.java {
+	srcDir '../client/src/test/java'
+}
+
+// FML trata el directorio que contiene mods.toml como el archivo del mod.
+// En userdev las clases y los recursos van a carpetas distintas; unirlos evita
+// "has mods that were not found" y el choque de módulos JPMS.
+sourceSets.main.output.resourcesDir = layout.buildDirectory.dir('classes/java/main').get().asFile
+
+minecraft {
+	mappings channel: 'official', version: props['minecraft_version']
+
+	runs {
+		configureEach {
+			workingDir = layout.projectDirectory.dir('../../runs/1.21.6/forge')
+			systemProperty 'forge.enabledGameTestNamespaces', props['mod_id']
+			mods {
+				"${props['mod_id']}" {
+					source sourceSets.main
+				}
+			}
+		}
+
+		register('client')
+
+		register('server') {
+			args '--nogui'
+		}
+	}
+}
+
+repositories {
+	minecraft.mavenizer(it)
+	maven fg.forgeMaven
+	maven fg.minecraftLibsMaven
+	mavenCentral()
+}
+
+dependencies {
+	implementation minecraft.dependency("net.minecraftforge:forge:${props['minecraft_version']}-${props['forge_version']}")
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	testImplementation 'com.electronwill.night-config:core:3.8.1'
+	testImplementation 'com.electronwill.night-config:toml:3.8.1'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def ensureRunEula = tasks.register('ensureRunEula') {
+	doLast {
+		def runDir = project.file('../../runs/1.21.6/forge')
+		runDir.mkdirs()
+		new File(runDir, 'eula.txt').text = "eula=true\n"
+	}
+}
+
+tasks.matching { it.name == 'runServer' }.configureEach {
+	dependsOn ensureRunEula
+}
+
+def replaceProperties = [
+		minecraft_version      : props['minecraft_version'],
+		minecraft_version_range: props['minecraft_version_range'],
+		forge_version          : props['forge_version'],
+		forge_version_range    : props['forge_version_range'],
+		loader_version_range   : props['loader_version_range'],
+		mod_id                 : props['mod_id'],
+		mod_name               : props['mod_name'],
+		mod_license            : props['mod_license'],
+		mod_version            : props['mod_version'],
+		mod_authors            : props['mod_authors'],
+		mod_description        : props['mod_description'],
+		mod_environment        : props['mod_environment']
+]
+
+processResources {
+	inputs.properties replaceProperties
+	filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+		expand replaceProperties
+	}
+}
+
+tasks.named('jar', Jar).configure {
+	archiveClassifier.set('forge')
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(file('../../../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 21
+}
+
+test {
+	useJUnitPlatform()
+}
