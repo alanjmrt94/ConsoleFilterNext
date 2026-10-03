@@ -169,6 +169,7 @@ gradle_launcher_java() {
 		1.8.9/forge) echo 8 ;;
 		1.12.2/forge) echo 25 ;;
 		1.16.1/forge|1.16.5/forge) echo 17 ;;
+		1.19.2/forge|1.19.4/forge) echo 21 ;;
 		26.*/*) echo 25 ;;
 		*/fabric)
 			if [[ "${bytecode}" == "25" ]]; then
