@@ -1,11 +1,14 @@
 package com.alanjmrt94.consolefilternext;
 
+import com.alanjmrt94.consolefilternext.client.ConsoleFilterConfigScreen;
+
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 
-import com.alanjmrt94.consolefilternext.client.ConsoleFilterConfigScreen;
-
+/**
+ * Registro del editor in-game en Forge 26.1.
+ */
 public final class ConsoleFilterClient {
 
 	private ConsoleFilterClient() {

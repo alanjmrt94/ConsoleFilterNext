@@ -26,7 +26,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
- * Adaptador Forge moderno (Minecraft 26.1, EventBus 7).
+ * Adaptador Forge (Minecraft 1.21.9, EventBus 7).
  */
 @Mod(ConsoleFilter.MODID)
 public final class ConsoleFilter implements FilterHost, ConfigScreenHost {

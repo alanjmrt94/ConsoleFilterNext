@@ -12,23 +12,23 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = ConsoleFilter.MODID)
-public class ConsoleFilterCommands {
+public final class ConsoleFilterCommands {
 
 	private ConsoleFilterCommands() {
 	}
 
-	@SubscribeEvent
-	public static void onRegisterCommands(RegisterCommandsEvent event) {
+	public static void register() {
+		RegisterCommandsEvent.BUS.addListener(ConsoleFilterCommands::onRegisterCommands);
+	}
+
+	private static void onRegisterCommands(RegisterCommandsEvent event) {
 		event.getDispatcher().register(buildRoot());
 	}
 
 	private static LiteralArgumentBuilder<CommandSourceStack> buildRoot() {
 		return Commands.literal("consolefilter")
-			.requires(source -> source.hasPermission(2))
+			.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 			.then(Commands.literal("reload")
 				.executes(ctx -> reload(ctx.getSource())))
 			.then(Commands.literal("list")
@@ -63,12 +63,10 @@ public class ConsoleFilterCommands {
 		if (mod == null) {
 			return 0;
 		}
-
 		if (!mod.reloadConfigFromDisk()) {
 			source.sendFailure(Component.literal("Failed to reload config. Check server logs."));
 			return 0;
 		}
-
 		FilterSummary summary = mod.getConfig().getSummary();
 		source.sendSuccess(
 			() -> Component.literal("Console Filter Next config reloaded: " + summary.total() + " active filter(s)."),
@@ -82,7 +80,6 @@ public class ConsoleFilterCommands {
 		if (mod == null) {
 			return 0;
 		}
-
 		FilterSummary summary = mod.getConfig().getSummary();
 		source.sendSuccess(() -> Component.literal(String.format(
 			"Profile '%s' — basic: %d, regex: %d, level: %d, thread: %d, source/logger: %d, modId: %d (total: %d)",
@@ -103,7 +100,6 @@ public class ConsoleFilterCommands {
 		if (mod == null) {
 			return 0;
 		}
-
 		FilterSummary summary = mod.getConfig().getSummary();
 		Map<FilterType, Long> byType = mod.getStats().snapshotByType();
 		source.sendSuccess(() -> Component.literal(String.format(
@@ -134,13 +130,11 @@ public class ConsoleFilterCommands {
 		if (mod == null) {
 			return 0;
 		}
-
 		Optional<Path> configPath = mod.getConfigPath();
 		if (configPath.isEmpty()) {
 			source.sendFailure(Component.literal("Config path is not available."));
 			return 0;
 		}
-
 		Path target = Path.of(pathString);
 		try {
 			ConfigFileHelper.exportConfig(configPath.get(), target);
@@ -157,12 +151,10 @@ public class ConsoleFilterCommands {
 		if (mod == null) {
 			return 0;
 		}
-
 		if (mod.getConfigPath().isEmpty()) {
 			source.sendFailure(Component.literal("Config path is not available."));
 			return 0;
 		}
-
 		Path sourcePath = Path.of(pathString);
 		try {
 			ConfigFileHelper.importConfig(sourcePath, mod.getConfigPath().get());
@@ -184,12 +176,10 @@ public class ConsoleFilterCommands {
 		if (mod == null) {
 			return 0;
 		}
-
 		if (!mod.persistActiveProfile(profile)) {
 			source.sendFailure(Component.literal("Failed to persist profile to config file."));
 			return 0;
 		}
-
 		FilterSummary summary = mod.getConfig().getSummary();
 		source.sendSuccess(
 			() -> Component.literal("Active profile set to '" + summary.activeProfile() + "' (" + summary.total() + " filter(s), saved to TOML)."),

@@ -1,6 +1,7 @@
 package com.alanjmrt94.consolefilternext;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,42 +15,42 @@ import com.alanjmrt94.consolefilternext.filter.JavaFilter;
 import com.alanjmrt94.consolefilternext.filter.Log4jFilter;
 import com.alanjmrt94.consolefilternext.filter.SystemErrFilter;
 import com.alanjmrt94.consolefilternext.filter.SystemOutFilter;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mojang.logging.LogUtils;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLPaths;
 
+/**
+ * Adaptador Forge (Minecraft 1.21.8, EventBus 7).
+ */
 @Mod(ConsoleFilter.MODID)
-public class ConsoleFilter implements FilterHost, ConfigScreenHost {
+public final class ConsoleFilter implements FilterHost, ConfigScreenHost {
 
 	public static final String MODID = "consolefilternext";
 	private static final Pattern LOG_PATTERN = Pattern.compile("\\[(.*?)\\] \\[(.*?)/(.*?)\\] \\[(.*?)\\]: (.*)");
+	private static final Logger LOGGER = LogUtils.getLogger();
 
 	private static ConsoleFilter instance;
-
-	private static final Logger LOGGER = LogUtils.getLogger();
 
 	private final ConsoleFilterConfig config = new ConsoleFilterConfig();
 	private final FilterStats stats = new FilterStats();
 	private final List<CustomFilter> filterRegistry = new ArrayList<>();
-	private ModConfig commonModConfig;
+	private Path configPath;
 
 	public ConsoleFilter(FMLJavaModLoadingContext context) {
 		instance = this;
 		ModIdResolver.setLookup(new ForgeModIdLookup());
-		config.init();
 
-		var modEventBus = context.getModEventBus();
-		modEventBus.addListener(this::commonSetup);
-		modEventBus.addListener(this::onConfigEvent);
+		configPath = FMLPaths.CONFIGDIR.get().resolve(ConsoleFilterConfig.CONFIG_FILE_NAME);
 
-		context.registerConfig(ModConfig.Type.COMMON, config.getSpec(), "consolefilternext-common.toml");
+		BusGroup modBusGroup = context.getModBusGroup();
+		FMLCommonSetupEvent.getBus(modBusGroup).addListener(this::commonSetup);
+		ConsoleFilterCommands.register();
 
 		if (FMLEnvironment.dist == Dist.CLIENT) {
 			ConsoleFilterClient.register(context);
@@ -61,51 +62,21 @@ public class ConsoleFilter implements FilterHost, ConfigScreenHost {
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event) {
-		config.load();
-		LOGGER.info(config.filterCount() + " message(s) to be filtered.");
+		config.loadFrom(configPath);
+		LOGGER.info("{} message(s) to be filtered.", config.filterCount());
 
 		filterRegistry.add(new SystemOutFilter(this));
 		filterRegistry.add(new SystemErrFilter(this));
 		filterRegistry.add(new JavaFilter(this));
 		filterRegistry.add(new Log4jFilter(this));
-
 		for (CustomFilter filter : filterRegistry) {
 			filter.applyFilter(this);
 		}
 	}
 
-	private void onConfigEvent(ModConfigEvent event) {
-		if (!MODID.equals(event.getConfig().getModId())) {
-			return;
-		}
-		if (event.getConfig().getType() != ModConfig.Type.COMMON) {
-			return;
-		}
-
-		if (event instanceof ModConfigEvent.Loading) {
-			commonModConfig = event.getConfig();
-		}
-
-		if (event instanceof ModConfigEvent.Loading || event instanceof ModConfigEvent.Reloading) {
-			config.load();
-			if (event instanceof ModConfigEvent.Reloading) {
-				LOGGER.info("Configuración recargada: {} filtro(s) activos.", config.filterCount());
-			}
-		}
-	}
-
 	public boolean reloadConfigFromDisk() {
-		if (commonModConfig != null && commonModConfig.getConfigData() instanceof CommentedFileConfig fileConfig) {
-			fileConfig.load();
-			config.clearProfileOverride();
-			config.load();
-			LOGGER.info("Configuración recargada desde disco: {} filtro(s) activos.", config.filterCount());
-			return true;
-		}
-
-		config.clearProfileOverride();
-		config.load();
-		LOGGER.warn("ModConfig no disponible; recarga aplicada solo en memoria.");
+		config.reloadFromDisk();
+		LOGGER.info("Configuración recargada desde disco: {} filtro(s) activos.", config.filterCount());
 		return true;
 	}
 
@@ -113,21 +84,13 @@ public class ConsoleFilter implements FilterHost, ConfigScreenHost {
 		String normalized = profile == null || profile.isBlank()
 			? ConsoleFilterConfig.PROFILE_DEFAULT
 			: profile;
-
-		Optional<java.nio.file.Path> configPath = getConfigPath();
-		if (configPath.isPresent()) {
-			try {
-				ConfigFileHelper.setActiveProfile(configPath.get(), normalized);
-				config.clearProfileOverride();
-				return reloadConfigFromDisk();
-			} catch (IOException exception) {
-				LOGGER.error("No se pudo persistir activeProfile en TOML", exception);
-				return false;
-			}
+		try {
+			ConfigFileHelper.setActiveProfile(configPath, normalized);
+			return reloadConfigFromDisk();
+		} catch (IOException exception) {
+			LOGGER.error("No se pudo persistir activeProfile en TOML", exception);
+			return false;
 		}
-
-		config.setProfileOverride(normalized);
-		return true;
 	}
 
 	@Override
@@ -172,7 +135,7 @@ public class ConsoleFilter implements FilterHost, ConfigScreenHost {
 		return stats;
 	}
 
-	public Optional<java.nio.file.Path> getConfigPath() {
-		return commonModConfig != null ? Optional.of(commonModConfig.getFullPath()) : Optional.empty();
+	public Optional<Path> getConfigPath() {
+		return Optional.ofNullable(configPath);
 	}
 }

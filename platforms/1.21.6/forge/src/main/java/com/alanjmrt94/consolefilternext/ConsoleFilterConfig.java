@@ -4,178 +4,125 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 
 /**
- * Adaptador ForgeConfigSpec → {@link FilterEngine}.
+ * Adaptador NightConfig/TOML → {@link FilterEngine} (mismo esquema que Forge/Fabric).
  */
-public class ConsoleFilterConfig implements FilterConfigView {
+public final class ConsoleFilterConfig implements FilterConfigView {
 
 	public static final String PROFILE_DEFAULT = FilterProfiles.DEFAULT;
 	public static final String PROFILE_DEBUG = FilterProfiles.DEBUG;
 	public static final String PROFILE_PRODUCTION = FilterProfiles.PRODUCTION;
+	public static final String CONFIG_FILE_NAME = FilterProfiles.CONFIG_FILE_NAME;
 
-	private ForgeConfigSpec.ConfigValue<String> activeProfile;
-	private ForgeConfigSpec.ConfigValue<Boolean> ignoreCase;
-	private ForgeConfigSpec.ConfigValue<Boolean> whitelistMode;
-	private ForgeConfigSpec.ConfigValue<Boolean> filterLatestLog;
-	private ForgeConfigSpec.ConfigValue<Boolean> skipMessagesWithStackTrace;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> basicFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> regexFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> levelFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> threadFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> sourceFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> loggerFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> modIdFilters;
-
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugBasicFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugRegexFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugLevelFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugThreadFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugSourceFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugLoggerFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> debugModIdFilters;
-
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionBasicFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionRegexFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionLevelFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionThreadFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionSourceFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionLoggerFilters;
-	private ForgeConfigSpec.ConfigValue<List<? extends String>> productionModIdFilters;
-
-	private ForgeConfigSpec spec;
 	private final FilterEngine engine = new FilterEngine();
+	private CommentedFileConfig fileConfig;
 	private String profileOverride;
 
-	public void init() {
-		ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-
-		builder.push("general");
-
-		activeProfile = builder
-			.comment("Active filter profile: default (uses [general] lists), debug, or production (uses [profiles.*] sections).")
-			.define("activeProfile", PROFILE_DEFAULT);
-
-		ignoreCase = builder
-			.comment("When true, basic, thread, source, logger, mod id, and regex filters ignore letter case.")
-			.define("ignoreCase", false);
-
-		whitelistMode = builder
-			.comment("When false (default), matching messages are hidden. When true, only matching messages are shown.")
-			.define("whitelistMode", false);
-
-		filterLatestLog = builder
-			.comment("When true, filters also apply to latest.log and other Log4j file appenders. When false, only console output is filtered.")
-			.define("filterLatestLog", true);
-
-		skipMessagesWithStackTrace = builder
-			.comment("When true, messages with an attached exception/stack trace are never filtered.")
-			.define("skipMessagesWithStackTrace", false);
-
-		basicFilters = defineFilterList(builder, "basicFilters",
-			"Any console messages containing any of these strings will be hidden (unless whitelistMode is enabled).");
-		regexFilters = defineFilterList(builder, "regexFilters",
-			"Console messages matching these Java-style regular expressions will be hidden.");
-		levelFilters = defineFilterList(builder, "levelFilters",
-			"Filter messages by log level (INFO, ERROR, WARN, etc.). Always case-insensitive.");
-		threadFilters = defineFilterList(builder, "threadFilters",
-			"Filter by thread name (contains match).");
-		sourceFilters = defineFilterList(builder, "sourceFilters",
-			"Filter by source/logger name (contains match).");
-		loggerFilters = defineFilterList(builder, "loggerFilters",
-			"Legacy alias for source/logger filtering (contains match). Merged with sourceFilters.");
-		modIdFilters = defineFilterList(builder, "modIdFilters",
-			"Filter messages from Forge mods by mod id (e.g. create, jei).");
-
-		builder.pop();
-
-		builder.push("profiles");
-
-		builder.push(PROFILE_DEBUG);
-		debugBasicFilters = defineFilterList(builder, "basicFilters", "Debug profile basic filters.");
-		debugRegexFilters = defineFilterList(builder, "regexFilters", "Debug profile regex filters.");
-		debugLevelFilters = defineFilterList(builder, "levelFilters", "Debug profile level filters.");
-		debugThreadFilters = defineFilterList(builder, "threadFilters", "Debug profile thread filters.");
-		debugSourceFilters = defineFilterList(builder, "sourceFilters", "Debug profile source filters.");
-		debugLoggerFilters = defineFilterList(builder, "loggerFilters", "Debug profile logger filters.");
-		debugModIdFilters = defineFilterList(builder, "modIdFilters", "Debug profile mod id filters.");
-		builder.pop();
-
-		builder.push(PROFILE_PRODUCTION);
-		productionBasicFilters = defineFilterList(builder, "basicFilters", "Production profile basic filters.");
-		productionRegexFilters = defineFilterList(builder, "regexFilters", "Production profile regex filters.");
-		productionLevelFilters = defineFilterList(builder, "levelFilters", "Production profile level filters.");
-		productionThreadFilters = defineFilterList(builder, "threadFilters", "Production profile thread filters.");
-		productionSourceFilters = defineFilterList(builder, "sourceFilters", "Production profile source filters.");
-		productionLoggerFilters = defineFilterList(builder, "loggerFilters", "Production profile logger filters.");
-		productionModIdFilters = defineFilterList(builder, "modIdFilters", "Production profile mod id filters.");
-		builder.pop();
-
-		builder.pop();
-
-		spec = builder.build();
+	public void loadFrom(java.nio.file.Path configPath) {
+		fileConfig = CommentedFileConfig.builder(configPath)
+			.sync()
+			.autosave()
+			.writingMode(com.electronwill.nightconfig.core.io.WritingMode.REPLACE)
+			.build();
+		fileConfig.load();
+		ensureDefaults(fileConfig);
+		fileConfig.save();
+		reloadEngine();
 	}
 
-	private static ForgeConfigSpec.ConfigValue<List<? extends String>> defineFilterList(
-			ForgeConfigSpec.Builder builder, String name, String comment) {
-		return builder.comment(comment).defineList(name, Collections.emptyList(), obj -> true);
+	public void reloadFromDisk() {
+		if (fileConfig != null) {
+			fileConfig.load();
+		}
+		profileOverride = null;
+		reloadEngine();
 	}
 
-	public void load() {
+	private void reloadEngine() {
 		FilterLists lists = resolveActiveLists();
 		engine.reload(
 			lists,
-			ignoreCase.get(),
-			whitelistMode.get(),
-			filterLatestLog.get(),
-			skipMessagesWithStackTrace.get(),
+			getBoolean("general.ignoreCase", false),
+			getBoolean("general.whitelistMode", false),
+			getBoolean("general.filterLatestLog", true),
+			getBoolean("general.skipMessagesWithStackTrace", false),
 			getEffectiveProfile()
 		);
 	}
 
-	private FilterLists resolveActiveLists() {
-		String profile = getEffectiveProfile();
-		return switch (profile) {
-			case FilterProfiles.DEBUG -> listsFrom(
-				debugBasicFilters, debugRegexFilters, debugLevelFilters,
-				debugThreadFilters, debugSourceFilters, debugLoggerFilters, debugModIdFilters);
-			case FilterProfiles.PRODUCTION -> listsFrom(
-				productionBasicFilters, productionRegexFilters, productionLevelFilters,
-				productionThreadFilters, productionSourceFilters, productionLoggerFilters, productionModIdFilters);
-			default -> listsFrom(
-				basicFilters, regexFilters, levelFilters,
-				threadFilters, sourceFilters, loggerFilters, modIdFilters);
-		};
+	private static void ensureDefaults(CommentedConfig config) {
+		config.set("general.activeProfile", config.getOrElse("general.activeProfile", PROFILE_DEFAULT));
+		config.set("general.ignoreCase", config.getOrElse("general.ignoreCase", false));
+		config.set("general.whitelistMode", config.getOrElse("general.whitelistMode", false));
+		config.set("general.filterLatestLog", config.getOrElse("general.filterLatestLog", true));
+		config.set("general.skipMessagesWithStackTrace", config.getOrElse("general.skipMessagesWithStackTrace", false));
+		ensureList(config, "general.basicFilters");
+		ensureList(config, "general.regexFilters");
+		ensureList(config, "general.levelFilters");
+		ensureList(config, "general.threadFilters");
+		ensureList(config, "general.sourceFilters");
+		ensureList(config, "general.loggerFilters");
+		ensureList(config, "general.modIdFilters");
+		for (String profile : List.of(PROFILE_DEBUG, PROFILE_PRODUCTION)) {
+			ensureList(config, "profiles." + profile + ".basicFilters");
+			ensureList(config, "profiles." + profile + ".regexFilters");
+			ensureList(config, "profiles." + profile + ".levelFilters");
+			ensureList(config, "profiles." + profile + ".threadFilters");
+			ensureList(config, "profiles." + profile + ".sourceFilters");
+			ensureList(config, "profiles." + profile + ".loggerFilters");
+			ensureList(config, "profiles." + profile + ".modIdFilters");
+		}
 	}
 
-	private FilterLists listsFrom(
-			ForgeConfigSpec.ConfigValue<List<? extends String>> basic,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> regex,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> level,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> thread,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> source,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> logger,
-			ForgeConfigSpec.ConfigValue<List<? extends String>> modId) {
+	private static void ensureList(CommentedConfig config, String path) {
+		if (!config.contains(path)) {
+			config.set(path, new ArrayList<String>());
+		}
+	}
+
+	private FilterLists resolveActiveLists() {
+		String profile = getEffectiveProfile();
+		String prefix = switch (profile) {
+			case FilterProfiles.DEBUG -> "profiles.debug.";
+			case FilterProfiles.PRODUCTION -> "profiles.production.";
+			default -> "general.";
+		};
 		return new FilterLists(
-			copyList(basic.get()),
-			copyList(regex.get()),
-			copyList(level.get()),
-			copyList(thread.get()),
-			copyList(source.get()),
-			copyList(logger.get()),
-			copyList(modId.get())
+			copyList(getStringList(prefix + "basicFilters")),
+			copyList(getStringList(prefix + "regexFilters")),
+			copyList(getStringList(prefix + "levelFilters")),
+			copyList(getStringList(prefix + "threadFilters")),
+			copyList(getStringList(prefix + "sourceFilters")),
+			copyList(getStringList(prefix + "loggerFilters")),
+			copyList(getStringList(prefix + "modIdFilters"))
 		);
 	}
 
-	private static List<String> copyList(List<? extends String> values) {
-		List<String> copy = new ArrayList<>();
-		for (String value : values) {
-			if (value != null) {
-				copy.add(value);
+	@SuppressWarnings("unchecked")
+	private List<String> getStringList(String path) {
+		Object value = fileConfig.get(path);
+		if (value instanceof List<?> list) {
+			List<String> result = new ArrayList<>();
+			for (Object entry : list) {
+				if (entry != null) {
+					result.add(String.valueOf(entry));
+				}
 			}
+			return result;
 		}
-		return copy;
+		return Collections.emptyList();
+	}
+
+	private static List<String> copyList(List<String> values) {
+		return new ArrayList<>(values);
+	}
+
+	private boolean getBoolean(String path, boolean fallback) {
+		Boolean value = fileConfig.get(path);
+		return value != null ? value : fallback;
 	}
 
 	@Override
@@ -193,49 +140,6 @@ public class ConsoleFilterConfig implements FilterConfigView {
 		return engine.evaluatePlain(text);
 	}
 
-	public boolean shouldFilterPlain(String text) {
-		return engine.shouldFilterPlain(text);
-	}
-
-	/** @deprecated Prefer {@link FilterEngine#applyFilterMode(boolean, boolean)} */
-	@Deprecated
-	static boolean applyFilterMode(boolean matches, boolean whitelistMode) {
-		return FilterEngine.applyFilterMode(matches, whitelistMode);
-	}
-
-	public void setProfileOverride(String profile) {
-		if (profile == null || profile.isBlank() || PROFILE_DEFAULT.equals(profile)) {
-			profileOverride = null;
-		} else {
-			profileOverride = profile;
-		}
-		load();
-	}
-
-	public void clearProfileOverride() {
-		profileOverride = null;
-	}
-
-	public String getEffectiveProfile() {
-		if (profileOverride != null) {
-			return profileOverride;
-		}
-		String configured = activeProfile.get();
-		return configured == null || configured.isBlank() ? PROFILE_DEFAULT : configured;
-	}
-
-	public int filterCount() {
-		return engine.filterCount();
-	}
-
-	public boolean isIgnoreCase() {
-		return engine.isIgnoreCase();
-	}
-
-	public boolean isWhitelistMode() {
-		return engine.isWhitelistMode();
-	}
-
 	@Override
 	public boolean isFilterLatestLog() {
 		return engine.isFilterLatestLog();
@@ -246,8 +150,33 @@ public class ConsoleFilterConfig implements FilterConfigView {
 		return engine.isSkipMessagesWithStackTrace();
 	}
 
-	public int countNonEmpty(List<? extends String> values) {
-		return FilterEngine.countNonEmpty(values);
+	public boolean shouldFilterPlain(String text) {
+		return engine.shouldFilterPlain(text);
+	}
+
+	public void setProfileOverride(String profile) {
+		if (profile == null || profile.isBlank() || PROFILE_DEFAULT.equals(profile)) {
+			profileOverride = null;
+		} else {
+			profileOverride = profile;
+		}
+		reloadEngine();
+	}
+
+	public void clearProfileOverride() {
+		profileOverride = null;
+	}
+
+	public String getEffectiveProfile() {
+		if (profileOverride != null) {
+			return profileOverride;
+		}
+		String configured = fileConfig.get("general.activeProfile");
+		return configured == null || configured.isBlank() ? PROFILE_DEFAULT : configured;
+	}
+
+	public int filterCount() {
+		return engine.filterCount();
 	}
 
 	public FilterSummary getSummary() {
@@ -258,7 +187,7 @@ public class ConsoleFilterConfig implements FilterConfigView {
 		return engine;
 	}
 
-	public ForgeConfigSpec getSpec() {
-		return spec;
+	public CommentedFileConfig getFileConfig() {
+		return fileConfig;
 	}
 }
