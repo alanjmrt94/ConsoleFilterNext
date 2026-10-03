@@ -1,0 +1,15 @@
+[
+  {
+    "modid": "${mod_id}",
+    "name": "${mod_name}",
+    "description": "${mod_description}",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://www.curseforge.com/minecraft/mc-mods/consolefilternext",
+    "authorList": ["${mod_authors}"],
+    "credits": "Basado originalmente en ConsoleFilter de Matthew Czyr (MattCzyr).",
+    "logoFile": "icon.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

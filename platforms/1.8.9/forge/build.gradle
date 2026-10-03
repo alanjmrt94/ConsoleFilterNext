@@ -1,0 +1,101 @@
+buildscript {
+	repositories {
+		maven { url = 'https://maven.minecraftforge.net' }
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+	}
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+
+def props = new Properties()
+file('../../../gradle.properties').withInputStream { props.load(it) }
+file('../../../versions/1.8.9.properties').withInputStream { props.load(it) }
+
+version = props['mod_version']
+group = props['mod_group_id']
+archivesBaseName = props['mod_id']
+
+sourceCompatibility = targetCompatibility = '1.8'
+
+sourceSets.main.java {
+	srcDir '../../../common-java8/src/main/java'
+	srcDir '../../../legacy-common/src/main/java'
+}
+
+// FG2 copia sources a build/sources y no respeta bien excludes entre srcDirs.
+// Sobreescribir con los overrides locales compatibles con Log4j 2.0-beta9.
+afterEvaluate {
+	tasks.sourceMainJava.doLast {
+		copy {
+			from 'src/main/java/com/alanjmrt94/consolefilternext/filter'
+			into "$buildDir/sources/main/java/com/alanjmrt94/consolefilternext/filter"
+			include 'Log4jFilter.java', 'Log4jAppenderFilters.java'
+		}
+	}
+}
+
+minecraft {
+	version = "${props['minecraft_version']}-${props['forge_version']}"
+	runDir = '../../runs/1.8.9/forge'
+	mappings = props['mcp_mappings']
+}
+
+repositories {
+	mavenCentral()
+}
+
+configurations {
+	embed
+	compile.extendsFrom embed
+}
+
+dependencies {
+	embed 'com.electronwill.night-config:core:3.6.7'
+	embed 'com.electronwill.night-config:toml:3.6.7'
+}
+
+task ensureRunEula {
+	doLast {
+		def runDir = file('../../runs/1.8.9/forge')
+		runDir.mkdirs()
+		new File(runDir, 'eula.txt').text = "eula=true\n"
+	}
+}
+
+runServer.dependsOn ensureRunEula
+
+processResources {
+	inputs.property 'version', project.version
+	inputs.property 'mcversion', project.minecraft.version
+
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+		expand([
+				version        : project.version,
+				mcversion      : props['minecraft_version'],
+				mod_id         : props['mod_id'],
+				mod_name       : props['mod_name'],
+				mod_authors    : props['mod_authors'],
+				mod_description: props['mod_description']
+		])
+	}
+	from(sourceSets.main.resources.srcDirs) {
+		exclude 'mcmod.info'
+	}
+}
+
+compileJava {
+	options.encoding = 'UTF-8'
+}
+
+jar {
+	classifier = 'forge'
+	from { configurations.embed.collect { it.isDirectory() ? it : zipTree(it) } }
+	duplicatesStrategy = 'exclude'
+	from(file('../../../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}

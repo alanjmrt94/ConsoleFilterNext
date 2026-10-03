@@ -1,0 +1,106 @@
+plugins {
+	id 'java'
+	id 'eclipse'
+	id 'com.gtnewhorizons.retrofuturagradle' version '2.0.6'
+}
+
+def props = new Properties()
+file('../../../gradle.properties').withInputStream { props.load(it) }
+file('../../../versions/1.12.2.properties').withInputStream { props.load(it) }
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName.set(props['mod_id'] as String)
+}
+
+java {
+	toolchain {
+		languageVersion.set(JavaLanguageVersion.of(8))
+	}
+}
+
+sourceSets.main.java {
+	srcDir '../../../common-java8/src/main/java'
+	srcDir '../../../legacy-common/src/main/java'
+}
+
+minecraft {
+	mcVersion.set(props['minecraft_version'] as String)
+	mcpMappingChannel.set(props['mcp_mapping_channel'] as String)
+	mcpMappingVersion.set(props['mcp_mapping_version'] as String)
+	username.set('Developer')
+	extraRunJvmArguments.add('-ea:' + group)
+}
+
+repositories {
+	mavenCentral()
+}
+
+configurations {
+	embed
+	implementation.extendsFrom(embed)
+}
+
+dependencies {
+	embed 'com.electronwill.night-config:core:3.6.7'
+	embed 'com.electronwill.night-config:toml:3.6.7'
+}
+
+def ensureRunEula = tasks.register('ensureRunEula') {
+	doLast {
+		def runDir = layout.projectDirectory.dir('../../runs/1.12.2/forge').asFile
+		runDir.mkdirs()
+		new File(runDir, 'eula.txt').text = "eula=true\n"
+	}
+}
+
+tasks.named('runServer').configure {
+	workingDir = layout.projectDirectory.dir('../../runs/1.12.2/forge')
+	dependsOn ensureRunEula
+}
+
+tasks.named('runClient').configure {
+	workingDir = layout.projectDirectory.dir('../../runs/1.12.2/forge')
+}
+
+processResources {
+	inputs.property 'version', project.version
+	inputs.property 'mcversion', props['minecraft_version']
+	filesMatching(['mcmod.info', 'pack.mcmeta']) {
+		expand([
+				version  : project.version,
+				mcversion: props['minecraft_version'],
+				mod_id   : props['mod_id'],
+				mod_name : props['mod_name'],
+				mod_authors: props['mod_authors'],
+				mod_description: props['mod_description']
+		])
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
+
+jar {
+	archiveClassifier.set('forge')
+	from(provider {
+		configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+	})
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(file('../../../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+	manifest {
+		attributes([
+				'Specification-Title'     : props['mod_id'],
+				'Specification-Vendor'    : props['mod_authors'],
+				'Specification-Version'   : '1',
+				'Implementation-Title'    : props['mod_name'],
+				'Implementation-Version'  : project.version,
+				'Implementation-Vendor'   : props['mod_authors']
+		])
+	}
+}
