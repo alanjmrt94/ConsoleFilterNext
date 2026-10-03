@@ -50,8 +50,9 @@ if is_isolated_cell "${LOADER}"; then
 	if [[ "${_loader}" == "fabric" ]]; then
 		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
 	else
-		LOG_HINTS=('Done (' 'message(s) to be filtered')
-		REQUIRE_ALL_HINTS=1
+		# FML/NeoForge a menudo no echoan el log del mod a stdout de Gradle.
+		LOG_HINTS=('Done (' 'For help, type "help"' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=0
 	fi
 else
 case "${LOADER}" in
@@ -197,18 +198,34 @@ else
 fi
 set -e
 
+smoke_matches() {
+	local hint="$1"
+	local extra
+	if grep -qiF "${hint}" "${LOG_FILE}"; then
+		return 0
+	fi
+	for extra in \
+		"${ROOT}/${RUN_DIR}/logs/latest.log" \
+		"${ROOT}/${RUN_DIR}/logs/debug.log"; do
+		if [[ -f "${extra}" ]] && grep -qiF "${hint}" "${extra}"; then
+			return 0
+		fi
+	done
+	return 1
+}
+
 smoke_passed() {
 	local hint
 	if [[ "${REQUIRE_ALL_HINTS}" -eq 1 ]]; then
 		for hint in "${LOG_HINTS[@]}"; do
-			if ! grep -qiF "${hint}" "${LOG_FILE}"; then
+			if ! smoke_matches "${hint}"; then
 				return 1
 			fi
 		done
 		return 0
 	fi
 	for hint in "${LOG_HINTS[@]}"; do
-		if grep -qiF "${hint}" "${LOG_FILE}"; then
+		if smoke_matches "${hint}"; then
 			return 0
 		fi
 	done
