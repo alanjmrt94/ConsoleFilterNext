@@ -65,6 +65,11 @@ sourceSets {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+// FML trata el directorio que contiene mods.toml como el archivo del mod.
+// En userdev las clases y los recursos van a carpetas distintas; unirlos evita
+// "has mods that were not found".
+sourceSets.main.output.resourcesDir = layout.buildDirectory.dir('classes/java/main').get().asFile
+
 def ensureRunEula = tasks.register('ensureRunEula') {
 	doLast {
 		def runDir = project.file('../../runs/1.19.4/forge')

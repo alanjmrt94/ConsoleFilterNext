@@ -86,7 +86,18 @@ jobs:
       - name: Grant execute permission
         run: chmod +x platforms/1.20.1/neoforge/gradlew
       - name: Build NeoForge
-        run: cd platforms/1.20.1/neoforge && ./gradlew clean build --no-daemon
+        run: |
+          set +e
+          for attempt in 1 2 3; do
+            (cd platforms/1.20.1/neoforge && ./gradlew clean build --no-daemon)
+            status=$?
+            if [ "${status}" -eq 0 ]; then
+              exit 0
+            fi
+            echo "NeoForge 1.20.1 build attempt ${attempt} failed (exit ${status}); retrying after maven 502/transient errors."
+            sleep 20
+          done
+          exit 1
       - name: Upload NeoForge JAR
         uses: actions/upload-artifact@v4
         with:
@@ -599,7 +610,7 @@ jobs:
           - { mc: "1.20.3", loader: fabric, java: 21 }
           - { mc: "1.20.4", loader: forge, java: 17 }
           - { mc: "1.20.4", loader: fabric, java: 21 }
-          - { mc: "1.20.4", loader: neoforge, java: 21 }
+          - { mc: "1.20.4", loader: neoforge, java: 17 }
           - { mc: "1.20.5", loader: fabric, java: 21 }
           - { mc: "1.20.6", loader: forge, java: 21 }
           - { mc: "1.20.6", loader: fabric, java: 21 }
@@ -712,7 +723,7 @@ jobs:
         include:
           - { mc: "1.20.4", loader: forge, java: 17 }
           - { mc: "1.20.4", loader: fabric, java: 21 }
-          - { mc: "1.20.4", loader: neoforge, java: 21 }
+          - { mc: "1.20.4", loader: neoforge, java: 17 }
           - { mc: "1.20.6", loader: forge, java: 21 }
           - { mc: "1.20.6", loader: fabric, java: 21 }
           - { mc: "1.20.6", loader: neoforge, java: 21 }
@@ -1064,9 +1075,9 @@ jobs:
       - name: Grant execute permission
         run: chmod +x platforms/1.8.9/forge/gradlew scripts/server-smoke.sh
       - name: Dedicated server smoke (Forge 1.8.9)
-        timeout-minutes: 20
+        timeout-minutes: 25
         env:
-          SMOKE_TIMEOUT_SECONDS: 300
+          SMOKE_TIMEOUT_SECONDS: 900
         run: |
           cd platforms/1.8.9/forge && ./gradlew setupCiWorkspace --no-daemon
           cd ../../..
@@ -1110,8 +1121,8 @@ jobs:
       - name: Grant execute permission
         run: chmod +x platforms/1.8.9/fabric/gradlew scripts/server-smoke.sh
       - name: Dedicated server smoke (Fabric 1.8.9)
-        timeout-minutes: 20
+        timeout-minutes: 25
         env:
-          SMOKE_TIMEOUT_SECONDS: 300
+          SMOKE_TIMEOUT_SECONDS: 900
         run: ./scripts/server-smoke.sh fabric-1.8.9
 

@@ -63,6 +63,9 @@ dependencies {
 	compileOnly 'org.apache.logging.log4j:log4j-core:2.11.2'
 	implementation 'com.electronwill.night-config:core:3.6.7'
 	implementation 'com.electronwill.night-config:toml:3.6.7'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 loom {
@@ -93,7 +96,14 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
+}
+
+// El mod se publica en Java 8; los tests usan text blocks / Files.writeString.
+tasks.named('compileJava', JavaCompile).configure {
 	options.release = 8
+}
+tasks.named('compileTestJava', JavaCompile).configure {
+	options.release = 17
 }
 
 tasks.named('remapJar', net.fabricmc.loom.task.RemapJarTask).configure {
@@ -104,4 +114,8 @@ jar {
 	from(file('../../../LICENSE.md')) {
 		rename { "${it}_${props['mod_id']}" }
 	}
+}
+
+test {
+	useJUnitPlatform()
 }
