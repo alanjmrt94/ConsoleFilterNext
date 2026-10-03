@@ -79,9 +79,9 @@ If **any** filter matches, the message is **filtered out** (unless whitelist mod
 
 | | |
 |---|---|
-| **Minecraft** | 1.20.1 · 1.21.1 · 26.1 · 26.2 · 1.16.x · 1.12.2 · 1.8.9 |
+| **Minecraft** | 1.19.x · 1.20.1–1.20.6 · 1.21.1–1.21.11 · 26.1 · 26.2 · 1.16.x · 1.12.2 · 1.8.9 |
 | **Mod loaders** | **Forge** · **Fabric** (incl. Legacy Fabric) · **NeoForge** (un JAR por loader; no todos los loaders en todas las MC) |
-| **Java** | 8 (1.16 / legacy) · 17 (1.20.1) · 21 (1.21.1) · 25 (26.x) |
+| **Java** | 8 (1.16 / legacy) · 17 (1.19 / 1.20.1–1.20.4) · 21 (1.20.5+ / 1.21.x) · 25 (26.x) |
 | **Side** | Client and dedicated server (optional on each) |
 
 Migrating from the original ConsoleFilter? See [MIGRATION.md](https://github.com/alanjmrt94/ConsoleFilterNext/blob/master/MIGRATION.md).

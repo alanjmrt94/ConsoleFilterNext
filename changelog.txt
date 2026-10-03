@@ -7,7 +7,7 @@
  - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
 -----------------------------------------------------
- VERSION 4.2.0 - 1.20.1–1.20.6 / 26.1 / 26.2 / líneas extra
+ VERSION 4.2.0 - 1.19.x / 1.20.1–1.20.6 / 1.21.x / 26.1 / 26.2 / líneas extra
 -----------------------------------------------------
 1.20.1, 26.1, 26.2:
  - Shared in-game config editor (platforms/{mc}/client/ on each MC line) on Forge, Fabric (Mod Menu), and NeoForge
@@ -17,6 +17,8 @@
  - Forge 26.1 / 26.2 (ForgeGradle 7, EventBus 7, Java 25)
  - Fabric 1.12.2 / 1.8.9 (Legacy Fabric Loom; filtro + TOML + comandos, sin editor in-game)
  - Minors 1.20.2–1.20.6: Forge salvo 1.20.5; Fabric en todas; NeoForge en 1.20.4 y 1.20.6 (20.2/20.3/20.5 sin MDG bundle)
+ - 1.19.2 / 1.19.4: Forge + Fabric (Java 17; filtro + TOML + comandos, sin editor: Screen API previa a GuiGraphics)
+ - 1.21.2–1.21.11: Fabric en todas; Forge si hay promoción; NeoForge solo con release estable (sin *-beta). 1.21.2 solo Fabric
 
 -----------------------------------------------------
  VERSION 4.1.0 - 1.20.1

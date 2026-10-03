@@ -16,6 +16,18 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **1.20.5** | Fabric (sin Forge/NeoForge) | `1.20.5-4.2.0` |
 | **1.20.6** | Forge · Fabric · NeoForge (Java 21) | `1.20.6-4.2.0` |
 | **1.21.1** | Forge · Fabric · NeoForge (Java 21) | `1.21.1-4.2.0` |
+| **1.21.2** | Fabric (sin Forge/NeoForge estables) | `1.21.2-4.2.0` |
+| **1.21.3** | Forge · Fabric · NeoForge | `1.21.3-4.2.0` |
+| **1.21.4** | Forge · Fabric · NeoForge | `1.21.4-4.2.0` |
+| **1.21.5** | Forge · Fabric · NeoForge | `1.21.5-4.2.0` |
+| **1.21.6** | Forge · Fabric (NeoForge solo beta) | `1.21.6-4.2.0` |
+| **1.21.7** | Forge · Fabric (NeoForge solo beta) | `1.21.7-4.2.0` |
+| **1.21.8** | Forge · Fabric · NeoForge | `1.21.8-4.2.0` |
+| **1.21.9** | Forge · Fabric (NeoForge solo beta) | `1.21.9-4.2.0` |
+| **1.21.10** | Forge · Fabric · NeoForge | `1.21.10-4.2.0` |
+| **1.21.11** | Forge · Fabric · NeoForge | `1.21.11-4.2.0` |
+| **1.19.2** | Forge · Fabric (Java 17, sin editor in-game) | `1.19.2-4.2.0` |
+| **1.19.4** | Forge · Fabric (Java 17, sin editor in-game) | `1.19.4-4.2.0` |
 | **1.16.5** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.5-4.2.0` |
 | **1.16.1** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.1-4.2.0` |
 | **1.12.2** | Forge · Fabric (Java 8, feature set reducido, sin editor) | `1.12.2-4.2.0` |
@@ -23,7 +35,7 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **26.1** | Forge · Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
 | **26.2** | Forge · Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
 
-Los tags `{mc}-4.2.0` existen para **todas** las líneas de la matriz (incluye `1.20.2`–`1.20.6`). GitHub Release, Modrinth y CurseForge se disparan al **pushear** cada tag. **Forge 26.x** y **Fabric 1.12.2 / 1.8.9** ya tienen tag; si no aparecen en las tiendas hay que **republicarlos**.
+Los tags `{mc}-4.2.0` existen para **todas** las líneas de la matriz (incluye `1.19.2`/`1.19.4` y `1.21.2`–`1.21.11`). GitHub Release, Modrinth y CurseForge se disparan al **pushear** cada tag. **Forge 26.x** y **Fabric 1.12.2 / 1.8.9** ya tienen tag; si no aparecen en las tiendas hay que **republicarlos**.
 
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
@@ -37,13 +49,17 @@ Los tags `{mc}-4.2.0` existen para **todas** las líneas de la matriz (incluye `
 | **Forge / Fabric 1.20.2–1.20.3** | Tras push del tag; filtrar por versión | Tras push del tag |
 | **Forge / Fabric / NeoForge 1.20.4 y 1.20.6** | Tras push del tag; filtrar por versión | Tras push del tag |
 | **Fabric 1.20.5** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Forge / Fabric 1.19.2 / 1.19.4** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Fabric 1.21.2** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Forge / Fabric / NeoForge 1.21.3–1.21.5, 1.21.8, 1.21.10, 1.21.11** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Forge / Fabric 1.21.6 / 1.21.7 / 1.21.9** | Tras push del tag; filtrar por versión | Tras push del tag |
 | **Forge / Fabric / NeoForge 26.1–26.2** | Filtrar por versión de juego | Filtrar por game version |
 
 | Hub | Link |
 |-----|------|
 | **CurseForge** (proyecto) | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
 | **Modrinth** (proyecto) | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
-| **GitHub Releases** | tags `{mc}-4.2.0` (`1.20.1`–`1.20.6`, `1.21.1`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`) |
+| **GitHub Releases** | tags `{mc}-4.2.0` (`1.19.x`, `1.20.1`–`1.20.6`, `1.21.1`–`1.21.11`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`) |
 | **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
 > **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).
@@ -287,9 +303,9 @@ If **any** of the conditions match, the message will be **filtered out**.
 
 | | |
 |---|---|
-| **Minecraft** | 1.20.1–1.20.4 (Forge/Fabric; NeoForge en 1.20.1 y 1.20.4) · 1.20.5 (Fabric) · 1.20.6 y 1.21.1 (Forge/Fabric/NeoForge) · 1.16.5 y 1.16.1 (Forge/Fabric, Java 8) · 1.12.2 y 1.8.9 (Forge + Fabric, Java 8) · 26.1 / 26.2 (Forge/Fabric/NeoForge, Java 25) |
-| **Mod loaders** | Forge 64+ (26.x) · Forge 47–50 (1.20.x) · Forge 36 (1.16.5) · Forge 14 (1.12.2) · Forge 11 (1.8.9) · Fabric · Legacy Fabric (1.12.2 / 1.8.9) · NeoForge |
-| **Java (runtime)** | 8 (MC 1.16.x / 1.12.2 / 1.8.9) · 17 (MC 1.20.1–1.20.4) · 21 (MC 1.20.5 / 1.20.6 / 1.21.1) · 25 (MC 26.x) |
+| **Minecraft** | 1.19.2 / 1.19.4 (Forge/Fabric) · 1.20.1–1.20.4 (Forge/Fabric; NeoForge en 1.20.1 y 1.20.4) · 1.20.5 (Fabric) · 1.20.6 y 1.21.x (Forge/Fabric; NeoForge donde hay release estable) · 1.16.5 y 1.16.1 (Forge/Fabric, Java 8) · 1.12.2 y 1.8.9 (Forge + Fabric, Java 8) · 26.1 / 26.2 (Forge/Fabric/NeoForge, Java 25) |
+| **Mod loaders** | Forge 64+ (26.x) · Forge 47–61 (1.20.x / 1.21.x) · Forge 43–45 (1.19.x) · Forge 36 (1.16.5) · Forge 14 (1.12.2) · Forge 11 (1.8.9) · Fabric · Legacy Fabric (1.12.2 / 1.8.9) · NeoForge |
+| **Java (runtime)** | 8 (MC 1.16.x / 1.12.2 / 1.8.9) · 17 (MC 1.19.x / 1.20.1–1.20.4) · 21 (MC 1.20.5 / 1.20.6 / 1.21.x) · 25 (MC 26.x) |
 | **Side** | **Client and dedicated server** — install on either or both; filters apply on both sides |
 | **Downloads** | [CurseForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) · [Modrinth](https://modrinth.com/mod/consolefilternext) · tags `{mc}-4.2.0` en GitHub |
 
@@ -304,7 +320,8 @@ If **any** of the conditions match, the message will be **filtered out**.
 | **1.20.4** | Java 17 | `cd platforms/1.20.4/{forge,fabric,neoforge} && ./gradlew build` |
 | **1.20.5** | Java 21 | `cd platforms/1.20.5/fabric && ./gradlew build` |
 | **1.20.6** | Java 21 | `cd platforms/1.20.6/{forge,fabric,neoforge} && ./gradlew build` |
-| **1.21.1** | Java 21 | `cd platforms/1.21.1/forge && ./gradlew build` (igual `fabric`, `neoforge`) |
+| **1.21.1–1.21.11** | Java 21 | `cd platforms/1.21.4/{forge,fabric,neoforge} && ./gradlew build` (celdas según matriz; 1.21.2 solo Fabric) |
+| **1.19.2 / 1.19.4** | Java 17 | `cd platforms/1.19.2/{forge,fabric} && ./gradlew build` (igual `1.19.4`) |
 | **1.16.5** | Java 8 (Gradle con JDK 17) | `cd platforms/1.16.5/forge && ./gradlew build` · `cd platforms/1.16.5/fabric && ./gradlew build` |
 | **1.16.1** | Java 8 (el servidor Forge 32 necesita JDK 8; Gradle puede ir en 17) | `JAVA8_HOME=… cd platforms/1.16.1/forge && ./gradlew build` · `cd platforms/1.16.1/fabric && ./gradlew build` |
 | **1.12.2** | Java 8 (Forge: Gradle/RFG con JDK 25; Fabric: Gradle 9 + JDK 21, bytecode 8) | `cd platforms/1.12.2/forge && ./gradlew build` · `cd platforms/1.12.2/fabric && ./gradlew build` |
@@ -442,7 +459,7 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
-| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`{mc}-{semver}`) | Build celdas enabled de esa línea MC y crea GitHub Release (3 JARs en 1.20.1 / 1.20.4 / 1.20.6 / 1.21.1 / 26.x; 2 JARs en 1.20.2 / 1.20.3 / 1.16.x / 1.12.2 / 1.8.9; 1 JAR en 1.20.5) |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`{mc}-{semver}`) | Build celdas enabled de esa línea MC y crea GitHub Release (JARs por loader presente en `platforms/{mc}/`) |
 | [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload JARs to Modrinth/CurseForge and notify Discord (requires the `publish` environment) |
 
 #### GitHub environment `publish`

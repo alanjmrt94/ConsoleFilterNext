@@ -21,7 +21,8 @@ Works on the **client and dedicated server** (optional on each side). Download t
 
 ## Compatibility
 
-- Minecraft **1.20.1** / **1.21.1** — Forge · Fabric · NeoForge
+- Minecraft **1.19.2** / **1.19.4** — Forge · Fabric
+- Minecraft **1.20.1** / **1.21.x** — Forge · Fabric · NeoForge (celdas según loader estable)
 - Minecraft **26.1** / **26.2** — Forge · Fabric · NeoForge (Java 25)
 - Minecraft **1.16.5** / **1.16.1** — Forge · Fabric (Java 8)
 - Minecraft **1.12.2** / **1.8.9** — Forge · Fabric (Java 8; sin editor in-game)
