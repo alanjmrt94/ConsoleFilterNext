@@ -508,6 +508,75 @@ jobs:
           SMOKE_TIMEOUT_SECONDS: 300
         run: ./scripts/server-smoke.sh neoforge-1.21
 
+  build-1-20-minors:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: "1.20.2", loader: forge, java: 17 }
+          - { mc: "1.20.2", loader: fabric, java: 21 }
+          - { mc: "1.20.3", loader: forge, java: 17 }
+          - { mc: "1.20.3", loader: fabric, java: 21 }
+          - { mc: "1.20.4", loader: forge, java: 17 }
+          - { mc: "1.20.4", loader: fabric, java: 21 }
+          - { mc: "1.20.4", loader: neoforge, java: 21 }
+          - { mc: "1.20.5", loader: fabric, java: 21 }
+          - { mc: "1.20.6", loader: forge, java: 21 }
+          - { mc: "1.20.6", loader: fabric, java: 21 }
+          - { mc: "1.20.6", loader: neoforge, java: 21 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: gradle
+      - name: Grant execute permission
+        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew
+      - name: Build ${{ matrix.loader }} ${{ matrix.mc }}
+        run: cd platforms/${{ matrix.mc }}/${{ matrix.loader }} && ./gradlew clean build --no-daemon
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolefilternext-${{ matrix.loader }}-${{ matrix.mc }}
+          path: platforms/${{ matrix.mc }}/${{ matrix.loader }}/build/libs/consolefilternext-*-${{ matrix.loader }}.jar
+          if-no-files-found: error
+
+  server-smoke-1-20-minors:
+    runs-on: ubuntu-latest
+    needs: build-1-20-minors
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: "1.20.2", loader: forge, java: 17 }
+          - { mc: "1.20.2", loader: fabric, java: 21 }
+          - { mc: "1.20.3", loader: forge, java: 17 }
+          - { mc: "1.20.3", loader: fabric, java: 21 }
+          - { mc: "1.20.4", loader: forge, java: 17 }
+          - { mc: "1.20.4", loader: fabric, java: 21 }
+          - { mc: "1.20.4", loader: neoforge, java: 21 }
+          - { mc: "1.20.5", loader: fabric, java: 21 }
+          - { mc: "1.20.6", loader: forge, java: 21 }
+          - { mc: "1.20.6", loader: fabric, java: 21 }
+          - { mc: "1.20.6", loader: neoforge, java: 21 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: gradle
+      - name: Grant execute permission
+        run: chmod +x platforms/${{ matrix.mc }}/${{ matrix.loader }}/gradlew scripts/server-smoke.sh
+      - name: Dedicated server smoke (${{ matrix.loader }} ${{ matrix.mc }})
+        timeout-minutes: 20
+        env:
+          SMOKE_TIMEOUT_SECONDS: 300
+        run: ./scripts/server-smoke.sh ${{ matrix.loader }}-${{ matrix.mc }}
+
   build-forge-1-16-5:
     runs-on: ubuntu-latest
     needs: lint

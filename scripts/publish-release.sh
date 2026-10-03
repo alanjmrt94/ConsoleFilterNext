@@ -459,7 +459,7 @@ publish_curseforge_java_versions() {
 			echo "Java 25"
 			return 0
 			;;
-		1.21.*)
+		1.21.*|1.20.5|1.20.6)
 			echo "Java 21"
 			return 0
 			;;

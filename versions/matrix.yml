@@ -29,6 +29,85 @@ targets:
     enabled: true
     project: "platforms/1.20.1/neoforge"
 
+  - id: mc1.20.2-forge
+    minecraft: "1.20.2"
+    loader: forge
+    java: 17
+    enabled: true
+    project: "platforms/1.20.2/forge"
+
+  - id: mc1.20.2-fabric
+    minecraft: "1.20.2"
+    loader: fabric
+    java: 17
+    enabled: true
+    project: "platforms/1.20.2/fabric"
+
+
+  - id: mc1.20.3-forge
+    minecraft: "1.20.3"
+    loader: forge
+    java: 17
+    enabled: true
+    project: "platforms/1.20.3/forge"
+
+  - id: mc1.20.3-fabric
+    minecraft: "1.20.3"
+    loader: fabric
+    java: 17
+    enabled: true
+    project: "platforms/1.20.3/fabric"
+
+
+  - id: mc1.20.4-forge
+    minecraft: "1.20.4"
+    loader: forge
+    java: 17
+    enabled: true
+    project: "platforms/1.20.4/forge"
+
+  - id: mc1.20.4-fabric
+    minecraft: "1.20.4"
+    loader: fabric
+    java: 17
+    enabled: true
+    project: "platforms/1.20.4/fabric"
+
+  - id: mc1.20.4-neoforge
+    minecraft: "1.20.4"
+    loader: neoforge
+    java: 17
+    enabled: true
+    project: "platforms/1.20.4/neoforge"
+
+  - id: mc1.20.5-fabric
+    minecraft: "1.20.5"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.20.5/fabric"
+
+  - id: mc1.20.6-forge
+    minecraft: "1.20.6"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.20.6/forge"
+
+  - id: mc1.20.6-fabric
+    minecraft: "1.20.6"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.20.6/fabric"
+
+  - id: mc1.20.6-neoforge
+    minecraft: "1.20.6"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.20.6/neoforge"
+
   - id: mc1.21-forge
     minecraft: "1.21.1"
     loader: forge

@@ -9,15 +9,19 @@ LOADER="${1:-forge}"
 SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-300}"
 
 usage() {
-	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2]"
+	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2|{forge,fabric,neoforge}-1.20.{2-6}]"
 	exit 1
 }
 
-case "${LOADER}" in
-	forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2) ;;
-	-h|--help) usage ;;
-	*) echo "Loader desconocido: ${LOADER}"; usage ;;
-esac
+if [[ "${LOADER}" =~ ^(forge|fabric|neoforge)-1\.20\.[2-6]$ ]]; then
+	:
+else
+	case "${LOADER}" in
+		forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2) ;;
+		-h|--help) usage ;;
+		*) echo "Loader desconocido: ${LOADER}"; usage ;;
+	esac
+fi
 
 # Alias cortos → (RUN_DIR, PROJECT_DIR). forge 1.20.1 usa el Gradle raíz.
 RUN_DIR="runs/1.20.1/forge"
@@ -25,6 +29,18 @@ PROJECT_DIR=""
 LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
 REQUIRE_ALL_HINTS=0
 
+if [[ "${LOADER}" =~ ^(forge|fabric|neoforge)-(1\.20\.[2-6])$ ]]; then
+	_loader="${BASH_REMATCH[1]}"
+	_mc="${BASH_REMATCH[2]}"
+	RUN_DIR="runs/${_mc}/${_loader}"
+	PROJECT_DIR="platforms/${_mc}/${_loader}"
+	if [[ "${_loader}" == "fabric" ]]; then
+		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
+	else
+		LOG_HINTS=('Done (' 'message(s) to be filtered')
+		REQUIRE_ALL_HINTS=1
+	fi
+else
 case "${LOADER}" in
 	fabric)
 		RUN_DIR="runs/1.20.1/fabric"
@@ -135,6 +151,7 @@ case "${LOADER}" in
 		PROJECT_DIR=""
 		;;
 esac
+fi
 
 mkdir -p "${RUN_DIR}"
 cat > "${RUN_DIR}/eula.txt" <<'EOF'
