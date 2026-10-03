@@ -7,7 +7,7 @@
  - Licensed under CC BY-NC-SA 4.0; see LICENSE.md
 
 -----------------------------------------------------
- VERSION 4.2.0 - 1.20.1 / 26.1 / 26.2 / líneas extra
+ VERSION 4.2.0 - 1.20.1–1.20.6 / 26.1 / 26.2 / líneas extra
 -----------------------------------------------------
 1.20.1, 26.1, 26.2:
  - Shared in-game config editor (platforms/{mc}/client/ on each MC line) on Forge, Fabric (Mod Menu), and NeoForge

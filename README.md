@@ -10,9 +10,11 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | Minecraft | Loaders | Tag |
 |-----------|---------|-----|
 | **1.20.1** | Forge · Fabric · NeoForge | `1.20.1-4.2.0` |
-| **1.20.2–1.20.4** | Forge · Fabric · NeoForge (solo 1.20.4) | tags `{mc}-4.2.0` (aún no publicados) |
-| **1.20.5** | Fabric (sin Forge/NeoForge) | `1.20.5-4.2.0` (aún no publicado) |
-| **1.20.6** | Forge · Fabric · NeoForge (Java 21) | `1.20.6-4.2.0` (aún no publicado) |
+| **1.20.2** | Forge · Fabric | `1.20.2-4.2.0` |
+| **1.20.3** | Forge · Fabric | `1.20.3-4.2.0` |
+| **1.20.4** | Forge · Fabric · NeoForge | `1.20.4-4.2.0` |
+| **1.20.5** | Fabric (sin Forge/NeoForge) | `1.20.5-4.2.0` |
+| **1.20.6** | Forge · Fabric · NeoForge (Java 21) | `1.20.6-4.2.0` |
 | **1.21.1** | Forge · Fabric · NeoForge (Java 21) | `1.21.1-4.2.0` |
 | **1.16.5** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.5-4.2.0` |
 | **1.16.1** | Forge · Fabric (Java 8, sin editor in-game) | `1.16.1-4.2.0` |
@@ -21,7 +23,7 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **26.1** | Forge · Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
 | **26.2** | Forge · Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
 
-Los tags `{mc}-4.2.0` ya existen para las líneas publicadas. **1.20.2–1.20.6** está en el repo y en CI; los tags de esas minors todavía no se publicaron. **Forge 26.x** y **Fabric 1.12.2 / 1.8.9** están en el repo y en CI; para que aparezcan en Modrinth/CurseForge hay que **republicar** esos tags.
+Los tags `{mc}-4.2.0` existen para **todas** las líneas de la matriz (incluye `1.20.2`–`1.20.6`). GitHub Release, Modrinth y CurseForge se disparan al **pushear** cada tag. **Forge 26.x** y **Fabric 1.12.2 / 1.8.9** ya tienen tag; si no aparecen en las tiendas hay que **republicarlos**.
 
 **Discord:** [discord.gg/CcUNTJjPD](https://discord.gg/CcUNTJjPD)
 
@@ -32,13 +34,16 @@ Los tags `{mc}-4.2.0` ya existen para las líneas publicadas. **1.20.2–1.20.6*
 | **Forge 1.20.1** | [1.20.1 · Forge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=1) | [`1.20.1-4.2.0+forge`](https://modrinth.com/mod/consolefilternext/version/1CZFZaWj) |
 | **Fabric 1.20.1** | [1.20.1 · Fabric](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=4) | [`1.20.1-4.2.0+fabric`](https://modrinth.com/mod/consolefilternext/version/JEPbwMU8) |
 | **NeoForge 1.20.1** | [1.20.1 · NeoForge](https://www.curseforge.com/minecraft/mc-mods/consolefilternext/files?page=1&pageSize=20&version=1.20.1&gameVersionTypeId=6) | [`1.20.1-4.2.0+neoforge`](https://modrinth.com/mod/consolefilternext/version/EE1FzT7i) |
+| **Forge / Fabric 1.20.2–1.20.3** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Forge / Fabric / NeoForge 1.20.4 y 1.20.6** | Tras push del tag; filtrar por versión | Tras push del tag |
+| **Fabric 1.20.5** | Tras push del tag; filtrar por versión | Tras push del tag |
 | **Forge / Fabric / NeoForge 26.1–26.2** | Filtrar por versión de juego | Filtrar por game version |
 
 | Hub | Link |
 |-----|------|
 | **CurseForge** (proyecto) | [consolefilternext](https://www.curseforge.com/minecraft/mc-mods/consolefilternext) |
 | **Modrinth** (proyecto) | [consolefilternext](https://modrinth.com/mod/consolefilternext) |
-| **GitHub Releases** | tags `{mc}-4.2.0` (`1.20.1`, `1.21.1`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`) |
+| **GitHub Releases** | tags `{mc}-4.2.0` (`1.20.1`–`1.20.6`, `1.21.1`, `1.16.x`, `1.12.2`, `1.8.9`, `26.1`, `26.2`) |
 | **Source & issues** | [GitHub](https://github.com/alanjmrt94/ConsoleFilterNext) |
 
 > **Developers:** run `./scripts/release.sh` for environment setup, builds, and publishing (GitHub + CurseForge + Modrinth).
