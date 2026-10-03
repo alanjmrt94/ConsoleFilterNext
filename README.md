@@ -34,6 +34,7 @@ An improved console log filter for Minecraft **Forge / Fabric / NeoForge** — b
 | **1.8.9** | Forge · Fabric (Java 8, feature set reducido, sin editor) | `1.8.9-4.2.0` |
 | **26.1** | Forge · Fabric · NeoForge (Java 25) | `26.1-4.2.0` |
 | **26.2** | Forge · Fabric · NeoForge (Java 25) | `26.2-4.2.0` |
+| **26.3** | Fabric · NeoForge (Java 25; NeoForge `26.3.0.8-beta`; sin Forge) | `26.3-4.2.0` (sin tag aún) |
 
 Los tags `{mc}-4.2.0` están en `origin` para **todas** las líneas de la matriz. GitHub Release, Modrinth y CurseForge se disparan con el push del tag; si un archivo no aparece en las tiendas hay que **republicar** ese tag.
 
@@ -327,6 +328,7 @@ If **any** of the conditions match, the message will be **filtered out**.
 | **1.12.2** | Java 8 (Forge: Gradle/RFG con JDK 25; Fabric: Gradle 9 + JDK 21, bytecode 8) | `cd platforms/1.12.2/forge && ./gradlew build` · `cd platforms/1.12.2/fabric && ./gradlew build` |
 | **1.8.9** | Java 8 (ForgeGradle 2.1 exige JDK 8; Fabric Loom con Gradle 9 + JDK 21) | `cd platforms/1.8.9/forge && ./gradlew setupCiWorkspace build` · `cd platforms/1.8.9/fabric && ./gradlew build` |
 | **26.1 / 26.2** | Java 25 | `cd platforms/26.1/{forge,fabric,neoforge} && ./gradlew build` (igual `platforms/26.2/*`) |
+| **26.3** | Java 25 | `cd platforms/26.3/{fabric,neoforge} && ./gradlew build` |
 
 Launcher JDK 17/21 OK para 1.20.1; Forge **1.19.x** usa launcher JDK 21 (`matrix.sh`). Para 26.x preferí JDK 25 (Gradle 9.5+). Si Mojang no es alcanzable: `USE_BMCL_MIRROR=1` (+ HTTP local de `versions/minecraft-meta` si hace falta).
 

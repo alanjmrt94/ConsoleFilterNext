@@ -48,7 +48,7 @@ jobs:
         run: |
           chmod +x gradlew scripts/release.sh scripts/publish-release.sh scripts/discord-notify.sh
           chmod +x platforms/1.20.1/fabric/gradlew platforms/1.20.1/neoforge/gradlew 2>/dev/null || true
-          chmod +x platforms/26.1/fabric/gradlew platforms/26.1/neoforge/gradlew platforms/26.1/forge/gradlew platforms/26.2/fabric/gradlew platforms/26.2/neoforge/gradlew platforms/26.2/forge/gradlew 2>/dev/null || true
+          chmod +x platforms/26.1/fabric/gradlew platforms/26.1/neoforge/gradlew platforms/26.1/forge/gradlew platforms/26.2/fabric/gradlew platforms/26.2/neoforge/gradlew platforms/26.2/forge/gradlew platforms/26.3/fabric/gradlew platforms/26.3/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/1.21.*/forge/gradlew platforms/1.21.*/fabric/gradlew platforms/1.21.*/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/1.20.*/forge/gradlew platforms/1.20.*/fabric/gradlew platforms/1.20.*/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/1.19.*/forge/gradlew platforms/1.19.*/fabric/gradlew 2>/dev/null || true
@@ -91,6 +91,10 @@ jobs:
               (cd platforms/26.2/fabric && ./gradlew clean build --no-daemon)
               (cd platforms/26.2/neoforge && ./gradlew clean build --no-daemon)
               (cd platforms/26.2/forge && ./gradlew clean build --no-daemon)
+              ;;
+            26.3)
+              (cd platforms/26.3/fabric && ./gradlew clean build --no-daemon)
+              (cd platforms/26.3/neoforge && ./gradlew clean build --no-daemon)
               ;;
             1.20.2)
               cf_gradle platforms/1.20.2/forge "${j17}" clean build --no-daemon
@@ -161,6 +165,7 @@ jobs:
             1.20.1) ls -la platforms/1.20.1/forge/build/libs/ platforms/1.20.1/fabric/build/libs/ platforms/1.20.1/neoforge/build/libs/ || true ;;
             26.1) ls -la platforms/26.1/fabric/build/libs/ platforms/26.1/neoforge/build/libs/ platforms/26.1/forge/build/libs/ || true ;;
             26.2) ls -la platforms/26.2/fabric/build/libs/ platforms/26.2/neoforge/build/libs/ platforms/26.2/forge/build/libs/ || true ;;
+            26.3) ls -la platforms/26.3/fabric/build/libs/ platforms/26.3/neoforge/build/libs/ || true ;;
             1.20.2) ls -la platforms/1.20.2/forge/build/libs/ platforms/1.20.2/fabric/build/libs/ || true ;;
             1.20.3) ls -la platforms/1.20.3/forge/build/libs/ platforms/1.20.3/fabric/build/libs/ || true ;;
             1.20.4) ls -la platforms/1.20.4/forge/build/libs/ platforms/1.20.4/fabric/build/libs/ platforms/1.20.4/neoforge/build/libs/ || true ;;

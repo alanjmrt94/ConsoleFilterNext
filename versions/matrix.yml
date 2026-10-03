@@ -375,6 +375,21 @@ targets:
     enabled: true
     project: "platforms/26.2/forge"
 
+  # 26.3: Fabric + NeoForge (NeoForge 26.3.x-beta). Sin Forge.
+  - id: mc26.3-fabric
+    minecraft: "26.3"
+    loader: fabric
+    java: 25
+    enabled: true
+    project: "platforms/26.3/fabric"
+
+  - id: mc26.3-neoforge
+    minecraft: "26.3"
+    loader: neoforge
+    java: 25
+    enabled: true
+    project: "platforms/26.3/neoforge"
+
   - id: mc1.16.1-forge
     minecraft: "1.16.1"
     loader: forge

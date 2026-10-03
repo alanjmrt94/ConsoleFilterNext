@@ -283,6 +283,48 @@ jobs:
           path: platforms/26.2/forge/build/libs/consolefilternext-*-forge.jar
           if-no-files-found: error
 
+  build-fabric-26-3:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - name: Grant execute permission
+        run: chmod +x platforms/26.3/fabric/gradlew
+      - name: Build Fabric 26.3
+        run: cd platforms/26.3/fabric && ./gradlew clean build --no-daemon
+      - name: Upload Fabric 26.3 JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolefilternext-fabric-26.3
+          path: platforms/26.3/fabric/build/libs/consolefilternext-*-fabric.jar
+          if-no-files-found: error
+
+  build-neoforge-26-3:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - name: Grant execute permission
+        run: chmod +x platforms/26.3/neoforge/gradlew
+      - name: Build NeoForge 26.3
+        run: cd platforms/26.3/neoforge && ./gradlew clean build --no-daemon
+      - name: Upload NeoForge 26.3 JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolefilternext-neoforge-26.3
+          path: platforms/26.3/neoforge/build/libs/consolefilternext-*-neoforge.jar
+          if-no-files-found: error
+
   server-smoke-fabric-26-1:
     runs-on: ubuntu-latest
     needs: build-fabric-26-1
@@ -390,6 +432,42 @@ jobs:
         env:
           SMOKE_TIMEOUT_SECONDS: 300
         run: ./scripts/server-smoke.sh forge-26.2
+
+  server-smoke-fabric-26-3:
+    runs-on: ubuntu-latest
+    needs: build-fabric-26-3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - name: Grant execute permission
+        run: chmod +x platforms/26.3/fabric/gradlew scripts/server-smoke.sh
+      - name: Dedicated server smoke (Fabric 26.3)
+        timeout-minutes: 20
+        env:
+          SMOKE_TIMEOUT_SECONDS: 300
+        run: ./scripts/server-smoke.sh fabric-26.3
+
+  server-smoke-neoforge-26-3:
+    runs-on: ubuntu-latest
+    needs: build-neoforge-26-3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - name: Grant execute permission
+        run: chmod +x platforms/26.3/neoforge/gradlew scripts/server-smoke.sh
+      - name: Dedicated server smoke (NeoForge 26.3)
+        timeout-minutes: 20
+        env:
+          SMOKE_TIMEOUT_SECONDS: 300
+        run: ./scripts/server-smoke.sh neoforge-26.3
 
   build-forge-1-21:
     runs-on: ubuntu-latest

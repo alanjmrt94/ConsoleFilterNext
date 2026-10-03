@@ -160,6 +160,16 @@ case "${LOADER}" in
 		PROJECT_DIR="platforms/26.2/forge"
 		LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
 		;;
+	fabric-26.3)
+		RUN_DIR="runs/26.3/fabric"
+		PROJECT_DIR="platforms/26.3/fabric"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
+		;;
+	neoforge-26.3)
+		RUN_DIR="runs/26.3/neoforge"
+		PROJECT_DIR="platforms/26.3/neoforge"
+		LOG_HINTS=('Done (' 'For help, type "help"' 'mod loading has completed' 'consolefilternext' 'console filter' 'NeoForge')
+		;;
 	forge)
 		PROJECT_DIR=""
 		;;
