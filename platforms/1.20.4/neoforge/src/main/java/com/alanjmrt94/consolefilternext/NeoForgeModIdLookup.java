@@ -7,7 +7,17 @@ final class NeoForgeModIdLookup implements ModIdLookup {
 	@Override
 	public boolean matchesNamespace(String source, String modId) {
 		return ModList.get().getModContainerById(modId)
-			.map(container -> source.startsWith(container.getNamespace()))
+			.map(container -> {
+				String namespace = container.getNamespace();
+				if (source.startsWith(namespace)) {
+					return true;
+				}
+				Object modInstance = container.getMod();
+				if (modInstance != null) {
+					return source.startsWith(modInstance.getClass().getPackageName());
+				}
+				return false;
+			})
 			.orElse(false);
 	}
 }
