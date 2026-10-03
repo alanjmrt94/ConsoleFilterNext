@@ -13,15 +13,19 @@ gradle-app.setting
 # Local Maven repo (build.gradle publishing)
 mcmodsrepo/
 
-# ─── Forge / Minecraft dev runs ─────────────────────────────────────────────
-run/
+# ─── Minecraft / loader dev runs (agrupados por versión) ─────────────────────
+runs/
+# Por si queda algún run legacy en la raíz
+/run/
+/run-*/
 
-# Fabric Loom / NeoForge MDG run directories (incl. versioned: run-fabric-26.1, …)
-run-fabric*/
-run-neoforge*/
+# Runs locales dentro de un módulo (p. ej. ForgeGradle legacy)
+platforms/**/run/
 
 # Compiled leftovers / NeoForm tooling artifacts
 **/*.class
+**/.mixin.out/
+**/net/
 
 # Manifest local de launcher (apunta a 127.0.0.1)
 versions/minecraft-meta/launcher_manifest_local.json
