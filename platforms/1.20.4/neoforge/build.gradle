@@ -105,8 +105,9 @@ neoForge {
 }
 
 dependencies {
-	implementation 'com.electronwill.night-config:core:3.8.1'
-	implementation 'com.electronwill.night-config:toml:3.8.1'
+	// 3.8.1 marca toml como Multi-Release sin META-INF/versions; SJH 20.4 aborta runServer.
+	implementation 'com.electronwill.night-config:core:3.6.7'
+	implementation 'com.electronwill.night-config:toml:3.6.7'
 
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
