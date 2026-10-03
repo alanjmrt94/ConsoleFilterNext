@@ -463,7 +463,7 @@ See `scripts/.release.local.example` for all variables (`CURSEFORGE_API_TOKEN`, 
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
+| [`.github/workflows/build.yml`](.github/workflows/build.yml) | Push and pull request (omite markdown, imágenes, `assets/**`, `.cursor/**`) | Job **lint** (Spotless + `-Werror`) y luego build + smoke **aislados** por loader |
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | Tag push (`{mc}-{semver}`) | Build celdas enabled de esa línea MC y crea GitHub Release (JARs por loader presente en `platforms/{mc}/`) |
 | [`.github/workflows/publish-distribution.yml`](.github/workflows/publish-distribution.yml) | Tag push (`*`) | Upload JARs to Modrinth/CurseForge and notify Discord (requires the `publish` environment) |
 

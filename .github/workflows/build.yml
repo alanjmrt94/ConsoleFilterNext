@@ -4,14 +4,20 @@ on:
   push:
     branches:
       - '**'
-    paths-ignore:
+    paths-ignore: &build-paths-ignore
       - '**/*.md'
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.webp'
+      - '**/*.gif'
+      - 'assets/**'
+      - '.cursor/**'
   pull_request:
     branches:
       - master
       - main
-    paths-ignore:
-      - '**/*.md'
+    paths-ignore: *build-paths-ignore
 
 jobs:
   lint:
