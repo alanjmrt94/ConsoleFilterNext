@@ -1,0 +1,108 @@
+buildscript {
+	repositories {
+		maven { url = 'https://maven.fabricmc.net/' }
+		mavenCentral()
+		gradlePluginPortal()
+	}
+	dependencies {
+		classpath "net.fabricmc:fabric-loom:1.14.1"
+	}
+	configurations.classpath {
+		resolutionStrategy {
+			force 'com.google.code.gson:gson:2.10.1'
+		}
+	}
+}
+
+apply plugin: 'fabric-loom'
+apply plugin: 'maven-publish'
+
+def props = new Properties()
+file('../../../gradle.properties').withInputStream { props.load(it) }
+file('../../../versions/1.16.1.properties').withInputStream { props.load(it) }
+props.each { key, value ->
+	if (!project.hasProperty(key)) {
+		project.ext.set(key as String, value)
+	}
+}
+
+version = props['mod_version']
+group = props['mod_group_id']
+
+base {
+	archivesName = props['mod_id'] as String
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+	withSourcesJar()
+}
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://maven.fabricmc.net/' }
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir '../../../common-java8/src/main/java'
+			srcDir '../../1.16.5/fabric/src/main/java'
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${props['minecraft_version']}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${props['fabric_loader_version']}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${props['fabric_api_version']}"
+
+	compileOnly 'org.apache.logging.log4j:log4j-api:2.11.2'
+	compileOnly 'org.apache.logging.log4j:log4j-core:2.11.2'
+	implementation 'com.electronwill.night-config:core:3.6.7'
+	implementation 'com.electronwill.night-config:toml:3.6.7'
+}
+
+loom {
+	runs {
+		server {
+			server()
+			setConfigName('Fabric Server 1.16.1')
+			ideConfigGenerated true
+			runDir '../../runs/1.16.1/fabric'
+		}
+	}
+}
+
+processResources {
+	def ver = project.version
+	inputs.property 'version', ver
+	filesMatching('fabric.mod.json') {
+		expand([
+				version        : ver,
+				mod_id         : props['mod_id'],
+				mod_name       : props['mod_name'],
+				mod_description: props['mod_description'],
+				mod_authors    : props['mod_authors'],
+				mod_license    : props['mod_license']
+		])
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 8
+}
+
+tasks.named('remapJar', net.fabricmc.loom.task.RemapJarTask).configure {
+	archiveClassifier.set('fabric')
+}
+
+jar {
+	from(file('../../../LICENSE.md')) {
+		rename { "${it}_${props['mod_id']}" }
+	}
+}
