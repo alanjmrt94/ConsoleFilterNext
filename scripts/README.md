@@ -59,7 +59,7 @@ Webhook: Edit channel del mod → Integrations → Webhooks → Copy URL → sec
 ./scripts/lint.sh fix          # quita imports no usados, trim, newlines
 ./scripts/lint.sh check
 ./scripts/matrix.sh test
-./scripts/server-smoke.sh forge   # fabric | neoforge | forge-26.1 | fabric-1.12.2 | fabric-1.8.9 | …
+./scripts/server-smoke.sh forge   # fabric | neoforge | forge-26.1 | fabric-1.12.2 | fabric-1.8.9 | forge-1.20.4 | …
 ./scripts/release.sh cut --dry-run
 ./scripts/release.sh publish --dry-run --skip-build
 ./scripts/discord-notify.sh --dry-run 1.20.1-4.2.0

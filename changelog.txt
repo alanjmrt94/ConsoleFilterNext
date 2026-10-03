@@ -16,6 +16,7 @@
  - Docs and scripts aligned with the three-loader release path
  - Forge 26.1 / 26.2 (ForgeGradle 7, EventBus 7, Java 25)
  - Fabric 1.12.2 / 1.8.9 (Legacy Fabric Loom; filtro + TOML + comandos, sin editor in-game)
+ - Minors 1.20.2–1.20.6: Forge salvo 1.20.5; Fabric en todas; NeoForge en 1.20.4 y 1.20.6 (20.2/20.3/20.5 sin MDG bundle)
 
 -----------------------------------------------------
  VERSION 4.1.0 - 1.20.1
