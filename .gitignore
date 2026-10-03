@@ -6,9 +6,9 @@
 gradle-app.setting
 .gradletasknamecache
 
-# Wrapper (keep tracked)
-!gradle/wrapper/gradle-wrapper.jar
-!gradle/wrapper/gradle-wrapper.properties
+# Wrapper (keep tracked; también en platforms/{mc}/{loader}/)
+!**/gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.properties
 
 # Local Maven repo (build.gradle publishing)
 mcmodsrepo/
@@ -25,7 +25,15 @@ platforms/**/run/
 # Compiled leftovers / NeoForm tooling artifacts
 **/*.class
 **/.mixin.out/
-**/net/
+# Decompilados de Minecraft: solo árboles generados, no src/**/java/net/
+/net/
+**/run/**/net/
+**/.gradle/**/net/
+**/build/**/net/
+# Dump NeoForm en la raíz del módulo (p. ej. platforms/26.x/neoforge/net)
+platforms/**/forge/net/
+platforms/**/neoforge/net/
+platforms/**/fabric/net/
 
 # Manifest local de launcher (apunta a 127.0.0.1)
 versions/minecraft-meta/launcher_manifest_local.json
@@ -47,6 +55,16 @@ out/
 
 # Cursor — plan de desarrollo local
 .cursor/
+
+# ─── Secretos y config de máquina ───────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.local
+!*.local.example
+local.properties
+*.keystore
+*.jks
 
 # ─── Scripts (secrets) ───────────────────────────────────────────────────────
 scripts/.release.local

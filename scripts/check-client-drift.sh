@@ -39,7 +39,17 @@ compare_group platforms/1.21.1/client \
 	platforms/1.20.3/client \
 	platforms/1.20.4/client \
 	platforms/1.20.5/client \
-	platforms/1.20.6/client
+	platforms/1.20.6/client \
+	platforms/1.21.2/client \
+	platforms/1.21.3/client \
+	platforms/1.21.4/client \
+	platforms/1.21.5/client \
+	platforms/1.21.6/client \
+	platforms/1.21.7/client \
+	platforms/1.21.8/client \
+	platforms/1.21.9/client \
+	platforms/1.21.10/client \
+	platforms/1.21.11/client
 
 if [[ "${fail}" -ne 0 ]]; then
 	echo "[error] Copiá el client canónico o unificá el cambio en todo el grupo." >&2

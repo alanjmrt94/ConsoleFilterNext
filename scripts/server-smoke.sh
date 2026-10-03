@@ -9,14 +9,16 @@ LOADER="${1:-forge}"
 SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-300}"
 
 usage() {
-	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2|forge-1.20.2|fabric-1.20.2|forge-1.20.3|fabric-1.20.3|forge-1.20.4|fabric-1.20.4|neoforge-1.20.4|fabric-1.20.5|forge-1.20.6|fabric-1.20.6|neoforge-1.20.6]"
+	echo "Uso: $0 [forge|fabric|neoforge|forge-1.21|…|{forge|fabric|neoforge}-{mc} si existe platforms/{mc}/{loader}]"
 	exit 1
 }
 
-is_enabled_120_minor() {
+is_isolated_cell() {
 	case "$1" in
-		forge-1.20.2|fabric-1.20.2|forge-1.20.3|fabric-1.20.3|forge-1.20.4|fabric-1.20.4|neoforge-1.20.4|fabric-1.20.5|forge-1.20.6|fabric-1.20.6|neoforge-1.20.6)
-			return 0
+		forge-*|fabric-*|neoforge-*)
+			local loader="${1%%-*}"
+			local mc="${1#*-}"
+			[[ -d "${ROOT}/platforms/${mc}/${loader}" ]]
 			;;
 		*)
 			return 1
@@ -24,13 +26,13 @@ is_enabled_120_minor() {
 	esac
 }
 
-if is_enabled_120_minor "${LOADER}"; then
+if is_isolated_cell "${LOADER}"; then
 	:
 else
 	case "${LOADER}" in
-		forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21|forge-1.16.5|fabric-1.16.5|forge-1.16.1|fabric-1.16.1|forge-1.12.2|fabric-1.12.2|forge-1.8.9|fabric-1.8.9|fabric-26.1|neoforge-26.1|forge-26.1|fabric-26.2|neoforge-26.2|forge-26.2) ;;
+		forge|fabric|neoforge|forge-1.21|fabric-1.21|neoforge-1.21) ;;
 		-h|--help) usage ;;
-		*) echo "Loader desconocido o celda 1.20.x no habilitada: ${LOADER}"; usage ;;
+		*) echo "Loader desconocido o celda no implementada: ${LOADER}"; usage ;;
 	esac
 fi
 
@@ -40,15 +42,11 @@ PROJECT_DIR=""
 LOG_HINTS=('Done (' 'For help, type "help"' 'Forge mod loading has completed' 'consolefilternext' 'console filter')
 REQUIRE_ALL_HINTS=0
 
-if is_enabled_120_minor "${LOADER}"; then
+if is_isolated_cell "${LOADER}"; then
 	_loader="${LOADER%%-*}"
 	_mc="${LOADER#*-}"
 	RUN_DIR="runs/${_mc}/${_loader}"
 	PROJECT_DIR="platforms/${_mc}/${_loader}"
-	if [[ ! -d "${ROOT}/${PROJECT_DIR}" ]]; then
-		echo "No existe ${PROJECT_DIR} (celda no implementada)."
-		exit 1
-	fi
 	if [[ "${_loader}" == "fabric" ]]; then
 		LOG_HINTS=('Done (' 'For help, type "help"' 'FabricLoader' 'consolefilternext' 'console filter')
 	else

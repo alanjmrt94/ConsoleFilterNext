@@ -49,8 +49,9 @@ jobs:
           chmod +x gradlew scripts/release.sh scripts/publish-release.sh scripts/discord-notify.sh
           chmod +x platforms/1.20.1/fabric/gradlew platforms/1.20.1/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/26.1/fabric/gradlew platforms/26.1/neoforge/gradlew platforms/26.1/forge/gradlew platforms/26.2/fabric/gradlew platforms/26.2/neoforge/gradlew platforms/26.2/forge/gradlew 2>/dev/null || true
-          chmod +x platforms/1.21.1/forge/gradlew platforms/1.21.1/fabric/gradlew platforms/1.21.1/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/1.21.*/forge/gradlew platforms/1.21.*/fabric/gradlew platforms/1.21.*/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/1.20.*/forge/gradlew platforms/1.20.*/fabric/gradlew platforms/1.20.*/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/1.19.*/forge/gradlew platforms/1.19.*/fabric/gradlew 2>/dev/null || true
           chmod +x platforms/1.16.5/forge/gradlew platforms/1.16.5/fabric/gradlew 2>/dev/null || true
           chmod +x platforms/1.16.1/forge/gradlew platforms/1.16.1/fabric/gradlew 2>/dev/null || true
           chmod +x platforms/1.12.2/forge/gradlew platforms/1.12.2/fabric/gradlew platforms/1.8.9/forge/gradlew platforms/1.8.9/fabric/gradlew 2>/dev/null || true
@@ -120,8 +121,22 @@ jobs:
               (cd platforms/1.8.9/fabric && ./gradlew clean build --no-daemon)
               ;;
             *)
-              echo "Unsupported MC line in tag: ${MC}"
-              exit 1
+              FOUND=0
+              for loader in forge fabric neoforge; do
+                if [[ -d "platforms/${MC}/${loader}" ]]; then
+                  FOUND=1
+                  chmod +x "platforms/${MC}/${loader}/gradlew"
+                  if [[ "${MC}" == 1.19.* && "${loader}" == forge ]]; then
+                    JAVA_HOME="${JAVA_HOME_17}" (cd "platforms/${MC}/${loader}" && ./gradlew clean build --no-daemon)
+                  else
+                    JAVA_HOME="${JAVA_HOME_21:-${JAVA_HOME}}" (cd "platforms/${MC}/${loader}" && ./gradlew clean build --no-daemon)
+                  fi
+                fi
+              done
+              if [[ "${FOUND}" -eq 0 ]]; then
+                echo "Unsupported MC line in tag: ${MC}"
+                exit 1
+              fi
               ;;
           esac
 
@@ -143,6 +158,11 @@ jobs:
             1.16.1) ls -la platforms/1.16.1/forge/build/libs/ platforms/1.16.1/fabric/build/libs/ || true ;;
             1.12.2) ls -la platforms/1.12.2/forge/build/libs/ platforms/1.12.2/fabric/build/libs/ || true ;;
             1.8.9) ls -la platforms/1.8.9/forge/build/libs/ platforms/1.8.9/fabric/build/libs/ || true ;;
+            *)
+              for loader in forge fabric neoforge; do
+                ls -la "platforms/${PUBLISH_MC}/${loader}/build/libs/" 2>/dev/null || true
+              done
+              ;;
           esac
 
       - name: Publish to Modrinth and CurseForge

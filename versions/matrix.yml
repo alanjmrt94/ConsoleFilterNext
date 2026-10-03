@@ -8,6 +8,34 @@ mod_id: consolefilternext
 mod_semver: "4.2.0"
 
 targets:
+  - id: mc1.19.2-forge
+    minecraft: "1.19.2"
+    loader: forge
+    java: 17
+    enabled: true
+    project: "platforms/1.19.2/forge"
+
+  - id: mc1.19.2-fabric
+    minecraft: "1.19.2"
+    loader: fabric
+    java: 17
+    enabled: true
+    project: "platforms/1.19.2/fabric"
+
+  - id: mc1.19.4-forge
+    minecraft: "1.19.4"
+    loader: forge
+    java: 17
+    enabled: true
+    project: "platforms/1.19.4/forge"
+
+  - id: mc1.19.4-fabric
+    minecraft: "1.19.4"
+    loader: fabric
+    java: 17
+    enabled: true
+    project: "platforms/1.19.4/fabric"
+
   - id: mc1.20.1-forge
     minecraft: "1.20.1"
     loader: forge
@@ -128,6 +156,181 @@ targets:
     java: 21
     enabled: true
     project: "platforms/1.21.1/neoforge"
+
+  - id: mc1.21.2-fabric
+    minecraft: "1.21.2"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.2/fabric"
+
+  - id: mc1.21.3-forge
+    minecraft: "1.21.3"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.3/forge"
+
+  - id: mc1.21.3-fabric
+    minecraft: "1.21.3"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.3/fabric"
+
+  - id: mc1.21.3-neoforge
+    minecraft: "1.21.3"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.3/neoforge"
+
+  - id: mc1.21.4-forge
+    minecraft: "1.21.4"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.4/forge"
+
+  - id: mc1.21.4-fabric
+    minecraft: "1.21.4"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.4/fabric"
+
+  - id: mc1.21.4-neoforge
+    minecraft: "1.21.4"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.4/neoforge"
+
+  - id: mc1.21.5-forge
+    minecraft: "1.21.5"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.5/forge"
+
+  - id: mc1.21.5-fabric
+    minecraft: "1.21.5"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.5/fabric"
+
+  - id: mc1.21.5-neoforge
+    minecraft: "1.21.5"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.5/neoforge"
+
+  - id: mc1.21.6-forge
+    minecraft: "1.21.6"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.6/forge"
+
+  - id: mc1.21.6-fabric
+    minecraft: "1.21.6"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.6/fabric"
+
+  - id: mc1.21.7-forge
+    minecraft: "1.21.7"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.7/forge"
+
+  - id: mc1.21.7-fabric
+    minecraft: "1.21.7"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.7/fabric"
+
+  - id: mc1.21.8-forge
+    minecraft: "1.21.8"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.8/forge"
+
+  - id: mc1.21.8-fabric
+    minecraft: "1.21.8"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.8/fabric"
+
+  - id: mc1.21.8-neoforge
+    minecraft: "1.21.8"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.8/neoforge"
+
+  - id: mc1.21.9-forge
+    minecraft: "1.21.9"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.9/forge"
+
+  - id: mc1.21.9-fabric
+    minecraft: "1.21.9"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.9/fabric"
+
+  - id: mc1.21.10-forge
+    minecraft: "1.21.10"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.10/forge"
+
+  - id: mc1.21.10-fabric
+    minecraft: "1.21.10"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.10/fabric"
+
+  - id: mc1.21.10-neoforge
+    minecraft: "1.21.10"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.10/neoforge"
+
+  - id: mc1.21.11-forge
+    minecraft: "1.21.11"
+    loader: forge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.11/forge"
+
+  - id: mc1.21.11-fabric
+    minecraft: "1.21.11"
+    loader: fabric
+    java: 21
+    enabled: true
+    project: "platforms/1.21.11/fabric"
+
+  - id: mc1.21.11-neoforge
+    minecraft: "1.21.11"
+    loader: neoforge
+    java: 21
+    enabled: true
+    project: "platforms/1.21.11/neoforge"
 
   # 26.x: Fabric + NeoForge + Forge (FG7 / EventBus 7). Java 25.
   - id: mc26.1-fabric

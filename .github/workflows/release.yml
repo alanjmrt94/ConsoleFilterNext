@@ -43,8 +43,9 @@ jobs:
           chmod +x gradlew scripts/*.sh
           chmod +x platforms/1.20.1/fabric/gradlew platforms/1.20.1/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/26.1/fabric/gradlew platforms/26.1/neoforge/gradlew platforms/26.1/forge/gradlew platforms/26.2/fabric/gradlew platforms/26.2/neoforge/gradlew platforms/26.2/forge/gradlew 2>/dev/null || true
-          chmod +x platforms/1.21.1/forge/gradlew platforms/1.21.1/fabric/gradlew platforms/1.21.1/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/1.21.*/forge/gradlew platforms/1.21.*/fabric/gradlew platforms/1.21.*/neoforge/gradlew 2>/dev/null || true
           chmod +x platforms/1.20.*/forge/gradlew platforms/1.20.*/fabric/gradlew platforms/1.20.*/neoforge/gradlew 2>/dev/null || true
+          chmod +x platforms/1.19.*/forge/gradlew platforms/1.19.*/fabric/gradlew 2>/dev/null || true
           chmod +x platforms/1.16.5/forge/gradlew platforms/1.16.5/fabric/gradlew 2>/dev/null || true
           chmod +x platforms/1.16.1/forge/gradlew platforms/1.16.1/fabric/gradlew 2>/dev/null || true
           chmod +x platforms/1.12.2/forge/gradlew platforms/1.12.2/fabric/gradlew platforms/1.8.9/forge/gradlew platforms/1.8.9/fabric/gradlew 2>/dev/null || true
@@ -169,8 +170,23 @@ jobs:
               EXPECTED=2
               ;;
             *)
-              echo "Unsupported MC line in tag: ${MC}"
-              exit 1
+              EXPECTED=0
+              for loader in forge fabric neoforge; do
+                if [[ -d "platforms/${MC}/${loader}" ]]; then
+                  chmod +x "platforms/${MC}/${loader}/gradlew"
+                  if [[ "${MC}" == 1.19.* && "${loader}" == forge ]]; then
+                    JAVA_HOME="${JAVA_HOME_17}" (cd "platforms/${MC}/${loader}" && ./gradlew clean build --no-daemon)
+                  else
+                    JAVA_HOME="${JAVA_HOME_21:-${JAVA_HOME}}" (cd "platforms/${MC}/${loader}" && ./gradlew clean build --no-daemon)
+                  fi
+                  stage_one "platforms/${MC}/${loader}/build/libs/consolefilternext-*-${loader}.jar"
+                  EXPECTED=$((EXPECTED + 1))
+                fi
+              done
+              if [[ "${EXPECTED}" -eq 0 ]]; then
+                echo "Unsupported MC line in tag: ${MC}"
+                exit 1
+              fi
               ;;
           esac
           rm -f dist/*-sources.jar dist/*-javadoc.jar
